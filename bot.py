@@ -46,9 +46,9 @@ async def language_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """User selected language"""
     context.user_data['language'] = update.message.text
     
-    keyboard = [['Employer', 'Employee']]
+    keyboard = [['Manager', 'Worker']]
     await update.message.reply_text(
-        "Are you an Employer or Employee?",
+        "Are you a Manager or Worker?",
         reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
     )
     return ROLE
@@ -59,69 +59,69 @@ async def role_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     role = update.message.text.lower()
     language = context.user_data['language']
     
-    if role == 'employer':
+    if role == 'manager':
         code = generate_code()
         user_data = {
             'language': language,
-            'role': 'employer',
+            'role': 'manager',
             'code': code,
-            'employees': []
+            'workers': []
         }
         database.save_user(user_id, user_data)
         
         await update.message.reply_text(
-            f"✅ Registered as Employer!\n\n"
+            f"✅ Registered as Manager!\n\n"
             f"📋 Your code: {code}\n\n"
-            f"Share this code with your employees so they can connect."
+            f"Share this code with your workers so they can connect."
         )
         return ConversationHandler.END
     
-    elif role == 'employee':
-        context.user_data['role'] = 'employee'
-        await update.message.reply_text("Please enter your employer's code (e.g., FARM-1234):")
+    elif role == 'worker':
+        context.user_data['role'] = 'worker'
+        await update.message.reply_text("Please enter your manager's code (e.g., FARM-1234):")
         return CODE_INPUT
     
     return ConversationHandler.END
 
 async def code_entered(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Employee entered employer code"""
+    """Worker entered manager code"""
     user_id = str(update.effective_user.id)
     code = update.message.text.strip().upper()
     language = context.user_data['language']
     
-    # Find employer with this code
+    # Find manager with this code
     all_users = database.get_all_users()
-    employer_id = None
+    manager_id = None
     
     for uid, udata in all_users.items():
-        if udata.get('role') == 'employer' and udata.get('code') == code:
-            employer_id = uid
+        if udata.get('role') == 'manager' and udata.get('code') == code:
+            manager_id = uid
             break
     
-    if not employer_id:
-        await update.message.reply_text("❌ Invalid code. Please try again or contact your employer.")
+    if not manager_id:
+        await update.message.reply_text("❌ Invalid code. Please try again or contact your manager.")
         return CODE_INPUT
     
-    # Save employee
-    employee_data = {
+    # Save worker
+    worker_data = {
         'language': language,
-        'role': 'employee',
-        'employer': employer_id
+        'role': 'worker',
+        'manager': manager_id
     }
-    database.save_user(user_id, employee_data)
+    database.save_user(user_id, worker_data)
     
-    # Update employer's employee list
-    employer_data = database.get_user(employer_id)
-    employer_data['employees'].append(user_id)
-    database.save_user(employer_id, employer_data)
+    # Update manager's worker list
+    manager_data = database.get_user(manager_id)
+    manager_data['workers'].append(user_id)
+    database.save_user(manager_id, manager_data)
     
-    await update.message.reply_text("✅ Connected to your employer! You can start chatting now.")
+    await update.message.reply_text("✅ Connected to your manager! You can start chatting now.")
     
-    # Notify employer
-    employer_name = update.effective_user.first_name
+    # Notify manager
+    worker_name = update.effective_user.first_name
     await context.bot.send_message(
-        chat_id=employer_id,
-        text=f"✅ {employer_name} connected as your employee!"
+        chat_id=manager_id,
+        text=f"✅ {worker_name} connected as your worker!"
     )
     
     return ConversationHandler.END
@@ -138,32 +138,29 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     user_lang = user['language']
     
-    if user['role'] == 'employer':
-    # Send to all employees (silently)
-        employer_name = update.effective_user.first_name
-        for emp_id in user['employees']:
-            employee = database.get_user(emp_id)
-            if employee:
-                translated = translator.translate(text, user_lang, employee['language'])
+    if user['role'] == 'manager':
+        # Send to all workers (silently)
+        manager_name = update.effective_user.first_name
+        for worker_id in user['workers']:
+            worker = database.get_user(worker_id)
+            if worker:
+                translated = translator.translate(text, user_lang, worker['language'])
                 await context.bot.send_message(
-                    chat_id=emp_id,
-                    text=f"🗣️ From {employer_name}: {translated}"
+                    chat_id=worker_id,
+                    text=f"🗣️ From {manager_name}: {translated}"
                 )
-        # No confirmation message - just silent success
     
-    elif user['role'] == 'employee':
-        # Send to employer (silently)
-        employer_id = user['employer']
-        employer = database.get_user(employer_id)
-        if employer:
-            translated = translator.translate(text, user_lang, employer['language'])
+    elif user['role'] == 'worker':
+        # Send to manager (silently)
+        manager_id = user['manager']
+        manager = database.get_user(manager_id)
+        if manager:
+            translated = translator.translate(text, user_lang, manager['language'])
             sender_name = update.effective_user.first_name
             await context.bot.send_message(
-                chat_id=employer_id,
+                chat_id=manager_id,
                 text=f"🗣️ From {sender_name}: {translated}"
             )
-        # No confirmation message - just silent success
-
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Cancel conversation"""
