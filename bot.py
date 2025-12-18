@@ -14,7 +14,13 @@ def load_config():
 
 def generate_code():
     """Generate unique farm code"""
-    return f"FARM-{random.randint(1000, 9999)}"
+    while True:
+        code = f"FARM-{random.randint(1000, 9999)}"
+        # Check if code already exists
+        all_users = database.get_all_users()
+        existing_codes = [u.get('code') for u in all_users.values() if u.get('code')]
+        if code not in existing_codes:
+            return code
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /start command"""
@@ -29,7 +35,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return ConversationHandler.END
     
     # New user - ask for language
-    keyboard = [['English', 'Spanish'], ['Hebrew', 'Other']]
+    keyboard = [['English', 'Thai'], ['Hebrew', 'Arabic'], ['Spanish', 'Turkish'], ['French', 'German']]
     await update.message.reply_text(
         "Welcome to FarmTranslate! 🚜\n\nSelect your language:",
         reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
@@ -133,19 +139,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_lang = user['language']
     
     if user['role'] == 'employer':
-        # Send to all employees
+    # Send to all employees (silently)
+        employer_name = update.effective_user.first_name
         for emp_id in user['employees']:
             employee = database.get_user(emp_id)
             if employee:
                 translated = translator.translate(text, user_lang, employee['language'])
                 await context.bot.send_message(
                     chat_id=emp_id,
-                    text=f"🗣️ From Boss: {translated}"
+                    text=f"🗣️ From {employer_name}: {translated}"
                 )
-        await update.message.reply_text("✅ Message sent to your employees.")
+        # No confirmation message - just silent success
     
     elif user['role'] == 'employee':
-        # Send to employer
+        # Send to employer (silently)
         employer_id = user['employer']
         employer = database.get_user(employer_id)
         if employer:
@@ -155,7 +162,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 chat_id=employer_id,
                 text=f"🗣️ From {sender_name}: {translated}"
             )
-            await update.message.reply_text("✅ Message sent to your employer.")
+        # No confirmation message - just silent success
+
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Cancel conversation"""
