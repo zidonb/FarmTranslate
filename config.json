@@ -4,7 +4,7 @@
   "context": {
     "industry": "dairy farming",
     "description": "Communication between dairy farm manager and workers about daily farm operations, cow health, milking schedules, and equipment maintenance.",
-    "history_size": 5
+    "history_size": 3
   },
   
   "languages": [
