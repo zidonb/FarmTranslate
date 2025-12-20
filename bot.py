@@ -4,6 +4,7 @@ from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, ConversationHandler
 import database
 import translator
+import conversations
 
 # Conversation states
 LANGUAGE, GENDER, ROLE, CODE_INPUT = range(4)
@@ -247,34 +248,73 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     user_lang = user['language']
     
+    # Get history size from config
+    config = load_config()
+    history_size = config.get('context', {}).get('history_size', 5)
+    max_history_messages = history_size * 2  # 5 per side = 10 total
+    
     if user['role'] == 'manager':
-        # Send to all workers (silently)
+        # Send to all workers
         manager_name = update.effective_user.first_name
         for worker_id in user['workers']:
             worker = database.get_user(worker_id)
             if worker:
+                # Get conversation history
+                history = conversations.get_conversation_history(user_id, worker_id, max_history_messages)
+                
+                # Translate with context
                 translated = translator.translate(
                     text=text,
                     from_lang=user_lang,
                     to_lang=worker['language'],
-                    target_gender=worker.get('gender')
+                    target_gender=worker.get('gender'),
+                    conversation_history=history
                 )
+                
+                # Save message to history
+                conversations.add_to_conversation(
+                    user_id_1=user_id,
+                    user_id_2=worker_id,
+                    from_id=user_id,
+                    text=text,
+                    language=user_lang,
+                    max_history=max_history_messages
+                )
+                
+                # Send translated message
                 await context.bot.send_message(
                     chat_id=worker_id,
                     text=f"🗣️ From {manager_name}: {translated}"
                 )
     
     elif user['role'] == 'worker':
-        # Send to manager (silently)
+        # Send to manager
         manager_id = user['manager']
         manager = database.get_user(manager_id)
         if manager:
+            # Get conversation history
+            history = conversations.get_conversation_history(user_id, manager_id, max_history_messages)
+            
+            # Translate with context
             translated = translator.translate(
                 text=text,
                 from_lang=user_lang,
                 to_lang=manager['language'],
-                target_gender=manager.get('gender')
+                target_gender=manager.get('gender'),
+                conversation_history=history
             )
+            
+            # Save message to history
+            conversations.add_to_conversation(
+                user_id_1=user_id,
+                user_id_2=manager_id,
+                from_id=user_id,
+                text=text,
+                language=user_lang,
+                max_history=max_history_messages
+            )
+            
+            # Send translated message
             sender_name = update.effective_user.first_name
             await context.bot.send_message(
                 chat_id=manager_id,
