@@ -1,41 +1,20 @@
-# Secrets - NEVER commit these!
-config.json
-*.env
-.env
-
-# Database - contains user data
+# Sensitive files - DO NOT UPLOAD
+secrets.json
 users.json
-*.db
-*.sqlite
+conversations.json
+
+# config.json is now SAFE (no secrets in it)
+# We WANT to upload it to GitHub/Railway
 
 # Python
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
+*.pyc
+*.pyo
+*.pyd
 .Python
 env/
 venv/
-ENV/
-build/
-dist/
-*.egg-info/
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
+# OS files
 .DS_Store
 Thumbs.db
-
-# Logs
-*.log
-
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
