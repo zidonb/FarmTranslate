@@ -5,13 +5,11 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 import database
 import translator
 import conversations
+from config import load_config
 
 # Conversation states
 LANGUAGE, GENDER, ROLE, CODE_INPUT = range(4)
 
-def load_config():
-    with open('config.json', 'r') as f:
-        return json.load(f)
 
 def generate_code():
     """Generate unique code"""

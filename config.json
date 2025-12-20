@@ -1,0 +1,34 @@
+{
+  "translation_provider": "claude",
+  
+  "context": {
+    "industry": "dairy farming",
+    "description": "Communication between dairy farm manager and workers about daily farm operations, cow health, milking schedules, and equipment maintenance.",
+    "history_size": 5
+  },
+  
+  "languages": [
+    "English",
+    "Hebrew", 
+    "Arabic",
+    "Thai",
+    "Spanish",
+    "Turkish",
+    "French",
+    "German",
+    "Portuguese",
+    "Russian"
+  ],
+  
+  "claude": {
+    "model": "claude-sonnet-4-20250514"
+  },
+  
+  "gemini": {
+    "model": "gemini-2.0-flash-exp"
+  },
+  
+  "openai": {
+    "model": "gpt-4o-mini"
+  }
+}

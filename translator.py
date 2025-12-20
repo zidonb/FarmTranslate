@@ -1,10 +1,7 @@
 import json
 from anthropic import Anthropic
+from config import load_config
 
-def load_config():
-    """Load API keys and settings from config"""
-    with open('config.json', 'r') as f:
-        return json.load(f)
 
 def translate(text: str, from_lang: str, to_lang: str, target_gender: str = None, conversation_history: list = None) -> str:
     """
