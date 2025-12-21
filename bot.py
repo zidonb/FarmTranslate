@@ -188,6 +188,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 /help - Show this help message
 /mycode - Show your connection code
+/reset - Delete all data and re-register
 /start - Re-register (if needed)
 
 💬 *How to use:*
@@ -198,6 +199,7 @@ Just type your message and it will be automatically translated and sent to your 
 📋 *Available Commands:*
 
 /help - Show this help message
+/reset - Delete all data and re-register
 /start - Re-register (if needed)
 
 💬 *How to use:*
@@ -228,6 +230,79 @@ async def mycode_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"👥 Connected workers: {worker_count}\n\n"
         f"Share this code with your workers to connect them.",
         parse_mode='Markdown'
+    )
+
+
+async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Reset user account - delete all data and allow re-registration"""
+    user_id = str(update.effective_user.id)
+    user = database.get_user(user_id)
+    
+    if not user:
+        await update.message.reply_text("You don't have an account to reset.")
+        return
+    
+    # If user is a manager, notify and reset all workers
+    if user['role'] == 'manager':
+        worker_ids = user.get('workers', [])
+        
+        for worker_id in worker_ids:
+            worker = database.get_user(worker_id)
+            if worker:
+                # Clear conversation history
+                conversations.clear_conversation(user_id, worker_id)
+                
+                # Delete worker account
+                all_users = database.get_all_users()
+                if worker_id in all_users:
+                    del all_users[worker_id]
+                    database.save_data(all_users)
+                
+                # Notify worker their account was reset
+                try:
+                    await context.bot.send_message(
+                        chat_id=worker_id,
+                        text="⚠️ Your manager has reset their account.\n"
+                             "Your account has also been reset.\n\n"
+                             "Use /start to register again with a new manager code."
+                    )
+                except Exception:
+                    # Worker may have blocked the bot or deleted Telegram
+                    pass
+    
+    # If user is a worker, remove from manager's list
+    elif user['role'] == 'worker':
+        manager_id = user.get('manager')
+        if manager_id:
+            manager = database.get_user(manager_id)
+            if manager and 'workers' in manager:
+                # Remove this worker from manager's list
+                manager['workers'] = [w for w in manager['workers'] if w != user_id]
+                database.save_user(manager_id, manager)
+                
+                # Notify manager
+                try:
+                    worker_name = update.effective_user.first_name
+                    await context.bot.send_message(
+                        chat_id=manager_id,
+                        text=f"ℹ️ {worker_name} has reset their account and is no longer connected."
+                    )
+                except Exception:
+                    pass
+            
+            # Clear conversation history
+            conversations.clear_conversation(user_id, manager_id)
+    
+    # Delete user data
+    all_users = database.get_all_users()
+    if user_id in all_users:
+        del all_users[user_id]
+        database.save_data(all_users)
+    
+    await update.message.reply_text(
+        "✅ Your account has been reset!\n\n"
+        "All your data and connections have been deleted.\n"
+        "Use /start to register again."
     )
 
 # ============================================
@@ -343,6 +418,7 @@ def main():
     app.add_handler(conv_handler)
     app.add_handler(CommandHandler('help', help_command))
     app.add_handler(CommandHandler('mycode', mycode_command))
+    app.add_handler(CommandHandler('reset', reset))  
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     
     print("🤖 FarmTranslate bot is running...")
