@@ -198,11 +198,10 @@ async def industry_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Send invitation message with share button
     await update.message.reply_text(
         f"✅ Registration complete!\n\n"
-        f"📋 Your invitation code: `{code}`\n"
+        f"📋 Your invitation code: {code}\n"
         f"🔗 Invitation link:\n{deep_link}\n\n"
         f"👉 Tap the button below to share with your contact:",
-        reply_markup=keyboard,
-        parse_mode='Markdown'
+        reply_markup=keyboard
     )
     
     return ConversationHandler.END
@@ -282,12 +281,11 @@ async def mycode_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Send status and invitation
     await update.message.reply_text(
-        f"👥 Worker connected: *{'Yes ✅' if has_worker else 'No ❌'}*\n\n"
-        f"📋 Your invitation code: `{code}`\n"
+        f"👥 Worker connected: {'Yes ✅' if has_worker else 'No ❌'}\n\n"
+        f"📋 Your invitation code: {code}\n"
         f"🔗 Invitation link:\n{deep_link}\n\n"
         f"👉 Tap the button below to share with your contact:",
-        reply_markup=keyboard,
-        parse_mode='Markdown'
+        reply_markup=keyboard
     )
 
 async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
