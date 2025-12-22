@@ -29,6 +29,10 @@
   },
   
   "history_size": 3,
+
+  "free_message_limit": 50,
+  "enforce_limits": false,
+  
   
   "languages": [
     "English",

@@ -5,6 +5,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 import database
 import translator
 import conversations
+import usage_tracker
 from config import load_config
 
 # Conversation states
@@ -392,6 +393,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Please use /start to register first.")
         return
     
+    # Check message limits (only for managers)
+    telegram_id = str(update.effective_user.id)
+    if user['role'] == 'manager':
+        if usage_tracker.is_user_blocked(telegram_id):
+            await update.message.reply_text(
+                "⚠️ You've reached the free message limit (50 messages).\n\n"
+                "Subscribe to continue using FarmTranslate.\n"
+                "Contact support for subscription options."
+            )
+            return
+    
     text = update.message.text
     user_lang = user['language']
     
@@ -442,6 +454,18 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chat_id=worker_id,
             text=f"🗣️ From {manager_name}: {translated}"
         )
+        
+        # Increment message counter for manager (after successful send)
+        allowed = usage_tracker.increment_message_count(telegram_id)
+        
+        if not allowed:
+            # Just hit the limit
+            await update.message.reply_text(
+                "⚠️ That was your last free message!\n\n"
+                "You've used all 50 free messages.\n"
+                "Subscribe to continue using FarmTranslate.\n"
+                "Contact support for subscription options."
+            )
     
     elif user['role'] == 'worker':
         manager_id = user.get('manager')

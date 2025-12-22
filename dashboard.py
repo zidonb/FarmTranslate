@@ -1,6 +1,7 @@
 from flask import Flask, render_template_string, request, redirect, session, jsonify
 import database
 import conversations
+import usage_tracker
 from config import load_config
 from datetime import datetime
 import secrets
@@ -9,7 +10,7 @@ app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 
 # Simple password protection
-DASHBOARD_PASSWORD = "zb280072A"  # Change this!
+DASHBOARD_PASSWORD = "farmadmin2024"  # Change this!
 
 # HTML Template
 DASHBOARD_HTML = """
@@ -200,6 +201,15 @@ DASHBOARD_HTML = """
                         <div><strong>Language:</strong> {{ manager.language }}</div>
                         <div><strong>Gender:</strong> {{ manager.gender }}</div>
                         <div><strong>Industry:</strong> {{ manager.industry }}</div>
+                        <div><strong>Messages Sent:</strong> {{ manager.messages_sent }} / {{ manager.message_limit }}</div>
+                        <div>
+                            <strong>Status:</strong>
+                            {% if manager.blocked %}
+                                <span class="badge disconnected">🚫 Blocked</span>
+                            {% else %}
+                                <span class="badge connected">✓ Active</span>
+                            {% endif %}
+                        </div>
                         <div>
                             <strong>Worker:</strong> 
                             {% if manager.worker %}
@@ -214,6 +224,11 @@ DASHBOARD_HTML = """
                               onsubmit="return confirm('Delete this manager and all their data?');">
                             <button type="submit" class="btn danger">🗑️ Delete Manager</button>
                         </form>
+                        {% if manager.blocked %}
+                        <form method="POST" action="/reset_usage/{{ manager.id }}" style="display:inline;">
+                            <button type="submit" class="btn">🔓 Reset Usage</button>
+                        </form>
+                        {% endif %}
                     </div>
                 </div>
                 {% endfor %}
@@ -394,6 +409,10 @@ def dashboard():
     # Get all users
     all_users = database.get_all_users()
     
+    # Get config for message limit
+    config = load_config()
+    message_limit = config.get('free_message_limit', 50)
+    
     # Separate managers and workers
     managers = []
     workers = []
@@ -401,6 +420,11 @@ def dashboard():
     for user_id, user_data in all_users.items():
         user_data['id'] = user_id
         if user_data.get('role') == 'manager':
+            # Add usage tracking data for managers
+            usage = usage_tracker.get_usage(user_id)
+            user_data['messages_sent'] = usage.get('messages_sent', 0)
+            user_data['blocked'] = usage.get('blocked', False)
+            user_data['message_limit'] = message_limit
             managers.append(user_data)
         elif user_data.get('role') == 'worker':
             workers.append(user_data)
@@ -514,6 +538,17 @@ def clear_conversation_route(conv_key):
     
     user1, user2 = conv_key.split('_')
     conversations.clear_conversation(user1, user2)
+    
+    return redirect('/')
+
+@app.route('/reset_usage/<user_id>', methods=['POST'])
+def reset_usage_route(user_id):
+    # Check authentication
+    if not session.get('authenticated'):
+        return redirect('/login')
+    
+    # Reset usage for this manager
+    usage_tracker.reset_user_usage(user_id)
     
     return redirect('/')
 
