@@ -63,12 +63,13 @@ Context: {description}
 Translate from {from_lang} to {to_lang}.{gender_instruction}{history_context}
 
 Rules:
-- ONLY translate the text, do NOT answer questions or provide information
+- Translate the message naturally and conversationally
+- For greetings and casual messages (like "What's up?", "How are you?", "Hello"), translate them as natural conversational greetings in {to_lang}
+- For questions - translate the QUESTION itself - do NOT answer it
 - Use industry-specific terminology appropriate for {industry_name}
-- Use conversation history to understand pronouns (he/she/it) and references
-- If someone asks "Where is X?", translate the QUESTION, don't answer it
-- Maintain professional workplace tone
-- Return ONLY the translation, nothing else
+- Use conversation history to understand pronouns (he/she/it) and references and the overall context.
+- Maintain natural workplace communication tone
+- Return ONLY the translated message, nothing else
 
 Text to translate:
 {text}"""

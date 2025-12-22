@@ -135,18 +135,24 @@ async def industry_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     }
     database.save_user(user_id, user_data)
     
-    # Send shareable message
+    # Message 1: Confirmation + instruction
     await update.message.reply_text(
-        f"✅ Registered successfully!\n\n"
-        f"📋 Share this with your worker:\n\n"
-        f"━━━━━━━━━━━━━━━━\n"
-        f"Join FarmTranslate!\n"
-        f"Code: {code}\n"
-        f"https://t.me/FarmTranslateBot\n"
-        f"━━━━━━━━━━━━━━━━\n\n"
-        f"Use /help to see available commands.",
+        "✅ Registration complete!\n\n"
+        "👉 Forward the next message to your contact to connect them.",
         reply_markup=ReplyKeyboardRemove()
     )
+    
+    # Message 2: Shareable invitation (designed to be forwarded)
+    await update.message.reply_text(
+        f"🚜 Join FarmTranslate!\n\n"
+        f"Chat with your contact in your native language.\n\n"
+        f"Get connected in 3 steps:\n"
+        f"1. Open: https://t.me/FarmTranslateBot\n"
+        f"2. Send: /start\n"
+        f"3. Enter code: {code}\n\n"
+        f"See you there! 👋"
+    )
+    
     return ConversationHandler.END
 
 async def code_entered(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -268,15 +274,22 @@ async def mycode_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     code = user.get('code', 'No code found')
     has_worker = user.get('worker') is not None
     
+    # Message 1: Status
     await update.message.reply_text(
-        f"📋 *Share this with your worker:*\n\n"
-        f"━━━━━━━━━━━━━━━━\n"
-        f"Join FarmTranslate!\n"
-        f"Code: `{code}`\n"
-        f"https://t.me/FarmTranslateBot\n"
-        f"━━━━━━━━━━━━━━━━\n\n"
-        f"👥 Worker connected: {'Yes' if has_worker else 'No'}",
+        f"👥 Worker connected: *{'Yes ✅' if has_worker else 'No ❌'}*\n\n"
+        f"👉 Forward the next message to your worker:",
         parse_mode='Markdown'
+    )
+    
+    # Message 2: Shareable invitation
+    await update.message.reply_text(
+        f"🚜 Join FarmTranslate!\n\n"
+        f"Chat with your contact in your native language.\n\n"
+        f"Get connected in 3 steps:\n"
+        f"1. Open: https://t.me/FarmTranslateBot\n"
+        f"2. Send /start\n"
+        f"3. Enter code: {code}\n\n"
+        f"See you there! 👋"
     )
 
 async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -303,7 +316,7 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 try:
                     await context.bot.send_message(
                         chat_id=worker_id,
-                        text="⚠️ Your manager has reset their account.\n"
+                        text="⚠️ Your Contact has reset their account.\n"
                              "Your account has also been reset.\n\n"
                              "You'll need a new code to reconnect."
                     )
@@ -364,8 +377,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         worker_id = user.get('worker')
         if not worker_id:
             await update.message.reply_text(
-                "⚠️ You don't have a worker connected yet.\n"
-                "Share your code (use /mycode) with your worker."
+                "⚠️ You don't have a contact connected yet.\n"
+                "Share your code (use /mycode) with your contact."
             )
             return
         
