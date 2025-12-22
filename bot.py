@@ -8,7 +8,7 @@ import conversations
 from config import load_config
 
 # Conversation states
-LANGUAGE, GENDER, INDUSTRY, CODE_INPUT = range(4)
+LANGUAGE, GENDER, ROLE, INDUSTRY, CODE_INPUT = range(5)
 
 
 def generate_code():
@@ -39,7 +39,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return ConversationHandler.END
     
     # New user - ask for language
-    # Get languages from config
     config = load_config()
     available_languages = config.get('languages', ['English', 'Spanish'])
     
@@ -64,26 +63,46 @@ async def language_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return GENDER
 
 async def gender_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """User selected gender - now ask for industry"""
+    """User selected gender - ask if registering or invited"""
     context.user_data['gender'] = update.message.text
     
-    # Get industries from config
-    config = load_config()
-    industries = config.get('industries', {})
-    
-    # Build keyboard with industry options
-    industry_buttons = []
-    for key, info in industries.items():
-        industry_buttons.append(info['name'])
-    
-    # Create keyboard (2 per row)
-    keyboard = [industry_buttons[i:i+2] for i in range(0, len(industry_buttons), 2)]
-    
+    keyboard = [['Registering', 'Invited']]
     await update.message.reply_text(
-        "What industry do you work in?",
+        "Are you registering a new account or were you invited?",
         reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
     )
-    return INDUSTRY
+    return ROLE
+
+async def role_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """User selected role"""
+    role = update.message.text.lower()
+    
+    if role == 'registering':
+        # Ask for industry
+        config = load_config()
+        industries = config.get('industries', {})
+        
+        industry_buttons = []
+        for key, info in industries.items():
+            industry_buttons.append(info['name'])
+        
+        keyboard = [industry_buttons[i:i+2] for i in range(0, len(industry_buttons), 2)]
+        
+        await update.message.reply_text(
+            "What industry do you work in?",
+            reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
+        )
+        return INDUSTRY
+    
+    elif role == 'invited':
+        # Ask for code
+        await update.message.reply_text(
+            "Please enter your invitation code (e.g., FARM-1234):",
+            reply_markup=ReplyKeyboardRemove()
+        )
+        return CODE_INPUT
+    
+    return ConversationHandler.END
 
 async def industry_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """User selected industry - register as manager"""
@@ -102,7 +121,7 @@ async def industry_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
             break
     
     if not industry_key:
-        industry_key = 'other'  # Fallback
+        industry_key = 'other'
     
     # Generate code and register as manager
     code = generate_code()
@@ -112,14 +131,19 @@ async def industry_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'role': 'manager',
         'industry': industry_key,
         'code': code,
-        'worker': None  # Single worker (None = no worker yet)
+        'worker': None
     }
     database.save_user(user_id, user_data)
     
+    # Send shareable message
     await update.message.reply_text(
-        f"✅ Registered as Manager!\n\n"
-        f"📋 Your code: {code}\n\n"
-        f"Share this code with your worker to connect.\n\n"
+        f"✅ Registered successfully!\n\n"
+        f"📋 Share this with your worker:\n\n"
+        f"━━━━━━━━━━━━━━━━\n"
+        f"Join FarmTranslate!\n"
+        f"Code: {code}\n"
+        f"https://t.me/FarmTranslateBot\n"
+        f"━━━━━━━━━━━━━━━━\n\n"
         f"Use /help to see available commands.",
         reply_markup=ReplyKeyboardRemove()
     )
@@ -215,7 +239,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 💬 *How to use:*
 Just type your message and it will be automatically translated and sent to your worker!
         """
-    else:  # worker
+    else:
         help_text = """
 📋 *Available Commands:*
 
@@ -245,10 +269,13 @@ async def mycode_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     has_worker = user.get('worker') is not None
     
     await update.message.reply_text(
-        f"📋 *Your Connection Code:*\n\n"
-        f"`{code}`\n\n"
-        f"👥 Worker connected: {'Yes' if has_worker else 'No'}\n\n"
-        f"Share this code with your worker to connect them.",
+        f"📋 *Share this with your worker:*\n\n"
+        f"━━━━━━━━━━━━━━━━\n"
+        f"Join FarmTranslate!\n"
+        f"Code: `{code}`\n"
+        f"https://t.me/FarmTranslateBot\n"
+        f"━━━━━━━━━━━━━━━━\n\n"
+        f"👥 Worker connected: {'Yes' if has_worker else 'No'}",
         parse_mode='Markdown'
     )
 
@@ -262,21 +289,17 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     
     if user['role'] == 'manager':
-        # If manager has a worker, delete worker and notify them
         worker_id = user.get('worker')
         if worker_id:
             worker = database.get_user(worker_id)
             if worker:
-                # Clear conversation history
                 conversations.clear_conversation(user_id, worker_id)
                 
-                # Delete worker account
                 all_users = database.get_all_users()
                 if worker_id in all_users:
                     del all_users[worker_id]
                     database.save_data(all_users)
                 
-                # Notify worker
                 try:
                     await context.bot.send_message(
                         chat_id=worker_id,
@@ -288,16 +311,13 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     pass
     
     elif user['role'] == 'worker':
-        # Remove worker from manager
         manager_id = user.get('manager')
         if manager_id:
             manager = database.get_user(manager_id)
             if manager:
-                # Clear manager's worker reference
                 manager['worker'] = None
                 database.save_user(manager_id, manager)
                 
-                # Notify manager
                 try:
                     worker_name = update.effective_user.first_name
                     await context.bot.send_message(
@@ -307,10 +327,8 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 except Exception:
                     pass
             
-            # Clear conversation history
             conversations.clear_conversation(user_id, manager_id)
     
-    # Delete user data
     all_users = database.get_all_users()
     if user_id in all_users:
         del all_users[user_id]
@@ -338,13 +356,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     user_lang = user['language']
     
-    # Get history size from config
     config = load_config()
     history_size = config.get('history_size', 5)
-    max_history_messages = history_size * 2  # per side
+    max_history_messages = history_size * 2
     
     if user['role'] == 'manager':
-        # Check if manager has a worker
         worker_id = user.get('worker')
         if not worker_id:
             await update.message.reply_text(
@@ -361,13 +377,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
         
-        # Get conversation history
         history = conversations.get_conversation_history(user_id, worker_id, max_history_messages)
-        
-        # Get manager's industry for context
         industry_key = user.get('industry', 'other')
         
-        # Translate with context
         translated = translator.translate(
             text=text,
             from_lang=user_lang,
@@ -377,7 +389,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             industry=industry_key
         )
         
-        # Save message to history
         conversations.add_to_conversation(
             user_id_1=user_id,
             user_id_2=worker_id,
@@ -387,7 +398,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             max_history=max_history_messages
         )
         
-        # Send translated message
         manager_name = update.effective_user.first_name
         await context.bot.send_message(
             chat_id=worker_id,
@@ -395,7 +405,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
     
     elif user['role'] == 'worker':
-        # Send to manager
         manager_id = user.get('manager')
         if not manager_id:
             await update.message.reply_text(
@@ -412,13 +421,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
         
-        # Get conversation history
         history = conversations.get_conversation_history(user_id, manager_id, max_history_messages)
-        
-        # Get manager's industry for context
         industry_key = manager.get('industry', 'other')
         
-        # Translate with context
         translated = translator.translate(
             text=text,
             from_lang=user_lang,
@@ -428,7 +433,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             industry=industry_key
         )
         
-        # Save message to history
         conversations.add_to_conversation(
             user_id_1=user_id,
             user_id_2=manager_id,
@@ -438,7 +442,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             max_history=max_history_messages
         )
         
-        # Send translated message
         sender_name = update.effective_user.first_name
         await context.bot.send_message(
             chat_id=manager_id,
@@ -454,12 +457,12 @@ def main():
     config = load_config()
     app = Application.builder().token(config['telegram_token']).build()
     
-    # Conversation handler for registration
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
             LANGUAGE: [MessageHandler(filters.TEXT & ~filters.COMMAND, language_selected)],
             GENDER: [MessageHandler(filters.TEXT & ~filters.COMMAND, gender_selected)],
+            ROLE: [MessageHandler(filters.TEXT & ~filters.COMMAND, role_selected)],
             INDUSTRY: [MessageHandler(filters.TEXT & ~filters.COMMAND, industry_selected)],
             CODE_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, code_entered)],
         },
