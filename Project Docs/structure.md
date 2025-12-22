@@ -14,6 +14,8 @@ FarmTranslate is a Telegram bot that enables real-time translated communication 
 - Support for 10 languages
 - Deep-link invitations with one-tap sharing
 - Real-time admin dashboard
+- Media forwarding (photos, videos, voice messages, files)
+- Usage tracking and message limits
 
 ---
 
@@ -45,15 +47,23 @@ FarmTranslate is a Telegram bot that enables real-time translated communication 
 ```
 Manager types: "Check cow 115 for heat"
    ↓
+Bot checks message limit (if enabled)
+   ↓
 Bot retrieves conversation history from PostgreSQL
    ↓
 Bot translates with industry context (dairy) + gender + history
    ↓
 Worker receives: "בדוק את פרה 115 אם היא במחזור" (Hebrew, male form)
    ↓
+Bot increments manager's message counter
+   ↓
 Worker replies: "היא נראית בריאה"
    ↓
 Manager receives: "She looks healthy"
+
+Manager sends photo of equipment
+   ↓
+Worker receives: "📎 From Manager: [Photo forwarded]"
 ```
 
 ---
@@ -77,6 +87,7 @@ farm-translate/
 ├── translator.py           # Translation with multiple LLM providers
 ├── database.py             # PostgreSQL storage with clean interface
 ├── conversations.py        # Conversation history in PostgreSQL (sliding window)
+├── usage_tracker.py        # Message limit tracking and enforcement
 ├── dashboard.py            # Flask admin dashboard (real-time monitoring)
 ├── config.py               # Configuration loader (environment + files)
 ├── config.json             # Non-secret settings (safe to upload to GitHub)
@@ -102,7 +113,9 @@ farm-translate/
 - Deep-link support (`/start invite_FARM-1234`)
 - InlineKeyboard share button with prefilled message
 - Message routing logic
-- Commands: `/start`, `/help`, `/mycode`, `/reset`
+- Media forwarding (photos, videos, voice, files, stickers, locations, contacts)
+- Usage limit enforcement (checks before sending, increments after)
+- Commands: `/start`, `/help`, `/mycode`, `/refer`, `/reset`
 - No translation, database, or config logic
 
 ### **translator.py**
@@ -129,16 +142,31 @@ farm-translate/
 - Stores original language + text for better translation context
 - Tables: `conversations` (conversation_key, messages)
 
+### **usage_tracker.py**
+- Message limit tracking and enforcement
+- Tracks by Telegram user ID (survives account resets)
+- Functions:
+  - `get_usage()` - Get usage data for a user
+  - `is_user_blocked()` - Check if user has reached limit
+  - `increment_message_count()` - Count message and check limit
+  - `reset_user_usage()` - Admin function to reset limits
+  - `get_usage_stats()` - Aggregated statistics
+- Tables: `usage_tracking` (telegram_user_id, data)
+- Only tracks manager messages (workers unlimited)
+- Configurable limit (default: 50 free messages)
+
 ### **dashboard.py**
 - Flask web application for admin monitoring
 - Real-time data from PostgreSQL (auto-refresh every 30s)
 - Password protected (`farmadmin2024` - change this!)
 - Features:
   - Statistics (total managers, workers, connections, messages)
-  - Manager list with codes and connection status
+  - Manager list with codes, connection status, and usage stats
   - Worker list with manager info
   - Recent conversations
-  - Admin actions (delete users, clear conversations)
+  - Admin actions (delete users, clear conversations, reset usage limits)
+- Usage tracking display: Shows messages sent / limit for each manager
+- Reset usage button for blocked managers
 - See DASHBOARD_SETUP.md for details
 
 ### **config.py**
@@ -164,6 +192,8 @@ farm-translate/
     }
   },
   "history_size": 3,
+  "free_message_limit": 50,
+  "enforce_limits": false,
   "languages": ["English", "Hebrew", "Arabic", ...]
 }
 ```
@@ -247,6 +277,30 @@ Different LLMs have different strengths:
 - Prevents duplication, enables easy lookup
 - Works for one-to-one conversations
 
+### **9. Media Forwarding**
+- Non-text messages forwarded as-is (no translation)
+- Supported media types:
+  - Photos
+  - Videos
+  - Voice messages
+  - Audio files
+  - Documents/Files
+  - Location
+  - Contact
+  - Stickers
+- Adds sender context: "📎 From [Name]:"
+- Preserves original media quality and metadata
+
+### **10. Usage Tracking & Limits**
+- Tracks by Telegram user ID (permanent, survives account resets)
+- Only managers counted (workers send unlimited messages)
+- Separate PostgreSQL table (`usage_tracking`)
+- Configurable free limit (default: 50 messages)
+- Can be enabled/disabled via `enforce_limits` config
+- Dashboard shows usage stats and blocked status
+- Admin can reset individual user limits
+- **Anti-abuse**: User cannot bypass limit by resetting account
+
 ---
 
 ## **Data Models**
@@ -266,6 +320,14 @@ CREATE TABLE users (
 CREATE TABLE conversations (
     conversation_key TEXT PRIMARY KEY,
     messages JSONB NOT NULL
+)
+```
+
+**usage_tracking table:**
+```sql
+CREATE TABLE usage_tracking (
+    telegram_user_id TEXT PRIMARY KEY,
+    data JSONB NOT NULL
 )
 ```
 
@@ -311,6 +373,16 @@ CREATE TABLE conversations (
 ]
 ```
 
+### **Usage Tracking Data (in JSONB)**
+```json
+{
+  "messages_sent": 47,
+  "blocked": false,
+  "first_seen": "2025-12-22T10:30:00",
+  "last_message": "2025-12-23T14:20:00"
+}
+```
+
 ---
 
 ## **Architecture**
@@ -321,6 +393,7 @@ CREATE TABLE conversations (
 │  ┌──────────────┐   │
 │  │ users table  │   │
 │  │ conversations│   │
+│  │usage_tracking│   │
 │  └──────────────┘   │
 └──────────┬──────────┘
            │
@@ -419,19 +492,22 @@ worker: python bot.py
 - Cloud deployment (Railway, 24/7)
 - Deep-link invitation system with share button
 - One-to-one manager-worker model
-- Commands: `/start`, `/help`, `/mycode`, `/reset`
+- Commands: `/start`, `/help`, `/mycode`, `/refer`, `/reset`
 - PostgreSQL database (scalable to 50k+ users)
 - Real-time admin dashboard (monitoring & management)
+- Media forwarding (photos, videos, voice, files, etc.)
+- Usage tracking and message limits
+- Viral growth feature (`/refer` command)
 
 🔄 **In Progress:**
 - Real user testing
 - Cost monitoring
 
 📋 **Next Up:**
+- Payment integration (Telegram Payments)
 - Multi-worker support (v2)
 - Analytics dashboard
-- Payment integration (Telegram Payments)
-- Voice message support
+- Voice message transcription + translation
 
 ---
 
@@ -472,3 +548,5 @@ https://t.me/FarmTranslateBot
 5. **Industry selected by manager**, worker inherits it
 6. **Gender required** for translation accuracy in gendered languages
 7. **PostgreSQL required** for shared data between bot and dashboard
+8. **Message limits** - Only manager messages counted, workers unlimited
+9. **Usage tracking by Telegram ID** - Survives account resets (anti-abuse)
