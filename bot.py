@@ -458,6 +458,60 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 # ============================================
+# MEDIA HANDLING
+# ============================================
+
+async def handle_media(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Forward non-text messages (photos, videos, voice, files, etc.) as-is"""
+    user_id = str(update.effective_user.id)
+    user = database.get_user(user_id)
+    
+    if not user:
+        await update.message.reply_text("Please use /start to register first.")
+        return
+    
+    # Determine recipient based on role
+    if user['role'] == 'manager':
+        recipient_id = user.get('worker')
+        if not recipient_id:
+            await update.message.reply_text(
+                "⚠️ You don't have a contact connected yet.\n"
+                "Share your invitation (use /mycode) with your contact."
+            )
+            return
+        sender_name = update.effective_user.first_name
+        prefix = f"📎 From {sender_name}:"
+    
+    elif user['role'] == 'worker':
+        recipient_id = user.get('manager')
+        if not recipient_id:
+            await update.message.reply_text(
+                "⚠️ You're not connected to a contact.\n"
+                "Ask your contact for their invitation link."
+            )
+            return
+        sender_name = update.effective_user.first_name
+        prefix = f"📎 From {sender_name}:"
+    
+    # Check if recipient exists
+    recipient = database.get_user(recipient_id)
+    if not recipient:
+        await update.message.reply_text(
+            "⚠️ Your contact's account no longer exists.\n"
+            "Use /reset to start over."
+        )
+        return
+    
+    # Send prefix message
+    await context.bot.send_message(
+        chat_id=recipient_id,
+        text=prefix
+    )
+    
+    # Forward the media message as-is
+    await update.message.forward(chat_id=recipient_id)
+
+# ============================================
 # MAIN APPLICATION
 # ============================================
 
@@ -481,6 +535,13 @@ def main():
     app.add_handler(CommandHandler('mycode', mycode_command))
     app.add_handler(CommandHandler('reset', reset))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    
+    # Handle all media types (photos, videos, voice, files, stickers, etc.)
+    app.add_handler(MessageHandler(
+        (filters.PHOTO | filters.VIDEO | filters.VOICE | filters.AUDIO | 
+         filters.Document.ALL | filters.LOCATION | filters.CONTACT | filters.Sticker.ALL),
+        handle_media
+    ))
     
     print("🤖 FarmTranslate bot is running...")
     app.run_polling()
