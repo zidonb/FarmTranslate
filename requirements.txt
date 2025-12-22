@@ -3,3 +3,4 @@ anthropic
 google-generativeai
 typing-extensions
 flask
+psycopg2-binary

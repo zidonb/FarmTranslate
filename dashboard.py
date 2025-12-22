@@ -519,20 +519,5 @@ def clear_conversation_route(conv_key):
 
 if __name__ == '__main__':
     import os
-    import threading
-    import asyncio
-    
-    # Start bot in background thread with event loop
-    def run_bot():
-        import bot
-        # Create new event loop for this thread
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        bot.main()
-    
-    bot_thread = threading.Thread(target=run_bot, daemon=True)
-    bot_thread.start()
-    
-    # Start dashboard
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
