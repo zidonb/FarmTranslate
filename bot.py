@@ -192,7 +192,7 @@ async def industry_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Create share button with prefilled message
     share_text = f"🚜 Join FarmTranslate!\nChat with me in your language:\n{deep_link}"
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("📤 Share Invitation", switch_inline_query=share_text)]
+        [InlineKeyboardButton("🚀 Send Invitation Now", switch_inline_query=share_text)]
     ])
     
     # Send invitation message with share button
