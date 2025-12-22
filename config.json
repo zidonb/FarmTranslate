@@ -1,11 +1,34 @@
 {
   "translation_provider": "claude",
   
-  "context": {
-    "industry": "dairy farming",
-    "description": "Communication between dairy farm manager and workers about daily farm operations, cow health, milking schedules, and equipment maintenance.",
-    "history_size": 3
+  "industries": {
+    "dairy_farm": {
+      "name": "Dairy Farm",
+      "description": "Communication between dairy farm manager and workers about daily farm operations, cow health, milking schedules, and equipment maintenance."
+    },
+    "farm": {
+      "name": "Farm / Agriculture",
+      "description": "Communication about general farming operations, crop management, livestock care, equipment, and seasonal tasks."
+    },
+    "construction": {
+      "name": "Construction",
+      "description": "Communication about construction site operations, safety procedures, materials, equipment, and building tasks."
+    },
+    "restaurant": {
+      "name": "Restaurant",
+      "description": "Communication about kitchen operations, food preparation, orders, customer service, and hygiene standards."
+    },
+    "warehouse": {
+      "name": "Warehouse",
+      "description": "Communication about inventory management, shipping, receiving, picking, packing, and logistics."
+    },
+    "other": {
+      "name": "General Workplace",
+      "description": "General workplace communication between managers and workers."
+    }
   },
+  
+  "history_size": 3,
   
   "languages": [
     "English",

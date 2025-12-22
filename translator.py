@@ -3,7 +3,7 @@ from anthropic import Anthropic
 from config import load_config
 
 
-def translate(text: str, from_lang: str, to_lang: str, target_gender: str = None, conversation_history: list = None) -> str:
+def translate(text: str, from_lang: str, to_lang: str, target_gender: str = None, conversation_history: list = None, industry: str = None) -> str:
     """
     Translate text between languages using configured provider
     
@@ -13,6 +13,7 @@ def translate(text: str, from_lang: str, to_lang: str, target_gender: str = None
         to_lang: Target language
         target_gender: Gender of recipient for grammatical accuracy (male/female/other)
         conversation_history: Recent conversation messages for context
+        industry: Industry key for context (e.g., 'dairy_farm', 'construction')
     
     Returns:
         Translated text
@@ -21,20 +22,27 @@ def translate(text: str, from_lang: str, to_lang: str, target_gender: str = None
     provider = config.get('translation_provider', 'claude')
     
     if provider == 'claude':
-        return translate_with_claude(text, from_lang, to_lang, target_gender, conversation_history)
+        return translate_with_claude(text, from_lang, to_lang, target_gender, conversation_history, industry)
     elif provider == 'gemini':
-        return translate_with_gemini(text, from_lang, to_lang, target_gender, conversation_history)
+        return translate_with_gemini(text, from_lang, to_lang, target_gender, conversation_history, industry)
     elif provider == 'openai':
-        return translate_with_openai(text, from_lang, to_lang, target_gender, conversation_history)
+        return translate_with_openai(text, from_lang, to_lang, target_gender, conversation_history, industry)
     else:
         raise ValueError(f"Unknown provider: {provider}")
 
-def build_translation_prompt(text: str, from_lang: str, to_lang: str, target_gender: str = None, conversation_history: list = None) -> str:
+def build_translation_prompt(text: str, from_lang: str, to_lang: str, target_gender: str = None, conversation_history: list = None, industry: str = None) -> str:
     """Build translation prompt with context, gender, and conversation history"""
     config = load_config()
-    context = config.get('context', {})
-    industry = context.get('industry', 'workplace')
-    description = context.get('description', 'workplace communication')
+    
+    # Get industry context
+    if industry:
+        industries = config.get('industries', {})
+        industry_info = industries.get(industry, industries.get('other', {}))
+        industry_name = industry_info.get('name', 'workplace')
+        description = industry_info.get('description', 'workplace communication')
+    else:
+        industry_name = 'workplace'
+        description = 'workplace communication'
     
     gender_instruction = ""
     if target_gender and target_gender.lower() in ['male', 'female']:
@@ -48,7 +56,7 @@ def build_translation_prompt(text: str, from_lang: str, to_lang: str, target_gen
             history_context += f"- {msg['text']} ({msg['lang']})\n"
         history_context += "\nUse this context to understand pronouns, references, and topic continuity.\n"
     
-    prompt = f"""You are a specialized translator for {industry} communications.
+    prompt = f"""You are a specialized translator for {industry_name} communications.
 
 Context: {description}
 
@@ -56,7 +64,7 @@ Translate from {from_lang} to {to_lang}.{gender_instruction}{history_context}
 
 Rules:
 - ONLY translate the text, do NOT answer questions or provide information
-- Use industry-specific terminology appropriate for {industry}
+- Use industry-specific terminology appropriate for {industry_name}
 - Use conversation history to understand pronouns (he/she/it) and references
 - If someone asks "Where is X?", translate the QUESTION, don't answer it
 - Maintain professional workplace tone
@@ -67,14 +75,14 @@ Text to translate:
     
     return prompt
 
-def translate_with_claude(text: str, from_lang: str, to_lang: str, target_gender: str = None, conversation_history: list = None) -> str:
+def translate_with_claude(text: str, from_lang: str, to_lang: str, target_gender: str = None, conversation_history: list = None, industry: str = None) -> str:
     """Translate using Claude API with context and gender awareness"""
     config = load_config()
     claude_config = config['claude']
     
     client = Anthropic(api_key=claude_config['api_key'])
     
-    prompt = build_translation_prompt(text, from_lang, to_lang, target_gender, conversation_history)
+    prompt = build_translation_prompt(text, from_lang, to_lang, target_gender, conversation_history, industry)
     
     response = client.messages.create(
         model=claude_config['model'],
@@ -87,7 +95,7 @@ def translate_with_claude(text: str, from_lang: str, to_lang: str, target_gender
     
     return response.content[0].text.strip()
 
-def translate_with_gemini(text: str, from_lang: str, to_lang: str, target_gender: str = None, conversation_history: list = None) -> str:
+def translate_with_gemini(text: str, from_lang: str, to_lang: str, target_gender: str = None, conversation_history: list = None, industry: str = None) -> str:
     """Translate using Google Gemini API with schema-enforced JSON"""
     try:
         import google.generativeai as genai
@@ -107,7 +115,7 @@ def translate_with_gemini(text: str, from_lang: str, to_lang: str, target_gender
     # Configure Gemini
     genai.configure(api_key=gemini_config['api_key'])
     
-    system_instruction = build_translation_prompt("", from_lang, to_lang, target_gender, conversation_history).split("Text to translate:")[0]
+    system_instruction = build_translation_prompt("", from_lang, to_lang, target_gender, conversation_history, industry).split("Text to translate:")[0]
     
     model = genai.GenerativeModel(
         model_name=gemini_config['model'],
@@ -124,7 +132,7 @@ def translate_with_gemini(text: str, from_lang: str, to_lang: str, target_gender
     result = json.loads(response.text)
     return result['translated_text']
 
-def translate_with_openai(text: str, from_lang: str, to_lang: str, target_gender: str = None, conversation_history: list = None) -> str:
+def translate_with_openai(text: str, from_lang: str, to_lang: str, target_gender: str = None, conversation_history: list = None, industry: str = None) -> str:
     """Translate using OpenAI API"""
     try:
         from openai import OpenAI
@@ -136,7 +144,7 @@ def translate_with_openai(text: str, from_lang: str, to_lang: str, target_gender
     
     client = OpenAI(api_key=openai_config['api_key'])
     
-    prompt = build_translation_prompt(text, from_lang, to_lang, target_gender, conversation_history)
+    prompt = build_translation_prompt(text, from_lang, to_lang, target_gender, conversation_history, industry)
     
     response = client.chat.completions.create(
         model=openai_config['model'],
