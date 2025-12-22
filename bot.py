@@ -1,6 +1,6 @@
 import json
 import random
-from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, ConversationHandler
 import database
 import translator
@@ -8,7 +8,7 @@ import conversations
 from config import load_config
 
 # Conversation states
-LANGUAGE, GENDER, ROLE, INDUSTRY, CODE_INPUT = range(5)
+LANGUAGE, GENDER, INDUSTRY = range(3)
 
 
 def generate_code():
@@ -26,10 +26,11 @@ def generate_code():
 # ============================================
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle /start command"""
+    """Handle /start command with optional deep-link parameter"""
     user_id = str(update.effective_user.id)
     user = database.get_user(user_id)
     
+    # Check if user already registered
     if user:
         await update.message.reply_text(
             f"Welcome back! You're registered as {user['role']}.\n"
@@ -37,6 +38,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"Use /help to see available commands."
         )
         return ConversationHandler.END
+    
+    # Check for deep-link parameter (e.g., /start invite_FARM-1234)
+    if context.args and len(context.args) > 0:
+        param = context.args[0]
+        if param.startswith('invite_'):
+            code = param.replace('invite_', '')
+            # Store code in context for later use
+            context.user_data['invite_code'] = code
     
     # New user - ask for language
     config = load_config()
@@ -63,46 +72,87 @@ async def language_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return GENDER
 
 async def gender_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """User selected gender - ask if registering or invited"""
+    """User selected gender - check if they have an invite code or ask for industry"""
     context.user_data['gender'] = update.message.text
     
-    keyboard = [['Registering', 'Invited']]
-    await update.message.reply_text(
-        "Are you registering a new account or were you invited?",
-        reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
-    )
-    return ROLE
-
-async def role_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """User selected role"""
-    role = update.message.text.lower()
-    
-    if role == 'registering':
-        # Ask for industry
-        config = load_config()
-        industries = config.get('industries', {})
+    # Check if user came via deep-link with invite code
+    if 'invite_code' in context.user_data:
+        code = context.user_data['invite_code']
+        user_id = str(update.effective_user.id)
+        language = context.user_data['language']
+        gender = context.user_data['gender']
         
-        industry_buttons = []
-        for key, info in industries.items():
-            industry_buttons.append(info['name'])
+        # Find manager with this code
+        all_users = database.get_all_users()
+        manager_id = None
         
-        keyboard = [industry_buttons[i:i+2] for i in range(0, len(industry_buttons), 2)]
+        for uid, udata in all_users.items():
+            if udata.get('role') == 'manager' and udata.get('code') == code:
+                manager_id = uid
+                break
+        
+        if not manager_id:
+            await update.message.reply_text(
+                "❌ Invalid invitation code.\n\n"
+                "Please ask your contact for a new invitation link.",
+                reply_markup=ReplyKeyboardRemove()
+            )
+            return ConversationHandler.END
+        
+        # Check if manager already has a worker
+        manager = database.get_user(manager_id)
+        if manager.get('worker'):
+            await update.message.reply_text(
+                "❌ This contact already has a worker connected.\n"
+                "Ask them to use /reset first.",
+                reply_markup=ReplyKeyboardRemove()
+            )
+            return ConversationHandler.END
+        
+        # Save worker
+        worker_data = {
+            'language': language,
+            'gender': gender,
+            'role': 'worker',
+            'manager': manager_id
+        }
+        database.save_user(user_id, worker_data)
+        
+        # Update manager's worker
+        manager['worker'] = user_id
+        database.save_user(manager_id, manager)
         
         await update.message.reply_text(
-            "What industry do you work in?",
-            reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
-        )
-        return INDUSTRY
-    
-    elif role == 'invited':
-        # Ask for code
-        await update.message.reply_text(
-            "Please enter your invitation code (e.g., FARM-1234):",
+            "✅ Connected to your contact! You can start chatting now.\n\n"
+            "Use /help to see available commands.",
             reply_markup=ReplyKeyboardRemove()
         )
-        return CODE_INPUT
+        
+        # Notify manager
+        worker_name = update.effective_user.first_name
+        await context.bot.send_message(
+            chat_id=manager_id,
+            text=f"✅ {worker_name} connected as your worker!"
+        )
+        
+        return ConversationHandler.END
     
-    return ConversationHandler.END
+    # No invite code - user is registering as manager
+    # Ask for industry
+    config = load_config()
+    industries = config.get('industries', {})
+    
+    industry_buttons = []
+    for key, info in industries.items():
+        industry_buttons.append(info['name'])
+    
+    keyboard = [industry_buttons[i:i+2] for i in range(0, len(industry_buttons), 2)]
+    
+    await update.message.reply_text(
+        "What industry do you work in?",
+        reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
+    )
+    return INDUSTRY
 
 async def industry_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """User selected industry - register as manager"""
@@ -135,78 +185,24 @@ async def industry_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     }
     database.save_user(user_id, user_data)
     
-    # Message 1: Confirmation + instruction
+    # Create deep-link for invitation
+    bot_username = "FarmTranslateBot"  # Your bot username
+    deep_link = f"https://t.me/{bot_username}?start=invite_{code}"
+    
+    # Create share button with prefilled message
+    share_text = f"🚜 Join FarmTranslate!\nChat with me in your language:\n{deep_link}"
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("📤 Share Invitation", switch_inline_query=share_text)]
+    ])
+    
+    # Send invitation message with share button
     await update.message.reply_text(
-        "✅ Registration complete!\n\n"
-        "👉 Forward the next message to your contact to connect them.",
-        reply_markup=ReplyKeyboardRemove()
-    )
-    
-    # Message 2: Shareable invitation (designed to be forwarded)
-    await update.message.reply_text(
-        f"🚜 Join FarmTranslate!\n\n"
-        f"Chat with your contact in your native language.\n\n"
-        f"Get connected in 3 steps:\n"
-        f"1. Open: https://t.me/FarmTranslateBot\n"
-        f"2. Send: /start\n"
-        f"3. Enter code: {code}\n\n"
-        f"See you there! 👋"
-    )
-    
-    return ConversationHandler.END
-
-async def code_entered(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Worker entered manager code"""
-    user_id = str(update.effective_user.id)
-    code = update.message.text.strip().upper()
-    language = context.user_data['language']
-    gender = context.user_data['gender']
-    
-    # Find manager with this code
-    all_users = database.get_all_users()
-    manager_id = None
-    
-    for uid, udata in all_users.items():
-        if udata.get('role') == 'manager' and udata.get('code') == code:
-            manager_id = uid
-            break
-    
-    if not manager_id:
-        await update.message.reply_text("❌ Invalid code. Please try again or contact your manager.")
-        return CODE_INPUT
-    
-    # Check if manager already has a worker
-    manager = database.get_user(manager_id)
-    if manager.get('worker'):
-        await update.message.reply_text(
-            "❌ This manager already has a worker connected.\n"
-            "Ask your manager to use /reset first."
-        )
-        return ConversationHandler.END
-    
-    # Save worker
-    worker_data = {
-        'language': language,
-        'gender': gender,
-        'role': 'worker',
-        'manager': manager_id
-    }
-    database.save_user(user_id, worker_data)
-    
-    # Update manager's worker
-    manager['worker'] = user_id
-    database.save_user(manager_id, manager)
-    
-    await update.message.reply_text(
-        "✅ Connected to your manager! You can start chatting now.\n\n"
-        "Use /help to see available commands."
-    )
-    
-    # Notify manager
-    worker_name = update.effective_user.first_name
-    await context.bot.send_message(
-        chat_id=manager_id,
-        text=f"✅ {worker_name} connected as your worker!"
+        f"✅ Registration complete!\n\n"
+        f"📋 Your invitation code: `{code}`\n"
+        f"🔗 Invitation link:\n{deep_link}\n\n"
+        f"👉 Tap the button below to share with your contact:",
+        reply_markup=keyboard,
+        parse_mode='Markdown'
     )
     
     return ConversationHandler.END
@@ -243,7 +239,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 /reset - Delete account and start over
 
 💬 *How to use:*
-Just type your message and it will be automatically translated and sent to your worker!
+Just type your message and it will be automatically translated and sent to your contact!
         """
     else:
         help_text = """
@@ -253,13 +249,13 @@ Just type your message and it will be automatically translated and sent to your 
 /reset - Delete account
 
 💬 *How to use:*
-Just type your message and it will be automatically translated and sent to your manager!
+Just type your message and it will be automatically translated and sent to your contact!
         """
     
     await update.message.reply_text(help_text, parse_mode='Markdown')
 
 async def mycode_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Show manager's code"""
+    """Show manager's code with share button"""
     user_id = str(update.effective_user.id)
     user = database.get_user(user_id)
     
@@ -274,22 +270,24 @@ async def mycode_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     code = user.get('code', 'No code found')
     has_worker = user.get('worker') is not None
     
-    # Message 1: Status
+    # Create deep-link for invitation
+    bot_username = "FarmTranslateBot"  # Your bot username
+    deep_link = f"https://t.me/{bot_username}?start=invite_{code}"
+    
+    # Create share button with prefilled message
+    share_text = f"🚜 Join FarmTranslate!\nChat with me in your language:\n{deep_link}"
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("📤 Share Invitation", switch_inline_query=share_text)]
+    ])
+    
+    # Send status and invitation
     await update.message.reply_text(
         f"👥 Worker connected: *{'Yes ✅' if has_worker else 'No ❌'}*\n\n"
-        f"👉 Forward the next message to your worker:",
+        f"📋 Your invitation code: `{code}`\n"
+        f"🔗 Invitation link:\n{deep_link}\n\n"
+        f"👉 Tap the button below to share with your contact:",
+        reply_markup=keyboard,
         parse_mode='Markdown'
-    )
-    
-    # Message 2: Shareable invitation
-    await update.message.reply_text(
-        f"🚜 Join FarmTranslate!\n\n"
-        f"Chat with your contact in your native language.\n\n"
-        f"Get connected in 3 steps:\n"
-        f"1. Open: https://t.me/FarmTranslateBot\n"
-        f"2. Send /start\n"
-        f"3. Enter code: {code}\n\n"
-        f"See you there! 👋"
     )
 
 async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -316,9 +314,9 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 try:
                     await context.bot.send_message(
                         chat_id=worker_id,
-                        text="⚠️ Your Contact has reset their account.\n"
+                        text="⚠️ Your contact has reset their account.\n"
                              "Your account has also been reset.\n\n"
-                             "You'll need a new code to reconnect."
+                             "You'll need a new invitation to reconnect."
                     )
                 except Exception:
                     pass
@@ -378,14 +376,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not worker_id:
             await update.message.reply_text(
                 "⚠️ You don't have a contact connected yet.\n"
-                "Share your code (use /mycode) with your contact."
+                "Share your invitation (use /mycode) with your contact."
             )
             return
         
         worker = database.get_user(worker_id)
         if not worker:
             await update.message.reply_text(
-                "⚠️ Your worker's account no longer exists.\n"
+                "⚠️ Your contact's account no longer exists.\n"
                 "Use /reset to start over."
             )
             return
@@ -421,16 +419,16 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         manager_id = user.get('manager')
         if not manager_id:
             await update.message.reply_text(
-                "⚠️ You're not connected to a manager.\n"
-                "Ask your manager for their code and use /start."
+                "⚠️ You're not connected to a contact.\n"
+                "Ask your contact for their invitation link."
             )
             return
         
         manager = database.get_user(manager_id)
         if not manager:
             await update.message.reply_text(
-                "⚠️ Your manager's account no longer exists.\n"
-                "Use /reset and wait for a new code."
+                "⚠️ Your contact's account no longer exists.\n"
+                "Use /reset and wait for a new invitation."
             )
             return
         
@@ -475,9 +473,7 @@ def main():
         states={
             LANGUAGE: [MessageHandler(filters.TEXT & ~filters.COMMAND, language_selected)],
             GENDER: [MessageHandler(filters.TEXT & ~filters.COMMAND, gender_selected)],
-            ROLE: [MessageHandler(filters.TEXT & ~filters.COMMAND, role_selected)],
             INDUSTRY: [MessageHandler(filters.TEXT & ~filters.COMMAND, industry_selected)],
-            CODE_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, code_entered)],
         },
         fallbacks=[CommandHandler('cancel', cancel)],
     )
