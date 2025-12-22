@@ -235,6 +235,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 /help - Show this help message
 /mycode - Show your connection code
+/refer - Recommend to other managers
 /reset - Delete account and start over
 
 💬 *How to use:*
@@ -245,6 +246,7 @@ Just type your message and it will be automatically translated and sent to your 
 📋 *Available Commands:*
 
 /help - Show this help message
+/refer - Recommend to other managers
 /reset - Delete account
 
 💬 *How to use:*
@@ -285,6 +287,34 @@ async def mycode_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"📋 Your invitation code: {code}\n"
         f"🔗 Invitation link:\n{deep_link}\n\n"
         f"👉 Tap the button below to share with your contact:",
+        reply_markup=keyboard
+    )
+
+async def refer_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Let users share the bot with other managers/colleagues"""
+    
+    # Shareable message for other potential managers
+    share_text = (
+        "🚜 Check out FarmTranslate!\n\n"
+        "I use it to communicate with my team in real-time - "
+        "we speak different languages but chat naturally!\n\n"
+        "🌍 10 languages supported\n"
+        "✅ Instant translation\n"
+        "🏭 Industry-specific terms\n"
+        "💬 Simple & effective\n\n"
+        "Try it free: https://t.me/FarmTranslateBot"
+    )
+    
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("📤 Recommend FarmTranslate", switch_inline_query=share_text)]
+    ])
+    
+    await update.message.reply_text(
+        "🚜 Love FarmTranslate?\n\n"
+        "Help other managers break language barriers!\n\n"
+        "Recommend FarmTranslate to colleagues, friends, or anyone "
+        "who manages teams speaking different languages.\n\n"
+        "👉 Tap the button to share:",
         reply_markup=keyboard
     )
 
@@ -533,6 +563,7 @@ def main():
     app.add_handler(conv_handler)
     app.add_handler(CommandHandler('help', help_command))
     app.add_handler(CommandHandler('mycode', mycode_command))
+    app.add_handler(CommandHandler('refer', refer_command))
     app.add_handler(CommandHandler('reset', reset))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     
