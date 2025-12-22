@@ -10,7 +10,7 @@ app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 
 # Simple password protection
-DASHBOARD_PASSWORD = "farmadmin2024"  # Change this!
+DASHBOARD_PASSWORD = "zb280072A"  # Change this!
 
 # HTML Template
 DASHBOARD_HTML = """
