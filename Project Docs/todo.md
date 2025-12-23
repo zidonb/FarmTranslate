@@ -42,6 +42,7 @@
 
 
 
+gemini-flash
 save all conversations for data, monitization.
 save  also for summary and action item features.
 
