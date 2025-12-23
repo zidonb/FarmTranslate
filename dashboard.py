@@ -8,6 +8,7 @@ from datetime import datetime
 import secrets
 import hmac
 import hashlib
+import requests
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
@@ -27,6 +28,28 @@ def verify_signature(payload_body, signature_header, secret):
         hashlib.sha256
     ).hexdigest()
     return hmac.compare_digest(computed_signature, signature_header)
+
+
+
+def send_telegram_notification(chat_id, text):
+    """Send Telegram message directly via Bot API"""
+    try:
+        config = load_config()
+        token = config['telegram_token']
+        
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
+        response = requests.post(url, json={
+            "chat_id": chat_id,
+            "text": text,
+            "parse_mode": "Markdown"
+        })
+        
+        if response.status_code == 200:
+            print(f"✅ Notification sent to {chat_id}")
+        else:
+            print(f"⚠️ Failed to send notification: {response.text}")
+    except Exception as e:
+        print(f"❌ Error sending notification: {e}")
 
 @app.route('/webhook/lemonsqueezy', methods=['POST'])
 def lemonsqueezy_webhook():
@@ -103,6 +126,14 @@ def handle_subscription_created(telegram_id: str, data: dict):
     }
     subscription_manager.save_subscription(telegram_id, subscription_data)
     print(f"✅ Subscription created for {telegram_id}: {subscription_data['lemon_subscription_id']}")
+    
+    # Send notification to user
+    send_telegram_notification(
+        telegram_id,
+        "✅ *Subscription Active!*\n\n"
+        "You now have unlimited messages.\n"
+        "Thank you for subscribing to BridgeOS! 🎉"
+    )
 
 def handle_subscription_updated(telegram_id: str, data: dict):
     """Handle subscription_updated event"""
@@ -134,6 +165,15 @@ def handle_subscription_cancelled(telegram_id: str, data: dict):
     subscription['ends_at'] = attrs.get('ends_at')
     subscription_manager.save_subscription(telegram_id, subscription)
     print(f"⚠️ Subscription cancelled for {telegram_id}, access until: {attrs.get('ends_at')}")
+    
+    # Send notification to user
+    ends_at_display = attrs.get('ends_at', 'end of billing period')[:10] if attrs.get('ends_at') else 'end of billing period'
+    send_telegram_notification(
+        telegram_id,
+        f"⚠️ *Subscription Cancelled*\n\n"
+        f"You'll keep access until {ends_at_display}.\n"
+        f"You can resubscribe anytime."
+    )
 
 def handle_subscription_resumed(telegram_id: str, data: dict):
     """Handle subscription_resumed event"""
@@ -146,6 +186,14 @@ def handle_subscription_resumed(telegram_id: str, data: dict):
     subscription['ends_at'] = None
     subscription_manager.save_subscription(telegram_id, subscription)
     print(f"✅ Subscription resumed for {telegram_id}")
+    
+    # Send notification to user
+    send_telegram_notification(
+        telegram_id,
+        "✅ *Subscription Resumed!*\n\n"
+        "Your subscription is active again.\n"
+        "Welcome back! 🎉"
+    )
 
 def handle_subscription_expired(telegram_id: str, data: dict):
     """Handle subscription_expired event"""
@@ -156,6 +204,15 @@ def handle_subscription_expired(telegram_id: str, data: dict):
     subscription['status'] = 'expired'
     subscription_manager.save_subscription(telegram_id, subscription)
     print(f"❌ Subscription expired for {telegram_id}")
+    
+    # Send notification to user
+    send_telegram_notification(
+        telegram_id,
+        "❌ *Subscription Expired*\n\n"
+        "Your subscription has ended.\n"
+        "You're back on the free tier (50 messages).\n\n"
+        "Subscribe again to continue unlimited messaging."
+    )
 
 def handle_subscription_paused(telegram_id: str, data: dict):
     """Handle subscription_paused event"""
@@ -184,6 +241,19 @@ def handle_subscription_payment_success(telegram_id: str, data: dict):
 def handle_subscription_payment_failed(telegram_id: str, data: dict):
     """Handle subscription_payment_failed event"""
     print(f"⚠️ Payment failed for {telegram_id}")
+    
+    # Send notification to user
+    subscription = subscription_manager.get_subscription(telegram_id)
+    portal_url = subscription.get('customer_portal_url') if subscription else None
+    
+    message = "⚠️ *Payment Failed*\n\n" \
+              "Your last payment didn't go through.\n" \
+              "We'll retry automatically in 3 days.\n\n"
+    
+    if portal_url:
+        message += f"Update your payment method: {portal_url}"
+    
+    send_telegram_notification(telegram_id, message)
 
 def handle_subscription_payment_recovered(telegram_id: str, data: dict):
     """Handle subscription_payment_recovered event"""
