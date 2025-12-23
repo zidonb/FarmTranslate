@@ -460,6 +460,47 @@ DASHBOARD_HTML = """
         </div>
 
         <div class="section">
+            <h2>💳 Subscriptions</h2>
+            {% if subscriptions_list %}
+                {% for sub in subscriptions_list %}
+                <div class="user-card">
+                    <h3>Telegram ID: {{ sub.telegram_id }}</h3>
+                    <div class="user-info">
+                        <div><strong>Status:</strong> 
+                            {% if sub.status == 'active' %}
+                                <span class="badge subscribed">✓ Active</span>
+                            {% elif sub.status == 'cancelled' %}
+                                <span class="badge disconnected">⚠️ Cancelled</span>
+                            {% elif sub.status == 'expired' %}
+                                <span class="badge disconnected">❌ Expired</span>
+                            {% elif sub.status == 'paused' %}
+                                <span class="badge disconnected">⏸️ Paused</span>
+                            {% endif %}
+                        </div>
+                        <div><strong>Plan:</strong> {{ sub.plan|title }}</div>
+                        <div><strong>Started:</strong> {{ sub.started_at[:10] }}</div>
+                        <div><strong>Renews:</strong> {{ sub.renews_at[:10] if sub.renews_at else 'N/A' }}</div>
+                        {% if sub.ends_at %}
+                        <div><strong>Ends:</strong> {{ sub.ends_at[:10] }}</div>
+                        {% endif %}
+                        {% if sub.cancelled_at %}
+                        <div><strong>Cancelled:</strong> {{ sub.cancelled_at[:10] }}</div>
+                        {% endif %}
+                        <div><strong>Lemon ID:</strong> {{ sub.lemon_subscription_id }}</div>
+                    </div>
+                    <div class="actions">
+                        {% if sub.customer_portal_url %}
+                        <a href="{{ sub.customer_portal_url }}" target="_blank" class="btn">🔗 Customer Portal</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p style="color: #999;">No subscriptions yet.</p>
+            {% endif %}
+        </div>
+
+        <div class="section">
             <h2>💬 Recent Conversations</h2>
             {% if conversations_list %}
                 {% for conv in conversations_list %}
@@ -667,6 +708,12 @@ def dashboard():
     all_subscriptions = subscription_manager.get_all_subscriptions()
     active_subscriptions = sum(1 for s in all_subscriptions.values() if s.get('status') in ['active', 'cancelled'])
     
+    # Format subscriptions for display
+    subscriptions_list = []
+    for telegram_id, sub_data in all_subscriptions.items():
+        sub_data['telegram_id'] = telegram_id
+        subscriptions_list.append(sub_data)
+    
     stats = {
         'total_managers': len(managers),
         'total_workers': len(workers),
@@ -680,6 +727,7 @@ def dashboard():
         managers=managers,
         workers=workers,
         conversations_list=conversations_list,
+        subscriptions_list=subscriptions_list,
         stats=stats,
         now=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     )
