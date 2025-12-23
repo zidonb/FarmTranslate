@@ -6,6 +6,7 @@ import database
 import translator
 import conversations
 import usage_tracker
+import subscription_manager
 from config import load_config
 
 # Conversation states
@@ -318,6 +319,82 @@ async def refer_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "👉 Tap the button to share:",
         reply_markup=keyboard
     )
+
+async def subscription_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show subscription status and management"""
+    user_id = str(update.effective_user.id)
+    user = database.get_user(user_id)
+    
+    if not user:
+        await update.message.reply_text("Please use /start to register first.")
+        return
+    
+    if user['role'] != 'manager':
+        await update.message.reply_text(
+            "Workers have unlimited messages! 🎉\n\n"
+            "Only managers need subscriptions.",
+            parse_mode='Markdown'
+        )
+        return
+    
+    # Get subscription status
+    subscription = subscription_manager.get_subscription(user_id)
+    
+    if not subscription or subscription.get('status') in ['expired', None]:
+        # No subscription or expired - show subscribe option
+        checkout_url = subscription_manager.create_checkout_url(user_id)
+        usage = usage_tracker.get_usage(user_id)
+        messages_sent = usage.get('messages_sent', 0)
+        
+        keyboard = InlineKeyboardMarkup([[
+            InlineKeyboardButton("💳 Subscribe Now", url=checkout_url)
+        ]])
+        
+        await update.message.reply_text(
+            f"📋 *Subscription Status*\n\n"
+            f"Status: ❌ No Active Subscription\n"
+            f"Messages Used: {messages_sent} / 50 (Free Tier)\n\n"
+            f"💳 *Subscribe to BridgeOS:*\n"
+            f"• Unlimited messages\n"
+            f"• $9/month\n"
+            f"• Cancel anytime",
+            reply_markup=keyboard,
+            parse_mode='Markdown'
+        )
+    else:
+        # Has subscription - show details
+        status = subscription.get('status', 'unknown')
+        renews_at = subscription.get('renews_at', 'N/A')[:10] if subscription.get('renews_at') else 'N/A'
+        ends_at = subscription.get('ends_at')
+        portal_url = subscription.get('customer_portal_url')
+        
+        # Status emoji
+        status_emoji = {
+            'active': '✅',
+            'cancelled': '⚠️',
+            'paused': '⏸️',
+            'expired': '❌'
+        }.get(status, '❓')
+        
+        message = f"📋 *Your Subscription*\n\n" \
+                  f"{status_emoji} Status: {status.title()}\n" \
+                  f"💳 Plan: Unlimited Messages\n" \
+                  f"💵 Price: $9/month\n"
+        
+        if status == 'active':
+            message += f"📅 Renews: {renews_at}\n"
+        elif status == 'cancelled' and ends_at:
+            message += f"📅 Access Until: {ends_at[:10]}\n"
+        
+        message += "\n_Manage or cancel anytime._"
+        
+        if portal_url:
+            keyboard = InlineKeyboardMarkup([[
+                InlineKeyboardButton("⚙️ Manage Subscription", url=portal_url)
+            ]])
+            await update.message.reply_text(message, reply_markup=keyboard, parse_mode='Markdown')
+        else:
+            await update.message.reply_text(message, parse_mode='Markdown')
 
 async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Reset user account - delete all data and allow re-registration"""
