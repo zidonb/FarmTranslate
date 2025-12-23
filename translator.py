@@ -97,12 +97,12 @@ def translate_with_claude(text: str, from_lang: str, to_lang: str, target_gender
     return response.content[0].text.strip()
 
 def translate_with_gemini(text: str, from_lang: str, to_lang: str, target_gender: str = None, conversation_history: list = None, industry: str = None) -> str:
-    """Translate using Google Gemini API with schema-enforced JSON"""
+    """Translate using Google Gemini 2.5 Flash Lite"""
     try:
         import google.generativeai as genai
         import typing_extensions as typing
     except ImportError:
-        raise ImportError("Please install: pip install google-generativeai typing-extensions")
+        raise ImportError("Please install: pip install google-generativeai>=0.8.0 typing-extensions")
     
     config = load_config()
     gemini_config = config['gemini']
@@ -123,7 +123,8 @@ def translate_with_gemini(text: str, from_lang: str, to_lang: str, target_gender
         system_instruction=system_instruction,
         generation_config={
             "response_mime_type": "application/json",
-            "response_schema": TranslationResponse
+            "response_schema": TranslationResponse,
+            "temperature": 0.3 # Lower temperature is better for translation accuracy
         }
     )
     

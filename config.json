@@ -1,5 +1,5 @@
 {
-  "translation_provider": "claude",
+  "translation_provider": "gemini",
   
   "industries": {
     "dairy_farm": {
@@ -59,7 +59,7 @@
   },
   
   "gemini": {
-    "model": "gemini-2.0-flash-exp"
+    "model": "gemini-2.5-flash-lite-preview-09-2025"
   },
   
   "openai": {
