@@ -16,7 +16,7 @@ LANGUAGE, GENDER, INDUSTRY = range(3)
 def generate_code():
     """Generate unique code"""
     while True:
-        code = f"FARM-{random.randint(1000, 9999)}"
+        code = f"BRIDGE-{random.randint(10000, 99999)}"
         # Check if code already exists
         all_users = database.get_all_users()
         existing_codes = [u.get('code') for u in all_users.values() if u.get('code')]
@@ -57,7 +57,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [available_languages[i:i+2] for i in range(0, len(available_languages), 2)]
     
     await update.message.reply_text(
-        "Welcome to FarmTranslate! 🚜\n\nSelect your language:",
+        "Welcome to BridgeOS! 🌉\n\nSelect your language:",
         reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
     )
     return LANGUAGE
@@ -192,7 +192,7 @@ async def industry_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     deep_link = f"https://t.me/{bot_username}?start=invite_{code}"
     
     # Create share button with prefilled message
-    share_text = f"🚜 Join FarmTranslate!\nChat with me in your language:\n{deep_link}"
+    share_text = f"🌉 Join BridgeOS!\nChat with me in your language:\n{deep_link}"
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("🚀 Send Invitation Now", switch_inline_query=share_text)]
     ])
@@ -237,6 +237,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 /help - Show this help message
 /mycode - Show your connection code
+/subscription - View subscription status
 /refer - Recommend to other managers
 /reset - Delete account and start over
 
@@ -278,7 +279,7 @@ async def mycode_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     deep_link = f"https://t.me/{bot_username}?start=invite_{code}"
     
     # Create share button with prefilled message
-    share_text = f"🚜 Join FarmTranslate!\nChat with me in your language:\n{deep_link}"
+    share_text = f"🌉 Join BridgeOS!\nChat with me in your language:\n{deep_link}"
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("📤 Share Invitation", switch_inline_query=share_text)]
     ])
@@ -295,12 +296,16 @@ async def mycode_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def refer_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Let users share the bot with other managers/colleagues"""
     
+    # Load config for dynamic language count
+    config = load_config()
+    language_count = len(config.get('languages', []))
+    
     # Shareable message for other potential managers
     share_text = (
-        "🚜 Check out FarmTranslate!\n\n"
+        "🌉 Check out BridgeOS!\n\n"
         "I use it to communicate with my team in real-time - "
         "we speak different languages but chat naturally!\n\n"
-        "🌍 10 languages supported\n"
+        f"🌍 {language_count} languages supported\n"  # ← Dynamic!
         "✅ Instant translation\n"
         "🏭 Industry-specific terms\n"
         "💬 Simple & effective\n\n"
@@ -308,93 +313,17 @@ async def refer_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("📤 Recommend FarmTranslate", switch_inline_query=share_text)]
+        [InlineKeyboardButton("📤 Recommend BridgeOS", switch_inline_query=share_text)]
     ])
     
     await update.message.reply_text(
-        "🚜 Love FarmTranslate?\n\n"
+        "🌉 Love BridgeOS?\n\n"
         "Help other managers break language barriers!\n\n"
-        "Recommend FarmTranslate to colleagues, friends, or anyone "
+        "Recommend BridgeOS to colleagues, friends, or anyone "
         "who manages teams speaking different languages.\n\n"
         "👉 Tap the button to share:",
         reply_markup=keyboard
     )
-
-async def subscription_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Show subscription status and management"""
-    user_id = str(update.effective_user.id)
-    user = database.get_user(user_id)
-    
-    if not user:
-        await update.message.reply_text("Please use /start to register first.")
-        return
-    
-    if user['role'] != 'manager':
-        await update.message.reply_text(
-            "Workers have unlimited messages! 🎉\n\n"
-            "Only managers need subscriptions.",
-            parse_mode='Markdown'
-        )
-        return
-    
-    # Get subscription status
-    subscription = subscription_manager.get_subscription(user_id)
-    
-    if not subscription or subscription.get('status') in ['expired', None]:
-        # No subscription or expired - show subscribe option
-        checkout_url = subscription_manager.create_checkout_url(user_id)
-        usage = usage_tracker.get_usage(user_id)
-        messages_sent = usage.get('messages_sent', 0)
-        
-        keyboard = InlineKeyboardMarkup([[
-            InlineKeyboardButton("💳 Subscribe Now", url=checkout_url)
-        ]])
-        
-        await update.message.reply_text(
-            f"📋 *Subscription Status*\n\n"
-            f"Status: ❌ No Active Subscription\n"
-            f"Messages Used: {messages_sent} / 50 (Free Tier)\n\n"
-            f"💳 *Subscribe to BridgeOS:*\n"
-            f"• Unlimited messages\n"
-            f"• $9/month\n"
-            f"• Cancel anytime",
-            reply_markup=keyboard,
-            parse_mode='Markdown'
-        )
-    else:
-        # Has subscription - show details
-        status = subscription.get('status', 'unknown')
-        renews_at = subscription.get('renews_at', 'N/A')[:10] if subscription.get('renews_at') else 'N/A'
-        ends_at = subscription.get('ends_at')
-        portal_url = subscription.get('customer_portal_url')
-        
-        # Status emoji
-        status_emoji = {
-            'active': '✅',
-            'cancelled': '⚠️',
-            'paused': '⏸️',
-            'expired': '❌'
-        }.get(status, '❓')
-        
-        message = f"📋 *Your Subscription*\n\n" \
-                  f"{status_emoji} Status: {status.title()}\n" \
-                  f"💳 Plan: Unlimited Messages\n" \
-                  f"💵 Price: $9/month\n"
-        
-        if status == 'active':
-            message += f"📅 Renews: {renews_at}\n"
-        elif status == 'cancelled' and ends_at:
-            message += f"📅 Access Until: {ends_at[:10]}\n"
-        
-        message += "\n_Manage or cancel anytime._"
-        
-        if portal_url:
-            keyboard = InlineKeyboardMarkup([[
-                InlineKeyboardButton("⚙️ Manage Subscription", url=portal_url)
-            ]])
-            await update.message.reply_text(message, reply_markup=keyboard, parse_mode='Markdown')
-        else:
-            await update.message.reply_text(message, parse_mode='Markdown')
 
 async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Reset user account - delete all data and allow re-registration"""
@@ -457,6 +386,88 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Use /start to register again."
     )
 
+
+async def subscription_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show subscription status and management"""
+    user_id = str(update.effective_user.id)
+    user = database.get_user(user_id)
+    
+    if not user:
+        await update.message.reply_text("Please use /start to register first.")
+        return
+    
+    if user['role'] != 'manager':
+        await update.message.reply_text(
+            "Workers have unlimited messages! 🎉\n\n"
+            "Only managers need subscriptions.",
+            parse_mode='Markdown'
+        )
+        return
+    
+    # Load config for pricing
+    config = load_config()
+    monthly_price = config.get('lemonsqueezy', {}).get('monthly_price', 9.00)
+    free_limit = config.get('free_message_limit', 50)
+    
+    # Get subscription status
+    subscription = subscription_manager.get_subscription(user_id)
+    
+    if not subscription or subscription.get('status') in ['expired', None]:
+        # No subscription or expired - show subscribe option
+        checkout_url = subscription_manager.create_checkout_url(user_id)
+        usage = usage_tracker.get_usage(user_id)
+        messages_sent = usage.get('messages_sent', 0)
+        
+        keyboard = InlineKeyboardMarkup([[
+            InlineKeyboardButton(f"💳 Subscribe (${monthly_price:.0f}/month)", url=checkout_url)
+        ]])
+        
+        await update.message.reply_text(
+            f"📋 *Subscription Status*\n\n"
+            f"Status: ❌ No Active Subscription\n"
+            f"Messages Used: {messages_sent} / {free_limit} (Free Tier)\n\n"
+            f"💳 *Subscribe to BridgeOS:*\n"
+            f"• Unlimited messages\n"
+            f"• ${monthly_price:.0f}/month\n"
+            f"• Cancel anytime",
+            reply_markup=keyboard,
+            parse_mode='Markdown'
+        )
+    else:
+        # Has subscription - show details
+        status = subscription.get('status', 'unknown')
+        renews_at = subscription.get('renews_at', 'N/A')[:10] if subscription.get('renews_at') else 'N/A'
+        ends_at = subscription.get('ends_at')
+        portal_url = subscription.get('customer_portal_url')
+        
+        # Status emoji
+        status_emoji = {
+            'active': '✅',
+            'cancelled': '⚠️',
+            'paused': '⏸️',
+            'expired': '❌'
+        }.get(status, '❓')
+        
+        message = f"📋 *Your Subscription*\n\n" \
+                  f"{status_emoji} Status: {status.title()}\n" \
+                  f"💳 Plan: Unlimited Messages\n" \
+                  f"💵 Price: ${monthly_price:.0f}/month\n"
+        
+        if status == 'active':
+            message += f"📅 Renews: {renews_at}\n"
+        elif status == 'cancelled' and ends_at:
+            message += f"📅 Access Until: {ends_at[:10]}\n"
+        
+        message += "\n_Manage or cancel anytime._"
+        
+        if portal_url:
+            keyboard = InlineKeyboardMarkup([[
+                InlineKeyboardButton("⚙️ Manage Subscription", url=portal_url)
+            ]])
+            await update.message.reply_text(message, reply_markup=keyboard, parse_mode='Markdown')
+        else:
+            await update.message.reply_text(message, parse_mode='Markdown')
+
 # ============================================
 # MESSAGE HANDLING
 # ============================================
@@ -470,21 +481,42 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Please use /start to register first.")
         return
     
+    # Load config for limits and pricing
+    config = load_config()
+    free_limit = config.get('free_message_limit', 50)
+    monthly_price = config.get('lemonsqueezy', {}).get('monthly_price', 9.00)
+    
     # Check message limits (only for managers)
     telegram_id = str(update.effective_user.id)
     if user['role'] == 'manager':
-        if usage_tracker.is_user_blocked(telegram_id):
-            await update.message.reply_text(
-                "⚠️ You've reached the free message limit (50 messages).\n\n"
-                "Subscribe to continue using FarmTranslate.\n"
-                "Contact support for subscription options."
-            )
-            return
+        # Check if user has active subscription
+        if subscription_manager.is_subscribed(telegram_id):
+            # User has subscription - unlimited messages, skip limit check
+            pass
+        else:
+            # No subscription - check free tier limits
+            if usage_tracker.is_user_blocked(telegram_id):
+                # Generate subscribe button
+                checkout_url = subscription_manager.create_checkout_url(telegram_id)
+                keyboard = InlineKeyboardMarkup([[
+                    InlineKeyboardButton(f"💳 Subscribe (${monthly_price:.0f}/month)", url=checkout_url)
+                ]])
+                
+                await update.message.reply_text(
+                    f"⚠️ *You've reached the free limit ({free_limit} messages)*\n\n"
+                    f"💳 Subscribe to BridgeOS:\n"
+                    f"• Unlimited messages\n"
+                    f"• ${monthly_price:.0f}/month\n"
+                    f"• Cancel anytime\n\n"
+                    f"Tap below to subscribe:",
+                    reply_markup=keyboard,
+                    parse_mode='Markdown'
+                )
+                return
     
     text = update.message.text
     user_lang = user['language']
     
-    config = load_config()
     history_size = config.get('history_size', 5)
     max_history_messages = history_size * 2
     
@@ -533,16 +565,24 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         
         # Increment message counter for manager (after successful send)
-        allowed = usage_tracker.increment_message_count(telegram_id)
-        
-        if not allowed:
-            # Just hit the limit
-            await update.message.reply_text(
-                "⚠️ That was your last free message!\n\n"
-                "You've used all 50 free messages.\n"
-                "Subscribe to continue using FarmTranslate.\n"
-                "Contact support for subscription options."
-            )
+        # Only increment if user doesn't have subscription
+        if not subscription_manager.is_subscribed(telegram_id):
+            allowed = usage_tracker.increment_message_count(telegram_id)
+            
+            if not allowed:
+                # Just hit the limit - show subscribe button
+                checkout_url = subscription_manager.create_checkout_url(telegram_id)
+                keyboard = InlineKeyboardMarkup([[
+                    InlineKeyboardButton(f"💳 Subscribe (${monthly_price:.0f}/month)", url=checkout_url)
+                ]])
+                
+                await update.message.reply_text(
+                    f"⚠️ *That was your last free message!*\n\n"
+                    f"You've used all {free_limit} free messages.\n\n"
+                    f"💳 Subscribe for unlimited messages (${monthly_price:.0f}/month):",
+                    reply_markup=keyboard,
+                    parse_mode='Markdown'
+                )
     
     elif user['role'] == 'worker':
         manager_id = user.get('manager')
@@ -665,6 +705,7 @@ def main():
     app.add_handler(CommandHandler('help', help_command))
     app.add_handler(CommandHandler('mycode', mycode_command))
     app.add_handler(CommandHandler('refer', refer_command))
+    app.add_handler(CommandHandler('subscription', subscription_command))
     app.add_handler(CommandHandler('reset', reset))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     
@@ -675,7 +716,7 @@ def main():
         handle_media
     ))
     
-    print("🤖 FarmTranslate bot is running...")
+    print("🤖 BridgeOS bot is running...")
     app.run_polling()
 
 if __name__ == '__main__':

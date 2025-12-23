@@ -41,15 +41,17 @@
   
   "languages": [
     "English",
-    "Hebrew", 
-    "Arabic",
-    "Thai",
-    "Spanish",
-    "Turkish",
-    "French",
-    "German",
-    "Portuguese",
-    "Russian"
+    "עברית",
+    "العربية",
+    "ไทย",
+    "Español",
+    "Türkçe",
+    "Français",
+    "Deutsch",
+    "Português",
+    "Русский",
+    "हिन्दी",
+    "Filipino"
   ],
   
   "claude": {
