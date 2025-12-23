@@ -2,9 +2,12 @@ from flask import Flask, render_template_string, request, redirect, session, jso
 import database
 import conversations
 import usage_tracker
+import subscription_manager
 from config import load_config
 from datetime import datetime
 import secrets
+import hmac
+import hashlib
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
@@ -12,12 +15,194 @@ app.secret_key = secrets.token_hex(16)
 # Simple password protection
 DASHBOARD_PASSWORD = "zb280072A"  # Change this!
 
+# ============================================
+# LEMON SQUEEZY WEBHOOK HANDLER
+# ============================================
+
+def verify_signature(payload_body, signature_header, secret):
+    """Verify Lemon Squeezy webhook signature"""
+    computed_signature = hmac.new(
+        secret.encode('utf-8'),
+        payload_body,
+        hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(computed_signature, signature_header)
+
+@app.route('/webhook/lemonsqueezy', methods=['POST'])
+def lemonsqueezy_webhook():
+    """Handle Lemon Squeezy webhook events"""
+    try:
+        config = load_config()
+        webhook_secret = config['lemonsqueezy']['webhook_secret']
+        
+        payload_body = request.get_data()
+        signature_header = request.headers.get('X-Signature')
+        
+        if not signature_header:
+            print("ERROR: No signature header")
+            return jsonify({"error": "No signature"}), 401
+        
+        if not verify_signature(payload_body, signature_header, webhook_secret):
+            print("ERROR: Invalid signature")
+            return jsonify({"error": "Invalid signature"}), 401
+        
+        data = request.json
+        event_name = data['meta']['event_name']
+        custom_data = data['meta'].get('custom_data', {})
+        telegram_id = custom_data.get('telegram_id')
+        
+        if not telegram_id:
+            print(f"WARNING: No telegram_id in webhook for event {event_name}")
+            return jsonify({"status": "success", "note": "no telegram_id"}), 200
+        
+        print(f"Processing event: {event_name} for telegram_id: {telegram_id}")
+        
+        # Handle different event types
+        if event_name == 'subscription_created':
+            handle_subscription_created(telegram_id, data)
+        elif event_name == 'subscription_updated':
+            handle_subscription_updated(telegram_id, data)
+        elif event_name == 'subscription_cancelled':
+            handle_subscription_cancelled(telegram_id, data)
+        elif event_name == 'subscription_resumed':
+            handle_subscription_resumed(telegram_id, data)
+        elif event_name == 'subscription_expired':
+            handle_subscription_expired(telegram_id, data)
+        elif event_name == 'subscription_paused':
+            handle_subscription_paused(telegram_id, data)
+        elif event_name == 'subscription_unpaused':
+            handle_subscription_unpaused(telegram_id, data)
+        elif event_name == 'subscription_payment_success':
+            handle_subscription_payment_success(telegram_id, data)
+        elif event_name == 'subscription_payment_failed':
+            handle_subscription_payment_failed(telegram_id, data)
+        elif event_name == 'subscription_payment_recovered':
+            handle_subscription_payment_recovered(telegram_id, data)
+        else:
+            print(f"Unhandled event: {event_name}")
+        
+        return jsonify({"status": "success"}), 200
+    
+    except Exception as e:
+        print(f"ERROR processing webhook: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 200
+
+def handle_subscription_created(telegram_id: str, data: dict):
+    """Handle subscription_created event"""
+    attrs = data['data']['attributes']
+    subscription_data = {
+        'status': 'active',
+        'lemon_subscription_id': data['data']['id'],
+        'lemon_customer_id': str(attrs['customer_id']),
+        'started_at': attrs['created_at'],
+        'renews_at': attrs['renews_at'],
+        'ends_at': attrs.get('ends_at'),
+        'cancelled_at': None,
+        'plan': 'monthly',
+        'customer_portal_url': attrs['urls']['customer_portal']
+    }
+    subscription_manager.save_subscription(telegram_id, subscription_data)
+    print(f"✅ Subscription created for {telegram_id}: {subscription_data['lemon_subscription_id']}")
+
+def handle_subscription_updated(telegram_id: str, data: dict):
+    """Handle subscription_updated event"""
+    attrs = data['data']['attributes']
+    subscription = subscription_manager.get_subscription(telegram_id)
+    if not subscription:
+        print(f"WARNING: Subscription not found for {telegram_id}, creating new")
+        handle_subscription_created(telegram_id, data)
+        return
+    subscription['renews_at'] = attrs['renews_at']
+    subscription['ends_at'] = attrs.get('ends_at')
+    subscription['customer_portal_url'] = attrs['urls']['customer_portal']
+    if attrs['cancelled']:
+        subscription['status'] = 'cancelled'
+        if not subscription.get('cancelled_at'):
+            subscription['cancelled_at'] = datetime.utcnow().isoformat()
+    subscription_manager.save_subscription(telegram_id, subscription)
+    print(f"✅ Subscription updated for {telegram_id}")
+
+def handle_subscription_cancelled(telegram_id: str, data: dict):
+    """Handle subscription_cancelled event"""
+    attrs = data['data']['attributes']
+    subscription = subscription_manager.get_subscription(telegram_id)
+    if not subscription:
+        print(f"WARNING: Subscription not found for {telegram_id}")
+        return
+    subscription['status'] = 'cancelled'
+    subscription['cancelled_at'] = datetime.utcnow().isoformat()
+    subscription['ends_at'] = attrs.get('ends_at')
+    subscription_manager.save_subscription(telegram_id, subscription)
+    print(f"⚠️ Subscription cancelled for {telegram_id}, access until: {attrs.get('ends_at')}")
+
+def handle_subscription_resumed(telegram_id: str, data: dict):
+    """Handle subscription_resumed event"""
+    subscription = subscription_manager.get_subscription(telegram_id)
+    if not subscription:
+        print(f"WARNING: Subscription not found for {telegram_id}")
+        return
+    subscription['status'] = 'active'
+    subscription['cancelled_at'] = None
+    subscription['ends_at'] = None
+    subscription_manager.save_subscription(telegram_id, subscription)
+    print(f"✅ Subscription resumed for {telegram_id}")
+
+def handle_subscription_expired(telegram_id: str, data: dict):
+    """Handle subscription_expired event"""
+    subscription = subscription_manager.get_subscription(telegram_id)
+    if not subscription:
+        print(f"WARNING: Subscription not found for {telegram_id}")
+        return
+    subscription['status'] = 'expired'
+    subscription_manager.save_subscription(telegram_id, subscription)
+    print(f"❌ Subscription expired for {telegram_id}")
+
+def handle_subscription_paused(telegram_id: str, data: dict):
+    """Handle subscription_paused event"""
+    subscription = subscription_manager.get_subscription(telegram_id)
+    if not subscription:
+        print(f"WARNING: Subscription not found for {telegram_id}")
+        return
+    subscription['status'] = 'paused'
+    subscription_manager.save_subscription(telegram_id, subscription)
+    print(f"⏸️ Subscription paused for {telegram_id}")
+
+def handle_subscription_unpaused(telegram_id: str, data: dict):
+    """Handle subscription_unpaused event"""
+    subscription = subscription_manager.get_subscription(telegram_id)
+    if not subscription:
+        print(f"WARNING: Subscription not found for {telegram_id}")
+        return
+    subscription['status'] = 'active'
+    subscription_manager.save_subscription(telegram_id, subscription)
+    print(f"▶️ Subscription unpaused for {telegram_id}")
+
+def handle_subscription_payment_success(telegram_id: str, data: dict):
+    """Handle subscription_payment_success event"""
+    print(f"✅ Payment successful for {telegram_id}")
+
+def handle_subscription_payment_failed(telegram_id: str, data: dict):
+    """Handle subscription_payment_failed event"""
+    print(f"⚠️ Payment failed for {telegram_id}")
+
+def handle_subscription_payment_recovered(telegram_id: str, data: dict):
+    """Handle subscription_payment_recovered event"""
+    subscription = subscription_manager.get_subscription(telegram_id)
+    if subscription and subscription['status'] == 'paused':
+        subscription['status'] = 'active'
+        subscription_manager.save_subscription(telegram_id, subscription)
+    print(f"✅ Payment recovered for {telegram_id}")
+
+# ============================================
+# DASHBOARD (Original Code)
+# ============================================
+
 # HTML Template
 DASHBOARD_HTML = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>FarmTranslate Dashboard</title>
+    <title>BridgeOS Dashboard</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="refresh" content="30">
@@ -108,6 +293,7 @@ DASHBOARD_HTML = """
         }
         .badge.connected { background: #48bb78; color: white; }
         .badge.disconnected { background: #f56565; color: white; }
+        .badge.subscribed { background: #4299e1; color: white; }
         .conversation {
             background: #f9f9f9;
             padding: 15px;
@@ -167,7 +353,7 @@ DASHBOARD_HTML = """
     <div class="container">
         <div class="header">
             <a href="/logout" class="logout">🚪 Logout</a>
-            <h1>🚜 FarmTranslate Dashboard</h1>
+            <h1>🌉 BridgeOS Dashboard</h1>
             <p>Real-time monitoring • Auto-refresh every 30 seconds • Last updated: {{ now }}</p>
         </div>
 
@@ -187,6 +373,10 @@ DASHBOARD_HTML = """
             <div class="stat-card">
                 <h3>Total Messages</h3>
                 <div class="number">{{ stats.total_messages }}</div>
+            </div>
+            <div class="stat-card">
+                <h3>Subscriptions</h3>
+                <div class="number">{{ stats.total_subscriptions }}</div>
             </div>
         </div>
 
@@ -208,6 +398,14 @@ DASHBOARD_HTML = """
                                 <span class="badge disconnected">🚫 Blocked</span>
                             {% else %}
                                 <span class="badge connected">✓ Active</span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <strong>Subscription:</strong>
+                            {% if manager.subscription %}
+                                <span class="badge subscribed">💳 {{ manager.subscription.status|title }}</span>
+                            {% else %}
+                                <span class="badge disconnected">Free Tier</span>
                             {% endif %}
                         </div>
                         <div>
@@ -294,7 +492,7 @@ LOGIN_HTML = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>FarmTranslate Dashboard - Login</title>
+    <title>BridgeOS Dashboard - Login</title>
     <meta charset="UTF-8">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -367,7 +565,7 @@ LOGIN_HTML = """
 </head>
 <body>
     <div class="login-box">
-        <h1>🚜 FarmTranslate</h1>
+        <h1>🌉 BridgeOS</h1>
         <p>Dashboard Login</p>
         {% if error %}
         <div class="error">{{ error }}</div>
@@ -402,49 +600,43 @@ def logout():
 
 @app.route('/')
 def dashboard():
-    # Check authentication
     if not session.get('authenticated'):
         return redirect('/login')
     
-    # Get all users
     all_users = database.get_all_users()
-    
-    # Get config for message limit
     config = load_config()
     message_limit = config.get('free_message_limit', 50)
     
-    # Separate managers and workers
     managers = []
     workers = []
     
     for user_id, user_data in all_users.items():
         user_data['id'] = user_id
         if user_data.get('role') == 'manager':
-            # Add usage tracking data for managers
             usage = usage_tracker.get_usage(user_id)
             user_data['messages_sent'] = usage.get('messages_sent', 0)
             user_data['blocked'] = usage.get('blocked', False)
             user_data['message_limit'] = message_limit
+            
+            # Get subscription status
+            subscription = subscription_manager.get_subscription(user_id)
+            user_data['subscription'] = subscription
+            
             managers.append(user_data)
         elif user_data.get('role') == 'worker':
             workers.append(user_data)
     
-    # Get all conversations
     all_conversations = conversations.load_conversations()
     conversations_list = []
     
     for conv_key, messages in all_conversations.items():
         user1, user2 = conv_key.split('_')
-        
-        # Get user info
         user1_data = database.get_user(user1)
         user2_data = database.get_user(user2)
         
         formatted_messages = []
-        for msg in messages[-10:]:  # Last 10 messages
+        for msg in messages[-10:]:
             msg_time = datetime.fromisoformat(msg['timestamp']).strftime('%H:%M')
-            
-            # Determine if from manager
             is_manager = False
             from_role = "User"
             if user1_data and user1_data.get('role') == 'manager' and msg['from'] == user1:
@@ -471,12 +663,16 @@ def dashboard():
             'messages': formatted_messages
         })
     
-    # Calculate stats
+    # Get subscription stats
+    all_subscriptions = subscription_manager.get_all_subscriptions()
+    active_subscriptions = sum(1 for s in all_subscriptions.values() if s.get('status') in ['active', 'cancelled'])
+    
     stats = {
         'total_managers': len(managers),
         'total_workers': len(workers),
         'active_connections': sum(1 for m in managers if m.get('worker')),
-        'total_messages': sum(len(msgs) for msgs in all_conversations.values())
+        'total_messages': sum(len(msgs) for msgs in all_conversations.values()),
+        'total_subscriptions': active_subscriptions
     }
     
     return render_template_string(
@@ -490,7 +686,6 @@ def dashboard():
 
 @app.route('/delete_user/<user_id>', methods=['POST'])
 def delete_user(user_id):
-    # Check authentication
     if not session.get('authenticated'):
         return redirect('/login')
     
@@ -498,20 +693,15 @@ def delete_user(user_id):
     if not user:
         return redirect('/')
     
-    # If manager, also delete worker and conversation
     if user.get('role') == 'manager':
         worker_id = user.get('worker')
         if worker_id:
-            # Delete conversation
             conversations.clear_conversation(user_id, worker_id)
-            
-            # Delete worker
             all_users = database.get_all_users()
             if worker_id in all_users:
                 del all_users[worker_id]
                 database.save_data(all_users)
     
-    # If worker, update manager and clear conversation
     elif user.get('role') == 'worker':
         manager_id = user.get('manager')
         if manager_id:
@@ -519,10 +709,8 @@ def delete_user(user_id):
             if manager:
                 manager['worker'] = None
                 database.save_user(manager_id, manager)
-            
             conversations.clear_conversation(user_id, manager_id)
     
-    # Delete the user
     all_users = database.get_all_users()
     if user_id in all_users:
         del all_users[user_id]
@@ -532,7 +720,6 @@ def delete_user(user_id):
 
 @app.route('/clear_conversation/<conv_key>', methods=['POST'])
 def clear_conversation_route(conv_key):
-    # Check authentication
     if not session.get('authenticated'):
         return redirect('/login')
     
@@ -543,14 +730,17 @@ def clear_conversation_route(conv_key):
 
 @app.route('/reset_usage/<user_id>', methods=['POST'])
 def reset_usage_route(user_id):
-    # Check authentication
     if not session.get('authenticated'):
         return redirect('/login')
     
-    # Reset usage for this manager
     usage_tracker.reset_user_usage(user_id)
     
     return redirect('/')
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Health check endpoint"""
+    return jsonify({"status": "healthy"}), 200
 
 if __name__ == '__main__':
     import os

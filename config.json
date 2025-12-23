@@ -31,8 +31,13 @@
   "history_size": 3,
 
   "free_message_limit": 8,
-  "enforce_limits": false,
+  "enforce_limits": true,
 
+  "lemonsqueezy": {
+    "store_url": "bridgeos.lemonsqueezy.com",
+    "variant_id": "1166995",
+    "monthly_price": 9.00
+  },
   
   "languages": [
     "English",

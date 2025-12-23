@@ -21,6 +21,7 @@ def load_config():
         config['claude']['api_key'] = os.getenv('CLAUDE_API_KEY')
         config['gemini']['api_key'] = os.getenv('GEMINI_API_KEY', '')
         config['openai']['api_key'] = os.getenv('OPENAI_API_KEY', '')
+        config['lemonsqueezy']['webhook_secret'] = os.getenv('LEMONSQUEEZY_WEBHOOK_SECRET', '')
     else:
         # Running locally - use secrets.json
         try:
@@ -30,6 +31,7 @@ def load_config():
             config['claude']['api_key'] = secrets['claude_api_key']
             config['gemini']['api_key'] = secrets.get('gemini_api_key', '')
             config['openai']['api_key'] = secrets.get('openai_api_key', '')
+            config['lemonsqueezy']['webhook_secret'] = secrets.get('lemonsqueezy_webhook_secret', '')
         except FileNotFoundError:
             raise Exception("secrets.json not found! Create it with your API keys.")
     

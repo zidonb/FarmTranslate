@@ -39,3 +39,10 @@
 - [ ] Message history view
 - [ ] Multi-industry templates
 - [ ] Referral program
+
+
+
+save all conversations for data, monitization.
+save the also for summary and action item features.
+
+5 digit code
