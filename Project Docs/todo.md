@@ -19,29 +19,6 @@
 - [ ] `/delete` - Remove worker connection
 - [ ] `/reset` - Complete re-registration
 
-## Priority 4: Analytics
-- [ ] `/stats` command (admin only) - basic metrics
-- [ ] Track: active users, messages/day, costs, revenue
-- [ ] Web dashboard (later, after 100+ users)
-
-## Priority 5: Scaling Preparation
-- [ ] Move conversations to separate files (> 500 users)
-- [ ] Migrate to PostgreSQL (> 2,000 users)
-- [ ] Add proper logging/error tracking
-
-## Priority 6: Business/Payments
-- [ ] LemonSqueezy integration
-- [ ] Payment flows
-- [ ] Subscription management
-
-## Backlog (Nice to Have)
-- [ ] Voice message support
-- [ ] Message history view
-- [ ] Multi-industry templates
-- [ ] Referral program
-
-
-
 gemini-flash
 save all conversations for data, monitization.
 save  also for summary and action item features.
