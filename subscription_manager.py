@@ -98,10 +98,9 @@ def create_checkout_url(telegram_user_id: str) -> str:
     config = load_config()
     
     store_url = config['lemonsqueezy']['store_url']  # e.g., "bridgeos.lemonsqueezy.com"
-    variant_id = config['lemonsqueezy']['variant_id']  # e.g., "1166995"
+    checkout_id = config['lemonsqueezy']['checkout_id']
     
-    checkout_url = f"https://{store_url}/checkout/buy/{variant_id}?checkout[custom][telegram_id]={telegram_user_id}"
-    
+    checkout_url = f"https://{store_url}/checkout/buy/{checkout_id}?checkout[custom][telegram_id]={telegram_user_id}"
     return checkout_url
 
 def get_customer_portal_url(telegram_user_id: str) -> Optional[str]:
