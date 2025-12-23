@@ -43,6 +43,6 @@
 
 
 save all conversations for data, monitization.
-save the also for summary and action item features.
+save  also for summary and action item features.
 
-5 digit code
+if after start i stop clicking button, can i continue?

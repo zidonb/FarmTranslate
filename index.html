@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BridgeOS | The Foreign Workforce Operating System</title>
+    <meta name="description" content="AI-powered management for foreign crews in construction, agriculture, and industry. Translate, track, and manage via Telegram.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        /* Smooth language transition */
+        .lang-content { transition: opacity 0.3s ease-in-out; }
+    </style>
+    <script>
+         tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f6fe',
+                            100: '#dee9fb',
+                            500: '#3b82f6', // A nice trustworthy blue
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            accent: '#f97316', // Orange accent for CTAs
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 font-sans antialiased text-slate-800">
+
+    <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center">
+                 <span class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 to-brand-500">
+                    BridgeOS
+                </span>
+            </div>
+
+            <div>
+                <button onclick="toggleLanguage()" class="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-100 hover:bg-slate-200 transition text-sm font-medium text-slate-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-slate-500">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
+                      </svg>
+                    <span id="lang-label">עברית</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div id="en-content" class="lang-content">
+
+        <section class="relative pt-20 pb-32 bg-slate-900 overflow-hidden">
+             <div class="absolute top-0 left-1/2 -translate-x-1/2 transform -translate-y-1/2 w-[800px] h-[800px] bg-brand-500/20 rounded-full blur-3xl opacity-50 lg:opacity-70"></div>
+
+            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+                <h1 class="text-4xl md:text-6xl font-extrabold text-white tracking-tight">
+                    Command Your Site <br class="hidden md:block"> in <span class="text-brand-500 bg-clip-text text-transparent bg-gradient-to-r from-brand-400 to-brand-200">Any Language.</span>
+                </h1>
+                <p class="mt-6 text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
+                    Don't just translate—orchestrate. BridgeOS is the AI Operating System that turns chaotic foreign workforces into synchronized teams. Manage tasks, get daily summaries, and communicate effortlessly.
+                </p>
+                <div class="mt-10 flex justify-center gap-4">
+                    <a href="YOUR_LEMON_SQUEEZY_OR_BOT_LINK" class="px-8 py-4 bg-brand-accent hover:bg-orange-600 text-white font-bold rounded-lg shadow-lg shadow-orange-500/30 transition-all transform hover:scale-105">
+                        Start Free Trial
+                    </a>
+                </div>
+                <p class="mt-4 text-sm text-slate-400">Works directly in Telegram. No app download required.</p>
+            </div>
+        </section>
+
+        <section class="py-16 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h2 class="text-3xl font-bold text-slate-900">The high cost of "Lost in Translation"</h2>
+                <p class="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">
+                    When managers speak Hebrew and crews speak Thai or Arabic, mistakes happen. Broken equipment, safety risks, and incomplete tasks cost your business money every single day.
+                </p>
+            </div>
+        </section>
+
+        <section class="py-20 bg-slate-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-base text-brand-600 font-semibold tracking-wide uppercase">The Solution</h2>
+                    <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+                        More Than a Translator. A Field OS.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+                        <div class="w-12 h-12 bg-brand-100 text-brand-600 rounded-lg flex items-center justify-center mb-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 110-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.73.448c-.514.316-1.201.154-1.488-.348A11.485 11.485 0 013 12c0-2.648.831-5.082 2.211-7.087.287-.501.974-.663 1.488-.348l.73.448c.523.302.71.962.463 1.511a11.51 11.51 0 01-.985 2.783m8.814 3.102c.688.06 1.386.09 2.09.09h.75a4.5 4.5 0 100-9h-.75c-.704 0-1.402.03-2.09.09m0 9.18c-.253.962-.584 1.892-.985 2.783-.247.55-.06 1.21.463 1.511l.73.448c.514.316 1.201.154 1.488-.348A11.485 11.485 0 0021 12c0-2.648-.831-5.082-2.211-7.087-.287-.501-.974-.663-1.488-.348l-.73.448c-.523.302-.71.962-.463 1.511a11.51 11.51 0 00.985 2.783" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-3">Industry-Specific Translation</h3>
+                        <p class="text-slate-600">It understands your jargon. Whether it's "Mastitis" in dairy or "Rebar" in construction, our AI knows the context in 10+ languages.</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+                        <div class="w-12 h-12 bg-brand-100 text-brand-600 rounded-lg flex items-center justify-center mb-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-3">Daily AI Summaries</h3>
+                        <p class="text-slate-600">Never scroll through hundreds of messages again. Get an automatic, neat summary of the entire shift's events and issues delivered at 8 PM.</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+                        <div class="w-12 h-12 bg-brand-100 text-brand-600 rounded-lg flex items-center justify-center mb-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-3">Task Management</h3>
+                        <p class="text-slate-600">Assign tasks in your language. Workers receive them in theirs and click "Done" when finished. Close the loop instantly.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+         <section class="py-12 bg-brand-700 text-white">
+            <div class="max-w-7xl mx-auto px-4 text-center">
+                <p class="text-brand-200 uppercase tracking-widest font-semibold mb-6">Trusted Sectors</p>
+                <div class="flex flex-wrap justify-center gap-x-12 gap-y-4 text-xl md:text-2xl font-bold opacity-90">
+                    <span>🚜 Agriculture & Dairy</span>
+                    <span>🏗️ Construction</span>
+                    <span>🏭 Industry & Warehousing</span>
+                </div>
+            </div>
+        </section>
+
+
+        <section class="py-24 bg-white text-center">
+            <div class="max-w-3xl mx-auto px-4">
+                <h2 class="text-3xl font-bold text-slate-900">Ready to regain control of your site?</h2>
+                <p class="mt-4 text-lg text-slate-600">Start your free trial today. No credit card required for the free tier.</p>
+                <div class="mt-8">
+                     <a href="YOUR_LEMON_SQUEEZY_OR_BOT_LINK" class="inline-block px-8 py-4 bg-brand-accent hover:bg-orange-600 text-white font-bold rounded-lg shadow-md transition-all">
+                        Get BridgeOS Now
+                    </a>
+                </div>
+                 <p class="mt-12 text-slate-500 text-sm">© 2025 BridgeOS. All rights reserved.</p>
+            </div>
+        </section>
+    </div>
+
+    <div id="he-content" class="lang-content hidden">
+
+         <section class="relative pt-20 pb-32 bg-slate-900 overflow-hidden">
+            <div class="absolute top-0 right-1/2 translate-x-1/2 transform -translate-y-1/2 w-[800px] h-[800px] bg-brand-500/20 rounded-full blur-3xl opacity-50 lg:opacity-70"></div>
+
+            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+                <h1 class="text-4xl md:text-6xl font-extrabold text-white tracking-tight leading-tight">
+                    לנהל את השטח <br class="hidden md:block"> <span class="text-brand-500 bg-clip-text text-transparent bg-gradient-to-r from-brand-400 to-brand-200">בכל שפה.</span>
+                </h1>
+                <p class="mt-6 text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
+                    אל תסתפקו בתרגום – תתחילו לנהל. BridgeOS היא מערכת הפעלה מבוססת AI ההופכת צוותי עובדים זרים לכוח עבודה מסונכרן. ניהול משימות, סיכומים יומיים ותקשורת חלקה.
+                </p>
+                <div class="mt-10 flex justify-center gap-4">
+                    <a href="YOUR_LEMON_SQUEEZY_OR_BOT_LINK" class="px-8 py-4 bg-brand-accent hover:bg-orange-600 text-white font-bold rounded-lg shadow-lg shadow-orange-500/30 transition-all transform hover:scale-105">
+                        התחל ניסיון חינם
+                    </a>
+                </div>
+                <p class="mt-4 text-sm text-slate-400">עובד ישירות דרך טלגרם. ללא צורך בהורדת אפליקציה.</p>
+            </div>
+        </section>
+
+         <section class="py-16 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h2 class="text-3xl font-bold text-slate-900">המחיר הגבוה של "קצר בתקשורת"</h2>
+                <p class="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">
+                    כשמנהל העבודה מדבר עברית והצוות מדבר תאית או ערבית, טעויות קורות. ציוד שבור, סיכוני בטיחות ומשימות שלא בוצעו עולים לעסק שלך כסף בכל יום מחדש.
+                </p>
+            </div>
+        </section>
+
+
+        <section class="py-20 bg-slate-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-base text-brand-600 font-semibold tracking-wide uppercase">הפתרון</h2>
+                    <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+                        יותר מתרגום. מערכת הפעלה לשטח.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+                     <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+                        <div class="w-12 h-12 bg-brand-100 text-brand-600 rounded-lg flex items-center justify-center mb-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 110-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.73.448c-.514.316-1.201.154-1.488-.348A11.485 11.485 0 013 12c0-2.648.831-5.082 2.211-7.087.287-.501.974-.663 1.488-.348l.73.448c.523.302.71.962.463 1.511a11.51 11.51 0 01-.985 2.783m8.814 3.102c.688.06 1.386.09 2.09.09h.75a4.5 4.5 0 100-9h-.75c-.704 0-1.402.03-2.09.09m0 9.18c-.253.962-.584 1.892-.985 2.783-.247.55-.06 1.21.463 1.511l.73.448c.514.316 1.201.154 1.488-.348A11.485 11.485 0 0021 12c0-2.648-.831-5.082-2.211-7.087-.287-.501-.974-.663-1.488-.348l-.73.448c-.523.302-.71.962-.463 1.511a11.51 11.51 0 00.985 2.783" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-3">תרגום מותאם לתעשייה</h3>
+                        <p class="text-slate-600">המערכת מבינה את הז'רגון המקצועי שלך. בין אם זה "דלקת עטין" ברפת או "כלונסאות" בבניין, ה-AI שלנו מבין את ההקשר ביותר מ-10 שפות.</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+                        <div class="w-12 h-12 bg-brand-100 text-brand-600 rounded-lg flex items-center justify-center mb-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-3">סיכום יומי אוטומטי</h3>
+                        <p class="text-slate-600">תפסיקו לגלול אחורה מאות הודעות. קבלו סיכום אוטומטי ומסודר של כל אירועי המשמרת והתקלות, ישירות לנייד ב-20:00 בערב.</p>
+                    </div>
+                     <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+                        <div class="w-12 h-12 bg-brand-100 text-brand-600 rounded-lg flex items-center justify-center mb-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-3">ניהול משימות וסגירת מעגל</h3>
+                        <p class="text-slate-600">הקצו משימות בעברית. העובדים מקבלים אותן בשפת האם שלהם ולוחצים "בוצע" בסיום. סגירת מעגל מיידית.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-12 bg-brand-700 text-white">
+            <div class="max-w-7xl mx-auto px-4 text-center">
+                <p class="text-brand-200 uppercase tracking-widest font-semibold mb-6">מגזרים נבחרים</p>
+                <div class="flex flex-wrap justify-center gap-x-12 gap-y-4 text-xl md:text-2xl font-bold opacity-90 rtl:flex-row-reverse">
+                    <span>🚜 חקלאות ורפתות</span>
+                    <span>🏗️ בנייה ותשתיות</span>
+                    <span>🏭 תעשייה ולוגיסטיקה</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-24 bg-white text-center">
+            <div class="max-w-3xl mx-auto px-4">
+                <h2 class="text-3xl font-bold text-slate-900">מוכנים להחזיר את השליטה לשטח?</h2>
+                <p class="mt-4 text-lg text-slate-600">התחילו ניסיון חינם עוד היום. אין צורך באשראי למסלול החינמי.</p>
+                <div class="mt-8">
+                     <a href="YOUR_LEMON_SQUEEZY_OR_BOT_LINK" class="inline-block px-8 py-4 bg-brand-accent hover:bg-orange-600 text-white font-bold rounded-lg shadow-md transition-all">
+                        התחל עכשיו עם BridgeOS
+                    </a>
+                </div>
+                 <p class="mt-12 text-slate-500 text-sm">© 2025 BridgeOS. כל הזכויות שמורות.</p>
+            </div>
+        </section>
+    </div>
+
+
+    <script>
+        let currentLang = 'en';
+        const htmlTag = document.documentElement;
+        const langLabel = document.getElementById('lang-label');
+        const enContent = document.getElementById('en-content');
+        const heContent = document.getElementById('he-content');
+
+        function toggleLanguage() {
+            if (currentLang === 'en') {
+                // Switch to Hebrew
+                currentLang = 'he';
+                htmlTag.setAttribute('lang', 'he');
+                htmlTag.setAttribute('dir', 'rtl');
+                langLabel.textContent = 'English'; // Label shows option to switch back
+                
+                enContent.classList.add('hidden');
+                heContent.classList.remove('hidden');
+            } else {
+                // Switch to English
+                currentLang = 'en';
+                htmlTag.setAttribute('lang', 'en');
+                htmlTag.setAttribute('dir', 'ltr');
+                langLabel.textContent = 'עברית'; // Label shows option to switch to Hebrew
+
+                heContent.classList.add('hidden');
+                enContent.classList.remove('hidden');
+            }
+        }
+    </script>
+
+</body>
+</html>

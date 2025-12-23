@@ -419,7 +419,7 @@ async def subscription_command(update: Update, context: ContextTypes.DEFAULT_TYP
         messages_sent = usage.get('messages_sent', 0)
         
         keyboard = InlineKeyboardMarkup([[
-            InlineKeyboardButton(f"💳 Subscribe (${monthly_price:.0f}/month)", url=checkout_url)
+            InlineKeyboardButton(f"🏢 Upgrade to Business License (${monthly_price:.0f}/month)", url=checkout_url)
         ]])
         
         await update.message.reply_text(
@@ -462,7 +462,7 @@ async def subscription_command(update: Update, context: ContextTypes.DEFAULT_TYP
         
         if portal_url:
             keyboard = InlineKeyboardMarkup([[
-                InlineKeyboardButton("⚙️ Manage Subscription", url=portal_url)
+                InlineKeyboardButton("⚙️ Manage Business License", url=portal_url)
             ]])
             await update.message.reply_text(message, reply_markup=keyboard, parse_mode='Markdown')
         else:
@@ -499,16 +499,22 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 # Generate subscribe button
                 checkout_url = subscription_manager.create_checkout_url(telegram_id)
                 keyboard = InlineKeyboardMarkup([[
-                    InlineKeyboardButton(f"💳 Subscribe (${monthly_price:.0f}/month)", url=checkout_url)
+                    InlineKeyboardButton(f"🏢 Upgrade to Business License (${monthly_price:.0f}/month)", url=checkout_url)
                 ]])
                 
                 await update.message.reply_text(
-                    f"⚠️ *You've reached the free limit ({free_limit} messages)*\n\n"
-                    f"💳 Subscribe to BridgeOS:\n"
-                    f"• Unlimited messages\n"
-                    f"• ${monthly_price:.0f}/month\n"
-                    f"• Cancel anytime\n\n"
-                    f"Tap below to subscribe:",
+                    f"⚠️ *Free Plan Limit Reached*\n\n"
+                    f"Your business has used its allocation of {free_limit} translated messages.\n"
+                    f"To continue operations without interruption, "
+                    f"please upgrade your account to the *Business License*.\n\n"
+                    f"*BridgeOS Business License:*\n"
+                    f"✅ Full Business Access (Unlimited usage)\n" 
+                    f"✅ Manager Dashboard\n"
+                    f"✅ Priority Processing\n"
+                    f"✅ Industry-Specific Translations\n"
+                    f"✅ Multi-Language Support (12 languages)\n"
+                    f"• *Price:* ${monthly_price:.0f}/month (Cancel anytime)\n\n"                    
+                    f"Tap below to upgrade:",
                     reply_markup=keyboard,
                     parse_mode='Markdown'
                 )
@@ -573,7 +579,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 # Just hit the limit - show subscribe button
                 checkout_url = subscription_manager.create_checkout_url(telegram_id)
                 keyboard = InlineKeyboardMarkup([[
-                    InlineKeyboardButton(f"💳 Subscribe (${monthly_price:.0f}/month)", url=checkout_url)
+                    InlineKeyboardButton(f"🏢 Upgrade to Business License (${monthly_price:.0f}/month)", url=checkout_url)
                 ]])
                 
                 await update.message.reply_text(
