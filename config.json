@@ -1,9 +1,12 @@
 {
-  
   "industries": {
     "dairy_farm": {
       "name": "Dairy Farm",
       "description": "Communication between dairy farm manager and workers about daily farm operations, cow health, milking schedules, and equipment maintenance."
+    },
+    "elderly_care": {
+      "name": "Nursing & Elderly Care (סיעוד)",
+      "description": "Communication between care coordinators and caregivers about patient care, medication schedules, daily routines, mobility assistance, dietary needs, and health monitoring."
     },
     "farm": {
       "name": "Farm / Agriculture",
@@ -26,21 +29,18 @@
       "description": "General workplace communication between managers and workers."
     }
   },
-  
   "history_size": 3,
-
   "free_message_limit": 8,
   "enforce_limits": true,
-  
   "testing_mode": true,
-  "test_user_ids": ["6425887398"],
-
+  "test_user_ids": [
+    "6425887398"
+  ],
   "lemonsqueezy": {
     "store_url": "bridgeos.lemonsqueezy.com",
     "checkout_id": "61249267-2ffd-487f-b2e9-edbcdec51ba2",
     "monthly_price": 9.00
   },
-  
   "languages": [
     "English",
     "עברית",
@@ -55,17 +55,13 @@
     "हिन्दी",
     "Filipino"
   ],
-  
   "translation_provider": "claude",
-
   "claude": {
     "model": "claude-sonnet-4-20250514"
   },
-  
   "gemini": {
     "model": "gemini-2.5-flash-lite-preview-09-2025"
   },
-  
   "openai": {
     "model": "gpt-4o-mini"
   }
