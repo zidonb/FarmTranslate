@@ -8,6 +8,10 @@
       "name": "Nursing & Elderly Care",
       "description": "Communication between care coordinators and caregivers about patient care, medication schedules, daily routines, mobility assistance, dietary needs, and health monitoring."
     },
+    "hospitality": {
+      "name": "Hospitality / Hotels",
+      "description": "Communication between hotel managers and housekeeping/maintenance staff. Focus on room status, guest requests, maintenance issues, and shift coordination."
+    },
     "farm": {
       "name": "Farm / Agriculture",
       "description": "Communication about general farming operations, crop management, livestock care, equipment, and seasonal tasks."

@@ -208,6 +208,11 @@ async def industry_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"👉 Tap the button below to share with your contact:",
         reply_markup=keyboard
     )
+
+    await update.message.reply_text(
+        "Ready to start! Use /help anytime.",
+        reply_markup=ReplyKeyboardRemove()
+    )
     
     return ConversationHandler.END
 
