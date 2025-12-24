@@ -19,6 +19,8 @@
 - [ ] `/delete` - Remove worker connection
 - [ ] `/reset` - Complete re-registration
 
+
+Ability to reset ones limited messages
 gemini-flash
 save all conversations for data, monitization.
 save  also for summary and action item features.
