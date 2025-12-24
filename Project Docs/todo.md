@@ -20,8 +20,9 @@
 - [ ] `/reset` - Complete re-registration
 
 
-gemini-flash
-save all conversations for data, monitization.
-save  also for summary and action item features.
+- gemini-flash
+- save all conversations for data, monitization.
+- save  also for summary and action item features.
 
-if after start i stop clicking button, can i continue?
+- if after start i stop clicking button, can i continue?
+- Language support in the registraion process
