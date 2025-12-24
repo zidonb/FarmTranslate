@@ -1,5 +1,4 @@
 {
-  "translation_provider": "claude",
   
   "industries": {
     "dairy_farm": {
@@ -32,6 +31,9 @@
 
   "free_message_limit": 8,
   "enforce_limits": true,
+  
+  "testing_mode": true,
+  "test_user_ids": ["6425887398"],
 
   "lemonsqueezy": {
     "store_url": "bridgeos.lemonsqueezy.com",
@@ -54,6 +56,8 @@
     "Filipino"
   ],
   
+  "translation_provider": "claude",
+
   "claude": {
     "model": "claude-sonnet-4-20250514"
   },

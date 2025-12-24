@@ -77,6 +77,15 @@ def save_usage(telegram_user_id: str, usage_data: Dict):
 
 def is_user_blocked(telegram_user_id: str) -> bool:
     """Check if user has reached message limit and is blocked"""
+    # Check whitelist first
+    config = load_config()
+    
+    # If testing mode is on, check whitelist
+    if config.get('testing_mode', False):
+        test_user_ids = config.get('test_user_ids', [])
+        if str(telegram_user_id) in test_user_ids:
+            return False  # Whitelisted users never blocked
+    
     usage = get_usage(telegram_user_id)
     return usage.get('blocked', False)
 
