@@ -41,6 +41,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return ConversationHandler.END
     
+    # Clear any existing conversation state to allow clean restart
+    context.user_data.clear()
+    
     # Check for deep-link parameter (e.g., /start invite_FARM-1234)
     if context.args and len(context.args) > 0:
         param = context.args[0]
@@ -704,7 +707,11 @@ def main():
             GENDER: [MessageHandler(filters.TEXT & ~filters.COMMAND, gender_selected)],
             INDUSTRY: [MessageHandler(filters.TEXT & ~filters.COMMAND, industry_selected)],
         },
-        fallbacks=[CommandHandler('cancel', cancel)],
+        fallbacks=[
+            CommandHandler('cancel', cancel),
+            CommandHandler('start', start),  # Allow /start to restart registration
+        ],
+        allow_reentry=True,  # Allow users to restart the conversation
     )
     
     app.add_handler(conv_handler)

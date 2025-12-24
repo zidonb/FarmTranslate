@@ -5,7 +5,7 @@
       "description": "Communication between dairy farm manager and workers about daily farm operations, cow health, milking schedules, and equipment maintenance."
     },
     "elderly_care": {
-      "name": "Nursing & Elderly Care (סיעוד)",
+      "name": "Nursing & Elderly Care",
       "description": "Communication between care coordinators and caregivers about patient care, medication schedules, daily routines, mobility assistance, dietary needs, and health monitoring."
     },
     "farm": {
