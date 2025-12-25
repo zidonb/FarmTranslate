@@ -17,6 +17,7 @@ BridgeOS is an AI-powered Operating System designed to manage foreign workforces
 - Deep-link invitations with one-tap sharing
 - Real-time admin dashboard
 - Media forwarding (photos, videos, voice messages, files)
+- **AI-powered daily summaries** - Extract action items from conversations ← NEW
 - **Subscription management with Lemon Squeezy**
 - **Usage tracking with free tier (50 messages) + unlimited paid tier**
 - Telegram notifications for subscription events
@@ -73,17 +74,44 @@ If not subscribed: Check free tier limit (usage_tracker.is_user_blocked())
    ↓
 If blocked: Show subscribe button with Lemon Squeezy checkout URL
    ↓
-Bot retrieves conversation history from PostgreSQL
+Bot retrieves last 6 messages from translation_msg_context (for translation)
    ↓
 Bot translates with industry context (dairy) + gender + history
    ↓
 Worker receives: "בדוק את פרה 115 אם היא במחזור" (Hebrew, male form)
+   ↓
+Bot saves message to BOTH:
+   - translation_msg_context (last 6 messages for translation)
+   - message_history (full 30-day history for summaries) ← NEW
    ↓
 Bot increments manager's message counter (if not subscribed)
    ↓
 Worker replies: "היא נראית בריאה"
    ↓
 Manager receives: "She looks healthy"
+```
+
+### **Summary Flow:** ← NEW
+```
+Manager types: /summary
+   ↓
+Bot checks: Is user a manager? (workers don't get summaries)
+   ↓
+Bot retrieves last 24 hours of messages from message_history
+   ↓
+Bot sends messages to Claude with prompt:
+   "Extract action items only (tasks, safety issues, equipment problems)"
+   ↓
+Claude returns bullet-list summary
+   ↓
+Manager receives:
+   "📋 Daily Summary (Last 24 Hours)
+   
+   • Check cow 115 for heat
+   • Fix broken gate in section 3
+   • Order more feed by Friday
+   
+   No other action items found."
 ```
 
 ### **Subscription Journey:**
@@ -134,33 +162,35 @@ On expiry: Receives notification, returns to free tier (50 messages)
    - Bot handlers → clean functions (easy to add features)
    - Payment logic → separate module (easy to swap providers)
    - Configuration → centralized, secrets separate
+   - **Message storage** → Two separate tables (translation context vs full history) ← NEW
 
 ---
 
 ## **File Structure**
 ```
 bridgeos/
-├── bot.py                      # Main bot logic (handlers, commands, deep-link support)
-├── translator.py               # Translation with multiple LLM providers
-├── database.py                 # PostgreSQL storage with clean interface
-├── conversations.py            # Conversation history in PostgreSQL (sliding window)
-├── usage_tracker.py            # Message limit tracking and enforcement
-├── subscription_manager.py     # Subscription CRUD operations (database interface) ← NEW
-├── dashboard.py                # Flask admin dashboard + Lemon Squeezy webhooks ← UPDATED
-├── config.py                   # Configuration loader (environment + files)
-├── config.json                 # Non-secret settings (safe to upload to GitHub) ← UPDATED
-├── secrets.json                # API keys (LOCAL only, in .gitignore)
-├── requirements.txt            # Python dependencies ← UPDATED
-├── Procfile                    # Railway deployment (web + worker services)
-├── runtime.txt                 # Python version (3.11.9)
-├── .gitignore                  # Exclude secrets and data files
-└── docs/                       # Documentation folder
-    ├── BACKGROUND.md           # Project context for new sessions
-    ├── structure.md            # This file ← UPDATED
-    ├── POSTGRESQL_MIGRATION.md # Database migration guide
-    ├── DASHBOARD_SETUP.md      # Dashboard setup instructions
-    ├── DEPLOYMENT_CHECKLIST.md # Lemon Squeezy deployment guide ← NEW
-    └── TESTING_GUIDE.md        # Payment testing procedures ← NEW
+├── bot.py                          # Main bot logic (handlers, commands, deep-link support)
+├── translator.py                   # Translation with multiple LLM providers
+├── database.py                     # PostgreSQL storage with clean interface
+├── translation_msg_context.py      # Last 6 messages for translation context ← RENAMED
+├── message_history.py              # Full 30-day history for summaries ← NEW
+├── usage_tracker.py                # Message limit tracking and enforcement
+├── subscription_manager.py         # Subscription CRUD operations (database interface)
+├── dashboard.py                    # Flask admin dashboard + Lemon Squeezy webhooks
+├── config.py                       # Configuration loader (environment + files)
+├── config.json                     # Non-secret settings (safe to upload to GitHub) ← UPDATED
+├── secrets.json                    # API keys (LOCAL only, in .gitignore)
+├── requirements.txt                # Python dependencies
+├── Procfile                        # Railway deployment (web + worker services)
+├── runtime.txt                     # Python version (3.11.9)
+├── .gitignore                      # Exclude secrets and data files
+└── docs/                           # Documentation folder
+    ├── BACKGROUND.md               # Project context for new sessions
+    ├── structure.md                # This file ← UPDATED
+    ├── POSTGRESQL_MIGRATION.md     # Database migration guide
+    ├── DASHBOARD_SETUP.md          # Dashboard setup instructions
+    ├── DEPLOYMENT_CHECKLIST.md     # Lemon Squeezy deployment guide
+    └── TESTING_GUIDE.md            # Payment testing procedures
 ```
 
 ---
@@ -174,10 +204,11 @@ bridgeos/
 - InlineKeyboard share button with prefilled message
 - Message routing logic
 - Media forwarding (photos, videos, voice, files, stickers, locations, contacts)
-- **Subscription checking before sending messages** ← NEW
-- **Subscribe button generation with Lemon Squeezy checkout URL** ← NEW
+- **Subscription checking before sending messages**
+- **Subscribe button generation with Lemon Squeezy checkout URL**
 - Usage limit enforcement (checks before sending, increments after)
-- Commands: `/start`, `/help`, `/mycode`, `/subscription`, `/refer`, `/reset` ← UPDATED
+- **Summary generation** (`/summary` command) ← NEW
+- Commands: `/start`, `/help`, `/mycode`, `/subscription`, `/summary`, `/refer`, `/reset` ← UPDATED
 - No translation, database, payment, or config logic
 
 ### **translator.py**
@@ -188,21 +219,36 @@ bridgeos/
   - `translate_with_gemini()` - Schema-enforced JSON (prevents answering questions)
   - `translate_with_openai()` - System prompt approach
 - `build_translation_prompt()` - Handles context, gender, industry
+- **Summary generation** - Uses Claude for extracting action items ← NEW
 
 ### **database.py**
 - Simple function interface: `get_user()`, `save_user()`, `get_all_users()`
 - PostgreSQL with JSONB storage (maintains same data structure as JSON files)
-- Tables: `users`, `conversations`, `usage_tracking`, `subscriptions` ← UPDATED
+- Tables: `users`, `translation_msg_context`, `message_history`, `usage_tracking`, `subscriptions` ← UPDATED
 - Shared access: Both bot and dashboard use same database
 
-### **conversations.py**
-- Conversation history management in PostgreSQL
-- `get_conversation_history()` - Retrieve last N messages
+### **translation_msg_context.py** (formerly conversations.py) ← RENAMED
+- Translation context management in PostgreSQL
+- `get_conversation_history()` - Retrieve last N messages (default: 6)
 - `add_to_conversation()` - Save message with sliding window
 - `clear_conversation()` - Delete conversation history
 - Pair-based keys: `"userID1_userID2"` (sorted, lowest first)
 - Stores original language + text for better translation context
-- Tables: `conversations` (conversation_key, messages)
+- **Sliding window** - Only keeps last 6 messages (configurable via `translation_context_size`)
+- Tables: `translation_msg_context` (conversation_key, messages) ← RENAMED
+
+### **message_history.py** ← NEW
+- **Full conversation history** for summaries and analytics
+- `save_message()` - Save message with timestamp + auto-cleanup
+- `get_messages()` - Retrieve messages with optional time filter (e.g., last 24 hours)
+- `cleanup_old_messages()` - Auto-delete messages older than retention period
+- `get_message_count()` - Count messages in timeframe
+- `clear_history()` - Admin function to delete all messages
+- `get_all_conversations()` - For dashboard monitoring
+- **Automatic cleanup** - Runs on every message save (configurable retention period)
+- **30-day retention** - Configurable via `message_retention_days` in config.json
+- Tables: `message_history` (conversation_key, messages)
+- **Separation principle**: Translation context and full history are separate
 
 ### **usage_tracker.py**
 - Message limit tracking and enforcement
@@ -217,7 +263,7 @@ bridgeos/
 - Only tracks manager messages when not subscribed (workers unlimited)
 - Configurable limit (default: 50 free messages)
 
-### **subscription_manager.py** ← NEW
+### **subscription_manager.py**
 - **Database waiter** - Pure CRUD operations for subscriptions
 - No webhook logic, no HTTP, no business logic
 - Functions:
@@ -231,19 +277,19 @@ bridgeos/
 - Tables: `subscriptions` (telegram_user_id, data)
 - **Separation principle**: Bot and dashboard both call subscription_manager, never duplicate logic
 
-### **dashboard.py** ← UPDATED
+### **dashboard.py**
 - Flask web application for admin monitoring
-- **Lemon Squeezy webhook handler** (`/webhook/lemonsqueezy`) ← NEW
+- **Lemon Squeezy webhook handler** (`/webhook/lemonsqueezy`)
 - Real-time data from PostgreSQL (auto-refresh every 30s)
 - Password protected (`zb280072A` - change this!)
 - Features:
-  - Statistics (total managers, workers, connections, messages, **subscriptions**) ← UPDATED
-  - Manager list with codes, connection status, usage stats, and **subscription badges** ← NEW
+  - Statistics (total managers, workers, connections, messages, **subscriptions**)
+  - Manager list with codes, connection status, usage stats, and **subscription badges**
   - Worker list with manager info
-  - **Subscription list with status, plan, dates, portal links** ← NEW
-  - Recent conversations
+  - **Subscription list with status, plan, dates, portal links**
+  - Recent conversations (from `message_history`) ← UPDATED
   - Admin actions (delete users, clear conversations, reset usage limits)
-- **Webhook Processing**: ← NEW
+- **Webhook Processing**:
   - Verifies HMAC-SHA256 signature
   - Processes 11 subscription event types
   - Updates PostgreSQL via subscription_manager
@@ -274,7 +320,8 @@ bridgeos/
       "description": "Communication about construction site operations..."
     }
   },
-  "history_size": 3,
+  "translation_context_size": 3,
+  "message_retention_days": 30,
   "free_message_limit": 50,
   "enforce_limits": true,
   "lemonsqueezy": {
@@ -298,6 +345,10 @@ bridgeos/
   ]
 }
 ```
+
+**New Config Options:** ← NEW
+- `translation_context_size: 3` - Messages per side for translation (6 total) ← RENAMED from `history_size`
+- `message_retention_days: 30` - How long to keep full message history ← NEW
 
 ### **secrets.json** (LOCAL only, in .gitignore)
 ```json
@@ -333,6 +384,8 @@ bridgeos/
   - Construction
   - Restaurant
   - Warehouse
+  - Nursing & Elderly Care
+  - Hospitality / Hotels
   - General Workplace
 
 ### **3. Configuration Split**
@@ -345,14 +398,14 @@ bridgeos/
 
 ### **4. Provider Flexibility**
 Different LLMs have different strengths:
-- **Claude Sonnet 4**: Best overall quality, strong system prompts, industry context
+- **Claude Sonnet 4**: Best overall quality, strong system prompts, industry context, **summary generation** ← NEW
 - **Gemini Flash**: Schema enforcement prevents hallucinations, 40x cheaper
 - **OpenAI GPT-4o**: Alternative option, structured outputs
 
 **Switch providers by changing one line in config.json**
 
 ### **5. Conversation Context**
-- Stores last N messages per conversation pair (configurable via `history_size`)
+- Stores last N messages per conversation pair (configurable via `translation_context_size`)
 - Sliding window (default: 3 messages per side = 6 total)
 - Helps with:
   - Pronouns ("she" = cow 115 from previous message)
@@ -372,7 +425,7 @@ Different LLMs have different strengths:
 - Both bot and dashboard access same database
 - Scalable to 50k+ users
 - No file locking issues
-- **4 tables**: users, conversations, usage_tracking, subscriptions
+- **5 tables**: users, translation_msg_context, message_history, usage_tracking, subscriptions ← UPDATED
 
 ### **8. Normalized Conversation Keys**
 - Key format: `"lowerID_higherID"` (always sorted)
@@ -405,7 +458,7 @@ Different LLMs have different strengths:
 - **Anti-abuse**: User cannot bypass limit by resetting account
 - **Subscription override**: If user is subscribed, usage tracking is skipped entirely
 
-### **11. Payment Architecture - Lemon Squeezy Integration** ← NEW
+### **11. Payment Architecture - Lemon Squeezy Integration**
 
 **Why Lemon Squeezy?**
 - Merchant of Record (handles VAT/tax globally)
@@ -460,11 +513,66 @@ Bot ← subscription_manager → PostgreSQL ← subscription_manager ← Webhook
 - No dependency on bot.py (faster, independent)
 - Events: created, cancelled, expired, payment_failed, resumed
 
-### **12. Native Language Names** ← NEW
+### **12. Native Language Names**
 - Registration buttons show language names in native scripts
 - Example: "עברית" instead of "Hebrew"
 - User selects their own language → native names improve UX
 - Maintains accessibility while being culturally appropriate
+
+### **13. Dual Storage Architecture** ← NEW
+
+**Problem**: Translation needs last 6 messages (fast), summaries need 30 days (comprehensive)
+
+**Solution**: Two separate PostgreSQL tables with different purposes
+
+**Table 1: `translation_msg_context`** (formerly `conversations`)
+- **Purpose**: Fast translation with recent context
+- **Storage**: Last 6 messages only (sliding window)
+- **Retention**: Automatic (keeps newest 6)
+- **Use case**: Real-time translation
+- **Performance**: Minimal data, fast queries
+
+**Table 2: `message_history`** ← NEW
+- **Purpose**: Full conversation history for summaries and analytics
+- **Storage**: All messages for 30 days
+- **Retention**: Automatic cleanup (deletes messages >30 days on every save)
+- **Use case**: Daily summaries, analytics, auditing
+- **Performance**: Larger data, time-based filtering
+
+**Benefits:**
+- ✅ **Separation of concerns** - Translation and summaries don't conflict
+- ✅ **Performance** - Translation queries stay fast (6 messages vs thousands)
+- ✅ **Data duplication** - Last 6 messages exist in both tables (acceptable trade-off)
+- ✅ **Independent optimization** - Can tune each table separately
+- ✅ **Automatic cleanup** - No manual maintenance, runs on every message save
+
+**Cost:**
+- Storage: ~$0.06/month for 1000 users (negligible)
+- Maintenance: Zero (automatic cleanup)
+
+### **14. On-Demand Summaries** ← NEW
+
+**Why on-demand vs auto-scheduled?**
+- ✅ Validates demand (are users actually using it?)
+- ✅ Cost control (only generate when requested)
+- ✅ Better UX (manager decides when they need it)
+- ✅ Simpler implementation (no cron jobs)
+
+**Summary Scope:**
+- **Timeframe**: Last 24 hours (not calendar day - avoids timezone complexity)
+- **Content**: Action items ONLY (tasks, safety issues, equipment problems)
+- **Format**: Bullet list (easy to scan)
+- **Provider**: Claude Sonnet 4 (best quality for extraction)
+
+**Cost Optimization:**
+- Use full message history (not just last N messages)
+- Filter by timestamp (last 24 hours)
+- Extract action items only (skip greetings, confirmations)
+
+**Future Enhancement:**
+- Task tracking with checkboxes (Telegram InlineKeyboard)
+- Worker clicks "✅ Done" → Manager gets notification
+- Not part of MVP, but technically feasible
 
 ---
 
@@ -480,9 +588,17 @@ CREATE TABLE users (
 )
 ```
 
-**conversations table:**
+**translation_msg_context table:** ← RENAMED
 ```sql
-CREATE TABLE conversations (
+CREATE TABLE translation_msg_context (
+    conversation_key TEXT PRIMARY KEY,
+    messages JSONB NOT NULL
+)
+```
+
+**message_history table:** ← NEW
+```sql
+CREATE TABLE message_history (
     conversation_key TEXT PRIMARY KEY,
     messages JSONB NOT NULL
 )
@@ -496,7 +612,7 @@ CREATE TABLE usage_tracking (
 )
 ```
 
-**subscriptions table:** ← NEW
+**subscriptions table:**
 ```sql
 CREATE TABLE subscriptions (
     telegram_user_id TEXT PRIMARY KEY,
@@ -528,23 +644,45 @@ CREATE TABLE subscriptions (
 }
 ```
 
-### **Conversation History (in JSONB)**
+### **Translation Context (in JSONB)** ← UPDATED
 ```json
 [
   {
     "from": "user1",
     "text": "Check cow 115",
     "lang": "English",
-    "timestamp": "2025-12-22T10:30:00"
+    "timestamp": "2025-12-25T10:30:00+00:00"
   },
   {
     "from": "user2",
     "text": "היא נראית בריאה",
     "lang": "עברית",
-    "timestamp": "2025-12-22T10:31:00"
+    "timestamp": "2025-12-25T10:31:00+00:00"
   }
 ]
 ```
+**Note**: Only last 6 messages (sliding window)
+
+### **Message History (in JSONB)** ← NEW
+```json
+[
+  {
+    "from": "user1",
+    "text": "Check cow 115",
+    "lang": "English",
+    "timestamp": "2025-12-25T10:30:00+00:00"
+  },
+  {
+    "from": "user2",
+    "text": "היא נראית בריאה",
+    "lang": "עברית",
+    "timestamp": "2025-12-25T10:31:00+00:00"
+  },
+  ...
+  (all messages for last 30 days)
+]
+```
+**Note**: Full history, auto-cleanup removes messages >30 days old
 
 ### **Usage Tracking Data (in JSONB)**
 ```json
@@ -556,7 +694,7 @@ CREATE TABLE subscriptions (
 }
 ```
 
-### **Subscription Data (in JSONB)** ← NEW
+### **Subscription Data (in JSONB)**
 ```json
 {
   "status": "active",
@@ -594,9 +732,10 @@ CREATE TABLE subscriptions (
 │         PostgreSQL DB                │
 │  ┌────────────────────────────────┐  │
 │  │ users                          │  │
-│  │ conversations                  │  │
+│  │ translation_msg_context        │  │  ← RENAMED
+│  │ message_history                │  │  ← NEW (30-day retention)
 │  │ usage_tracking                 │  │
-│  │ subscriptions  ← NEW           │  │
+│  │ subscriptions                  │  │
 │  └────────────────────────────────┘  │
 └──────────┬───────────────────────────┘
            │
@@ -630,6 +769,19 @@ Next message: bot.py checks subscription_manager.is_subscribed()
 Allowed (unlimited messages)
 ```
 
+### **Message Flow Architecture:** ← NEW
+```
+User sends message
+     ↓
+bot.py saves to TWO tables:
+     ├─→ translation_msg_context (last 6 messages, sliding window)
+     └─→ message_history (full 30 days, auto-cleanup)
+     ↓
+Translation uses: translation_msg_context (fast, 6 messages)
+     ↓
+Summary uses: message_history (comprehensive, 24 hours filtered)
+```
+
 ---
 
 ## **Commands**
@@ -638,7 +790,8 @@ Allowed (unlimited messages)
 - `/start` - Register and get invitation link
 - `/help` - Show available commands
 - `/mycode` - Show invitation code and link
-- `/subscription` - Manage subscription (view status, subscribe, portal link) ← NEW/UPDATED
+- `/subscription` - Manage subscription (view status, subscribe, portal link)
+- `/summary` - Generate daily summary of action items (last 24 hours) ← NEW
 - `/refer` - Recommend BridgeOS to other managers
 - `/reset` - Delete account and start over
 
@@ -650,7 +803,7 @@ Allowed (unlimited messages)
 
 ### **Command Details:**
 
-**`/subscription` (Managers only):** ← NEW/UPDATED
+**`/subscription` (Managers only):**
 
 **Without subscription:**
 ```
@@ -695,6 +848,47 @@ Manage or cancel anytime.
 [⚙️ Manage Subscription]
 ```
 
+**`/summary` (Managers only):** ← NEW
+
+**When messages exist:**
+```
+📋 Daily Summary (Last 24 Hours)
+
+Action Items:
+• Check cow 115 for heat
+• Fix broken gate in section 3
+• Order more feed by Friday
+• Report: Worker needs safety boots
+
+⚠️ Safety Issues:
+• Electrical panel sparking - needs immediate attention
+
+🔧 Equipment:
+• Milking machine #2 making noise
+
+Total messages: 47
+```
+
+**When no messages:**
+```
+📋 Daily Summary (Last 24 Hours)
+
+No messages found in the last 24 hours.
+
+Start a conversation with your worker to see summaries here!
+```
+
+**When no action items:**
+```
+📋 Daily Summary (Last 24 Hours)
+
+No action items found.
+
+Your team is all caught up! ✅
+
+Total messages: 12
+```
+
 ---
 
 ## **Scaling Path**
@@ -713,9 +907,13 @@ Manage or cancel anytime.
 - Claude Sonnet: ~$600/month
 - Gemini Flash: ~$15/month
 
+**Summary Costs (per 1,000 users, 1 summary/day):** ← NEW
+- Claude Sonnet: ~$15/month (30k users = $0.0005 per summary × 30 days)
+- Negligible compared to translation costs
+
 **Revenue (at 20% conversion to paid):**
 - 200 subscribers × $9 = $1,800/month
-- **Profit margin**: $1,800 - $15 (translation) - $20 (hosting) = $1,765/month
+- **Profit margin**: $1,800 - $15 (translation) - $15 (summaries) - $20 (hosting) = $1,750/month
 
 **Lemon Squeezy Fees:**
 - 5% + $0.50 per transaction
@@ -746,7 +944,7 @@ Manage or cancel anytime.
 - `GEMINI_API_KEY` - Google Gemini API key (optional)
 - `OPENAI_API_KEY` - OpenAI API key (optional)
 - `DATABASE_URL` - PostgreSQL connection (auto-set by Railway)
-- `LEMONSQUEEZY_WEBHOOK_SECRET` - Webhook signing secret (from Lemon Squeezy) ← NEW
+- `LEMONSQUEEZY_WEBHOOK_SECRET` - Webhook signing secret (from Lemon Squeezy)
 
 ### **Webhook Configuration:**
 
@@ -786,7 +984,7 @@ worker: python bot.py
 ### **To Normalize PostgreSQL Schema (future):**
 1. Create proper tables with foreign keys
 2. Write migration script from JSONB to tables
-3. Update `database.py`, `conversations.py`, `subscription_manager.py` internals
+3. Update `database.py`, `translation_msg_context.py`, `message_history.py`, `subscription_manager.py` internals
 4. **No changes needed in bot.py or translator.py** ✅
 
 ### **To Add Payment Provider (future):**
@@ -803,7 +1001,7 @@ worker: python bot.py
 ✅ **Completed:**
 - Multi-language support (12 languages with native scripts)
 - Gender-aware translation
-- Industry-specific context (6 industries)
+- Industry-specific context (8 industries)
 - Conversation history with sliding window
 - Multiple LLM providers (Claude/Gemini/OpenAI)
 - Clean config architecture (secrets separate)
@@ -817,19 +1015,21 @@ worker: python bot.py
 - Media forwarding (photos, videos, voice, files, etc.)
 - Usage tracking and message limits (50 free messages)
 - Viral growth feature (`/refer` command)
-- **Lemon Squeezy payment integration** ← NEW
-- **Subscription management (/subscription command)** ← NEW
-- **Webhook-based subscription lifecycle** ← NEW
-- **Telegram notifications for subscription events** ← NEW
-- **Customer portal for billing management** ← NEW
-- **Freemium model (50 free → $9/month unlimited)** ← NEW
+- Lemon Squeezy payment integration
+- Subscription management (/subscription command)
+- Webhook-based subscription lifecycle
+- Telegram notifications for subscription events
+- Customer portal for billing management
+- Freemium model (50 free → $9/month unlimited)
 
 🔄 **In Progress:**
+- **Dual storage architecture** (translation context + full history) ← NEW
+- **`/summary` command** (AI-powered daily summaries) ← NEW
 - Real user testing
 - Cost monitoring
-- Lemon Squeezy identity verification (test mode working)
 
 📋 **Next Up:**
+- Task tracking with checkboxes (future enhancement)
 - Analytics dashboard (conversion tracking)
 - Multi-worker support (v2)
 - Voice message transcription + translation
@@ -850,7 +1050,7 @@ worker: python bot.py
 - typing-extensions (for Gemini schemas)
 - flask (Admin dashboard + webhook handler)
 - psycopg2-binary (PostgreSQL driver)
-- requests (for Telegram notifications from webhooks) ← NEW
+- requests (for Telegram notifications from webhooks)
 
 ### **Environment:**
 - **Local**: Uses `secrets.json` for API keys
@@ -878,9 +1078,11 @@ https://t.me/FarmTranslateBot
 8. **PostgreSQL required** for shared data between bot and dashboard
 9. **Message limits** - Only manager messages counted (when not subscribed), workers unlimited
 10. **Usage tracking by Telegram ID** - Survives account resets (anti-abuse)
-11. **Subscription checking** - Subscribed users bypass usage limits entirely ← NEW
-12. **Payment via Lemon Squeezy** - Webhook-based, Merchant of Record ← NEW
-13. **Customer portal for cancellation** - No cancel command needed ← NEW
+11. **Subscription checking** - Subscribed users bypass usage limits entirely
+12. **Payment via Lemon Squeezy** - Webhook-based, Merchant of Record
+13. **Customer portal for cancellation** - No cancel command needed
+14. **Dual storage** - Translation context (6 messages) + Full history (30 days) ← NEW
+15. **Summaries for managers only** - Workers don't get `/summary` command ← NEW
 
 ---
 
@@ -899,6 +1101,14 @@ https://t.me/FarmTranslateBot
 4. Monitor Railway logs for webhook events
 5. Check PostgreSQL `subscriptions` table
 6. Verify Telegram notifications
+
+### **Summary Testing:** ← NEW
+1. Send multiple messages between manager and worker
+2. Manager types `/summary`
+3. Check if action items are extracted correctly
+4. Test with no messages (last 24 hours)
+5. Test with messages but no action items
+6. Verify summary format (bullets)
 
 ### **Subscription Testing Checklist:**
 - [ ] Free tier: Send 50 messages, see limit
@@ -932,7 +1142,7 @@ See `docs/TESTING_GUIDE.md` for detailed procedures.
 - Total messages sent
 - Subscription count
 - Usage stats per manager
-- Recent conversations
+- Recent conversations (from `message_history`) ← UPDATED
 
 ### **External Tools (Future):**
 - Lemon Squeezy dashboard for revenue
@@ -963,18 +1173,35 @@ See `docs/TESTING_GUIDE.md` for detailed procedures.
 - Test webhook endpoint with curl
 - Check Railway logs for incoming requests
 
+**"Summary showing old messages"** ← NEW
+- Check `message_retention_days` in config.json
+- Verify cleanup is running (check logs for "Cleaned up X old messages")
+- Query PostgreSQL: `SELECT * FROM message_history WHERE conversation_key='...'`
+
+**"Summary not extracting action items"** ← NEW
+- Check Claude API response in logs
+- Verify prompt includes industry context
+- Test with different message content
+- Check if messages exist in last 24 hours
+
 ### **Maintenance Tasks:**
 - Monitor Railway database size (PostgreSQL)
 - Review Lemon Squeezy failed payments
 - Check subscription renewal rates
 - Monitor translation costs vs revenue
 - Update bot commands in @BotFather if changed
+- **Monitor message history retention** - Verify auto-cleanup is working ← NEW
 
 ---
 
 ## **Future Enhancements**
 
 ### **Phase 2:**
+- **Task tracking with checkboxes** (Telegram InlineKeyboard) ← NEW
+  - Parse action items from summaries
+  - Add "✅ Done" buttons for workers
+  - Track completion status
+  - Notify manager when completed
 - Multi-worker support (1 manager → N workers)
 - Team plans (manager + 5 workers = $15/month)
 - Annual subscriptions (discount)
@@ -985,14 +1212,16 @@ See `docs/TESTING_GUIDE.md` for detailed procedures.
 - Video call integration (with live translation)
 - Mobile app (native experience)
 - Desktop app (for office computers)
+- **Auto-scheduled summaries** (premium feature) ← NEW
 
 ### **Phase 4:**
 - Multi-language group chats
 - Translation quality feedback
 - Custom industry vocabulary
 - Integration with HR systems
+- **Advanced analytics** (task completion rates, response times) ← NEW
 
 ---
 
-**Last Updated**: December 23, 2025
-**Version**: 2.0 (with Lemon Squeezy integration)
+**Last Updated**: December 25, 2025
+**Version**: 2.1 (with AI-powered summaries and dual storage)

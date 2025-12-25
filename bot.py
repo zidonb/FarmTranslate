@@ -4,7 +4,7 @@ from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKey
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, ConversationHandler
 import database
 import translator
-import conversations
+import translation_msg_context
 import usage_tracker
 import subscription_manager
 from config import load_config
@@ -347,7 +347,7 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if worker_id:
             worker = database.get_user(worker_id)
             if worker:
-                conversations.clear_conversation(user_id, worker_id)
+                translation_msg_context.clear_conversation(user_id, worker_id)
                 
                 all_users = database.get_all_users()
                 if worker_id in all_users:
@@ -381,7 +381,7 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 except Exception:
                     pass
             
-            conversations.clear_conversation(user_id, manager_id)
+            translation_msg_context.clear_conversation(user_id, manager_id)
     
     all_users = database.get_all_users()
     if user_id in all_users:
@@ -531,8 +531,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     user_lang = user['language']
     
-    history_size = config.get('history_size', 5)
-    max_history_messages = history_size * 2
+    translation_context_size = config.get('translation_context_size', 5)
+    max_history_messages = translation_context_size * 2
     
     if user['role'] == 'manager':
         worker_id = user.get('worker')
@@ -551,7 +551,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
         
-        history = conversations.get_conversation_history(user_id, worker_id, max_history_messages)
+        history = translation_msg_context.get_conversation_history(user_id, worker_id, max_history_messages)
         industry_key = user.get('industry', 'other')
         
         translated = translator.translate(
@@ -563,7 +563,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             industry=industry_key
         )
         
-        conversations.add_to_conversation(
+        translation_msg_context.add_to_conversation(
             user_id_1=user_id,
             user_id_2=worker_id,
             from_id=user_id,
@@ -615,7 +615,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
         
-        history = conversations.get_conversation_history(user_id, manager_id, max_history_messages)
+        history = translation_msg_context.get_conversation_history(user_id, manager_id, max_history_messages)
         industry_key = manager.get('industry', 'other')
         
         translated = translator.translate(
@@ -627,7 +627,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             industry=industry_key
         )
         
-        conversations.add_to_conversation(
+        translation_msg_context.add_to_conversation(
             user_id_1=user_id,
             user_id_2=manager_id,
             from_id=user_id,

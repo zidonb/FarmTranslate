@@ -33,7 +33,8 @@
       "description": "General workplace communication between managers and workers."
     }
   },
-  "history_size": 3,
+  "translation_context_size": 3,
+  "message_retention_days": 30,
   "free_message_limit": 8,
   "enforce_limits": true,
   "testing_mode": true,

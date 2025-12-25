@@ -1,6 +1,6 @@
 from flask import Flask, render_template_string, request, redirect, session, jsonify
 import database
-import conversations
+import translation_msg_context
 import usage_tracker
 import subscription_manager
 from config import load_config
@@ -737,7 +737,7 @@ def dashboard():
         elif user_data.get('role') == 'worker':
             workers.append(user_data)
     
-    all_conversations = conversations.load_conversations()
+    all_conversations = translation_msg_context.load_conversations()
     conversations_list = []
     
     for conv_key, messages in all_conversations.items():
@@ -814,7 +814,7 @@ def delete_user(user_id):
     if user.get('role') == 'manager':
         worker_id = user.get('worker')
         if worker_id:
-            conversations.clear_conversation(user_id, worker_id)
+            translation_msg_context.clear_conversation(user_id, worker_id)
             all_users = database.get_all_users()
             if worker_id in all_users:
                 del all_users[worker_id]
@@ -827,7 +827,7 @@ def delete_user(user_id):
             if manager:
                 manager['worker'] = None
                 database.save_user(manager_id, manager)
-            conversations.clear_conversation(user_id, manager_id)
+            translation_msg_context.clear_conversation(user_id, manager_id)
     
     all_users = database.get_all_users()
     if user_id in all_users:
@@ -842,7 +842,7 @@ def clear_conversation_route(conv_key):
         return redirect('/login')
     
     user1, user2 = conv_key.split('_')
-    conversations.clear_conversation(user1, user2)
+    translation_msg_context.clear_conversation(user1, user2)
     
     return redirect('/')
 
