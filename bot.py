@@ -154,7 +154,7 @@ async def gender_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [industry_buttons[i:i+2] for i in range(0, len(industry_buttons), 2)]
     
     await update.message.reply_text(
-        "What industry do you work in?",
+        "What industry do you work in?\n\nThis helps provide accurate translations of technical terms and workplace-specific language.",
         reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
     )
     return INDUSTRY

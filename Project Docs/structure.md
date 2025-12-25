@@ -6,6 +6,8 @@
 
 BridgeOS (formerly FarmTranslate) is a Telegram bot that enables real-time translated communication between managers and workers who speak different languages. Built initially for dairy farms with foreign workers, it now supports multiple industries through industry-specific translation contexts.
 
+BridgeOS is an AI-powered Operating System designed to manage foreign workforces by transforming simple translation into operational control. It functions as a command center that not only translates communication in real-time but also automatically generates daily site summaries, tracks task completion with "closed-loop" accountability, and converts unstructured worker reports into organized data logs. By bridging the gap between instruction and execution, BridgeOS ensures that nothing—from safety hazards to critical tasks—gets lost in translation.
+
 **Key Features:**
 - One-to-one translated conversations (manager ↔ worker)
 - Industry-specific terminology (dairy, construction, restaurant, warehouse, etc.)

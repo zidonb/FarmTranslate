@@ -26,3 +26,4 @@
 
 - if after start i stop clicking button, can i continue?
 - Language support in the registraion process
+- Menu look and feel
