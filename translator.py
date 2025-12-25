@@ -156,3 +156,95 @@ def translate_with_openai(text: str, from_lang: str, to_lang: str, target_gender
     )
     
     return response.choices[0].message.content.strip()
+
+def generate_daily_actionitems(messages: list, industry: str = None) -> str:
+    """
+    Generate AI-powered summary of conversation messages
+    Extracts action items only (tasks, safety issues, equipment problems)
+    
+    Args:
+        messages: List of message dicts with 'from', 'text', 'lang', 'timestamp'
+        industry: Industry key for context (e.g., 'dairy_farm', 'construction')
+    
+    Returns:
+        Formatted summary as string
+    """
+    if not messages:
+        return "No messages found in the last 24 hours.\n\nStart a conversation with your worker to see summaries here!"
+    
+    config = load_config()
+    
+    # Get industry context
+    if industry:
+        industries = config.get('industries', {})
+        industry_info = industries.get(industry, industries.get('other', {}))
+        industry_name = industry_info.get('name', 'workplace')
+        description = industry_info.get('description', 'workplace communication')
+    else:
+        industry_name = 'workplace'
+        description = 'workplace communication'
+    
+    # Format messages for prompt
+    conversation_text = ""
+    for msg in messages:
+        timestamp = msg.get('timestamp', '')
+        if timestamp:
+            # Format timestamp nicely
+            try:
+                from datetime import datetime
+                dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                time_str = dt.strftime('%H:%M')
+            except:
+                time_str = timestamp[:16] if len(timestamp) >= 16 else timestamp
+        else:
+            time_str = "Unknown time"
+        
+        conversation_text += f"[{time_str}] {msg['text']} ({msg['lang']})\n"
+    
+    # Build prompt
+    prompt = f"""You are analyzing a {industry_name} workplace conversation.
+
+Context: {description}
+
+Conversation (last 24 hours):
+{conversation_text}
+
+Extract ONLY action items from this conversation. Focus on:
+• Tasks to be completed
+• Safety issues or concerns
+• Equipment problems or maintenance needs
+• Important instructions or requests
+
+Skip: greetings, confirmations, casual conversation, questions already answered.
+
+Format your response as a bullet list under appropriate categories:
+- Action Items
+- Safety Issues (if any)
+- Equipment (if any)
+
+If there are NO action items, respond with: "No action items found."
+
+Be concise and specific. Extract only what requires follow-up action."""
+
+    # Use Claude for summary generation (best quality)
+    claude_config = config.get('claude', {})
+    api_key = claude_config.get('api_key')
+    
+    if not api_key:
+        return "Error: Claude API key not configured for summary generation."
+    
+    client = Anthropic(api_key=api_key)
+    
+    try:
+        response = client.messages.create(
+            model=claude_config.get('model', 'claude-sonnet-4-20250514'),
+            max_tokens=1000,
+            messages=[{
+                "role": "user",
+                "content": prompt
+            }]
+        )
+        
+        return response.content[0].text.strip()
+    except Exception as e:
+        return f"Error generating summary: {str(e)}"

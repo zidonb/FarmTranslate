@@ -5,9 +5,11 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 import database
 import translator
 import translation_msg_context
+import message_history
 import usage_tracker
 import subscription_manager
 from config import load_config
+from datetime import datetime, timezone
 
 # Conversation states
 LANGUAGE, GENDER, INDUSTRY = range(3)
@@ -245,6 +247,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 /help - Show this help message
 /mycode - Show your connection code
+/daily - Get daily action items
 /subscription - View subscription status
 /refer - Recommend to other managers
 /reset - Delete account and start over
@@ -393,6 +396,81 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "All your data and connections have been deleted.\n"
         "Use /start to register again."
     )
+
+
+
+
+async def daily_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Generate AI-powered Action itesms of last 24 hours"""
+    user_id = str(update.effective_user.id)
+    user = database.get_user(user_id)
+    
+    if not user:
+        await update.message.reply_text("Please use /start to register first.")
+        return
+    
+    # Only managers can get summaries
+    if user['role'] != 'manager':
+        await update.message.reply_text(
+            "Only managers can generate summaries.\n\n"
+            "This feature helps managers track action items and tasks."
+        )
+        return
+    
+    # Check if manager has a worker
+    worker_id = user.get('worker')
+    if not worker_id:
+        await update.message.reply_text(
+            "You don't have a worker connected yet.\n\n"
+            "Connect with a worker first to see conversation summaries."
+        )
+        return
+    
+    # Send "generating" message
+    generating_msg = await update.message.reply_text(
+        "⏳ Generating Daily Action Items (Last 24 Hours)...\n\n"
+        "Analyzing last 24 hours of conversation."
+    )
+    
+    try:
+        # Get messages from last 24 hours
+        messages = message_history.get_messages(
+            user_id_1=user_id,
+            user_id_2=worker_id,
+            hours=24
+        )
+        
+        # Get industry context
+        industry_key = user.get('industry', 'other')
+        
+        # Generate daily action items using Claude
+        action_items_text = translator.generate_daily_actionitems(messages, industry=industry_key)
+        
+        # Count total messages
+        message_count = len(messages)
+        
+        # Format response
+        response = f"📋 *Daily Action Items (Last 24 Hours)*\n\n{action_items_text}"
+        
+        # Add message count if there are messages
+        if message_count > 0:
+            response += f"\n\n_Total messages: {message_count}_"
+        
+        # Delete "generating" message
+        await generating_msg.delete()
+        
+        # Send daily action items
+        await update.message.reply_text(response, parse_mode='Markdown')
+        
+    except Exception as e:
+        # Delete "generating" message
+        await generating_msg.delete()
+        
+        # Send error message
+        await update.message.reply_text(
+            f"âŒ Error generating daily action items: {str(e)}\n\n"
+            f"Please try again later or contact support."
+        )
 
 
 async def subscription_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -572,6 +650,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             max_history=max_history_messages
         )
         
+        # Also save to message_history for summaries (full 30-day retention)
+        message_history.save_message(
+            user_id_1=user_id,
+            user_id_2=worker_id,
+            from_id=user_id,
+            text=text,
+            language=user_lang
+        )
+        
         manager_name = update.effective_user.first_name
         await context.bot.send_message(
             chat_id=worker_id,
@@ -634,6 +721,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text=text,
             language=user_lang,
             max_history=max_history_messages
+        )
+        
+        # Also save to message_history for summaries (full 30-day retention)
+        message_history.save_message(
+            user_id_1=user_id,
+            user_id_2=manager_id,
+            from_id=user_id,
+            text=text,
+            language=user_lang
         )
         
         sender_name = update.effective_user.first_name
@@ -723,6 +819,7 @@ def main():
     app.add_handler(CommandHandler('help', help_command))
     app.add_handler(CommandHandler('mycode', mycode_command))
     app.add_handler(CommandHandler('refer', refer_command))
+    app.add_handler(CommandHandler('daily', daily_command))
     app.add_handler(CommandHandler('subscription', subscription_command))
     app.add_handler(CommandHandler('reset', reset))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
