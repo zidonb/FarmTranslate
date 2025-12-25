@@ -157,20 +157,21 @@ def translate_with_openai(text: str, from_lang: str, to_lang: str, target_gender
     
     return response.choices[0].message.content.strip()
 
-def generate_daily_actionitems(messages: list, industry: str = None) -> str:
+def generate_daily_actionitems(messages: list, industry: str = None, manager_language: str = None) -> str:
     """
-    Generate AI-powered summary of conversation messages
-    Extracts action items only (tasks, safety issues, equipment problems)
+    Generate AI-powered action items from conversation messages
+    Extracts ONLY actionable tasks, safety issues, and equipment problems
     
     Args:
         messages: List of message dicts with 'from', 'text', 'lang', 'timestamp'
         industry: Industry key for context (e.g., 'dairy_farm', 'construction')
+        manager_language: Manager's language for the output (e.g., 'English', 'עברית')
     
     Returns:
-        Formatted summary as string
+        Formatted bullet list of action items in manager's language
     """
     if not messages:
-        return "No messages found in the last 24 hours.\n\nStart a conversation with your worker to see summaries here!"
+        return "No messages found in the last 24 hours.\n\nStart a conversation with your worker to see action items here!"
     
     config = load_config()
     
@@ -183,6 +184,9 @@ def generate_daily_actionitems(messages: list, industry: str = None) -> str:
     else:
         industry_name = 'workplace'
         description = 'workplace communication'
+    
+    # Default to English if not specified
+    output_language = manager_language or 'English'
     
     # Format messages for prompt
     conversation_text = ""
@@ -201,37 +205,64 @@ def generate_daily_actionitems(messages: list, industry: str = None) -> str:
         
         conversation_text += f"[{time_str}] {msg['text']} ({msg['lang']})\n"
     
-    # Build prompt
-    prompt = f"""You are analyzing a {industry_name} workplace conversation.
+    # Build prompt - VERY SPECIFIC to avoid summarization
+    prompt = f"""You are extracting ACTION ITEMS from a {industry_name} workplace conversation.
+
+CRITICAL INSTRUCTIONS:
+1. Do NOT summarize the conversation. Do NOT explain what happened. ONLY extract specific action items.
+2. Output your response ONLY in {output_language}. This is mandatory.
 
 Context: {description}
 
 Conversation (last 24 hours):
 {conversation_text}
 
-Extract ONLY action items from this conversation. Focus on:
-• Tasks to be completed
-• Safety issues or concerns
-• Equipment problems or maintenance needs
-• Important instructions or requests
+EXTRACTION RULES:
+1. Extract ONLY items that require action or follow-up
+2. Format as bullet points (use • symbol)
+3. Be specific - include details like names, numbers, locations
+4. Group under these categories ONLY if items exist:
+   - Action Items
+   - Safety Issues
+   - Equipment
 
-Skip: greetings, confirmations, casual conversation, questions already answered.
+INCLUDE:
+- Specific tasks mentioned ("check cow 115", "fix gate in section 3")
+- Safety concerns that need addressing
+- Equipment problems requiring attention
+- Explicit instructions or requests
 
-Format your response as a bullet list under appropriate categories:
-- Action Items
-- Safety Issues (if any)
-- Equipment (if any)
+EXCLUDE:
+- Greetings, confirmations, acknowledgments
+- Questions that were already answered
+- General conversation or updates
+- Completed tasks (if marked as done)
 
-If there are NO action items, respond with: "No action items found."
+OUTPUT FORMAT (in {output_language}):
+If action items exist:
+Action Items:
+- [specific task with details]
+- [specific task with details]
 
-Be concise and specific. Extract only what requires follow-up action."""
+Safety Issues:
+- [specific safety concern]
 
-    # Use Claude for summary generation (best quality)
+Equipment:
+- [specific equipment problem]
+
+If NO action items exist:
+"No action items found."
+
+REMEMBER: 
+- Each bullet point must be a SPECIFIC, ACTIONABLE task - not a summary
+- Your ENTIRE response must be in {output_language}"""
+
+    # Use Claude for action items generation (best quality)
     claude_config = config.get('claude', {})
     api_key = claude_config.get('api_key')
     
     if not api_key:
-        return "Error: Claude API key not configured for summary generation."
+        return "Error: Claude API key not configured for action items generation."
     
     client = Anthropic(api_key=api_key)
     
@@ -247,4 +278,4 @@ Be concise and specific. Extract only what requires follow-up action."""
         
         return response.content[0].text.strip()
     except Exception as e:
-        return f"Error generating summary: {str(e)}"
+        return f"Error generating action items: {str(e)}"

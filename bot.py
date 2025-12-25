@@ -444,7 +444,7 @@ async def daily_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         industry_key = user.get('industry', 'other')
         
         # Generate daily action items using Claude
-        action_items_text = translator.generate_daily_actionitems(messages, industry=industry_key)
+        action_items_text = translator.generate_daily_actionitems(messages, industry=industry_key, manager_language=user['language'])
         
         # Count total messages
         message_count = len(messages)
