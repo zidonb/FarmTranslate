@@ -29,3 +29,4 @@
 - Menu look and feel
 - /suggest command, for features suggestions [to bridgeos dev team, me]
 - cahce daily, save daily
+- I18N

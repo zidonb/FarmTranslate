@@ -1,6 +1,7 @@
 from flask import Flask, render_template_string, request, redirect, session, jsonify
 import database
 import translation_msg_context
+import message_history
 import usage_tracker
 import subscription_manager
 from config import load_config
@@ -45,11 +46,11 @@ def send_telegram_notification(chat_id, text):
         })
         
         if response.status_code == 200:
-            print(f"✅ Notification sent to {chat_id}")
+            print(f"âœ… Notification sent to {chat_id}")
         else:
-            print(f"⚠️ Failed to send notification: {response.text}")
+            print(f"âš ï¸ Failed to send notification: {response.text}")
     except Exception as e:
-        print(f"❌ Error sending notification: {e}")
+        print(f"âŒ Error sending notification: {e}")
 
 @app.route('/webhook/lemonsqueezy', methods=['POST'])
 def lemonsqueezy_webhook():
@@ -125,14 +126,14 @@ def handle_subscription_created(telegram_id: str, data: dict):
         'customer_portal_url': attrs['urls']['customer_portal']
     }
     subscription_manager.save_subscription(telegram_id, subscription_data)
-    print(f"✅ Subscription created for {telegram_id}: {subscription_data['lemon_subscription_id']}")
+    print(f"âœ… Subscription created for {telegram_id}: {subscription_data['lemon_subscription_id']}")
     
     # Send notification to user
     send_telegram_notification(
         telegram_id,
-        "✅ *Subscription Active!*\n\n"
+        "âœ… *Subscription Active!*\n\n"
         "You now have unlimited messages.\n"
-        "Thank you for subscribing to BridgeOS! 🎉"
+        "Thank you for subscribing to BridgeOS! ðŸŽ‰"
     )
 
 def handle_subscription_updated(telegram_id: str, data: dict):
@@ -151,7 +152,7 @@ def handle_subscription_updated(telegram_id: str, data: dict):
         if not subscription.get('cancelled_at'):
             subscription['cancelled_at'] = datetime.utcnow().isoformat()
     subscription_manager.save_subscription(telegram_id, subscription)
-    print(f"✅ Subscription updated for {telegram_id}")
+    print(f"âœ… Subscription updated for {telegram_id}")
 
 def handle_subscription_cancelled(telegram_id: str, data: dict):
     """Handle subscription_cancelled event"""
@@ -164,13 +165,13 @@ def handle_subscription_cancelled(telegram_id: str, data: dict):
     subscription['cancelled_at'] = datetime.utcnow().isoformat()
     subscription['ends_at'] = attrs.get('ends_at')
     subscription_manager.save_subscription(telegram_id, subscription)
-    print(f"⚠️ Subscription cancelled for {telegram_id}, access until: {attrs.get('ends_at')}")
+    print(f"âš ï¸ Subscription cancelled for {telegram_id}, access until: {attrs.get('ends_at')}")
     
     # Send notification to user
     ends_at_display = attrs.get('ends_at', 'end of billing period')[:10] if attrs.get('ends_at') else 'end of billing period'
     send_telegram_notification(
         telegram_id,
-        f"⚠️ *Subscription Cancelled*\n\n"
+        f"âš ï¸ *Subscription Cancelled*\n\n"
         f"You'll keep access until {ends_at_display}.\n"
         f"You can resubscribe anytime."
     )
@@ -185,14 +186,14 @@ def handle_subscription_resumed(telegram_id: str, data: dict):
     subscription['cancelled_at'] = None
     subscription['ends_at'] = None
     subscription_manager.save_subscription(telegram_id, subscription)
-    print(f"✅ Subscription resumed for {telegram_id}")
+    print(f"âœ… Subscription resumed for {telegram_id}")
     
     # Send notification to user
     send_telegram_notification(
         telegram_id,
-        "✅ *Subscription Resumed!*\n\n"
+        "âœ… *Subscription Resumed!*\n\n"
         "Your subscription is active again.\n"
-        "Welcome back! 🎉"
+        "Welcome back! ðŸŽ‰"
     )
 
 def handle_subscription_expired(telegram_id: str, data: dict):
@@ -203,12 +204,12 @@ def handle_subscription_expired(telegram_id: str, data: dict):
         return
     subscription['status'] = 'expired'
     subscription_manager.save_subscription(telegram_id, subscription)
-    print(f"❌ Subscription expired for {telegram_id}")
+    print(f"âŒ Subscription expired for {telegram_id}")
     
     # Send notification to user
     send_telegram_notification(
         telegram_id,
-        "❌ *Subscription Expired*\n\n"
+        "âŒ *Subscription Expired*\n\n"
         "Your subscription has ended.\n"
         "You're back on the free tier (50 messages).\n\n"
         "Subscribe again to continue unlimited messaging."
@@ -222,7 +223,7 @@ def handle_subscription_paused(telegram_id: str, data: dict):
         return
     subscription['status'] = 'paused'
     subscription_manager.save_subscription(telegram_id, subscription)
-    print(f"⏸️ Subscription paused for {telegram_id}")
+    print(f"â¸ï¸ Subscription paused for {telegram_id}")
 
 def handle_subscription_unpaused(telegram_id: str, data: dict):
     """Handle subscription_unpaused event"""
@@ -232,21 +233,21 @@ def handle_subscription_unpaused(telegram_id: str, data: dict):
         return
     subscription['status'] = 'active'
     subscription_manager.save_subscription(telegram_id, subscription)
-    print(f"▶️ Subscription unpaused for {telegram_id}")
+    print(f"â–¶ï¸ Subscription unpaused for {telegram_id}")
 
 def handle_subscription_payment_success(telegram_id: str, data: dict):
     """Handle subscription_payment_success event"""
-    print(f"✅ Payment successful for {telegram_id}")
+    print(f"âœ… Payment successful for {telegram_id}")
 
 def handle_subscription_payment_failed(telegram_id: str, data: dict):
     """Handle subscription_payment_failed event"""
-    print(f"⚠️ Payment failed for {telegram_id}")
+    print(f"âš ï¸ Payment failed for {telegram_id}")
     
     # Send notification to user
     subscription = subscription_manager.get_subscription(telegram_id)
     portal_url = subscription.get('customer_portal_url') if subscription else None
     
-    message = "⚠️ *Payment Failed*\n\n" \
+    message = "âš ï¸ *Payment Failed*\n\n" \
               "Your last payment didn't go through.\n" \
               "We'll retry automatically in 3 days.\n\n"
     
@@ -261,7 +262,7 @@ def handle_subscription_payment_recovered(telegram_id: str, data: dict):
     if subscription and subscription['status'] == 'paused':
         subscription['status'] = 'active'
         subscription_manager.save_subscription(telegram_id, subscription)
-    print(f"✅ Payment recovered for {telegram_id}")
+    print(f"âœ… Payment recovered for {telegram_id}")
 
 # ============================================
 # DASHBOARD (Original Code)
@@ -422,9 +423,9 @@ DASHBOARD_HTML = """
 <body>
     <div class="container">
         <div class="header">
-            <a href="/logout" class="logout">🚪 Logout</a>
-            <h1>🌉 BridgeOS Dashboard</h1>
-            <p>Real-time monitoring • Auto-refresh every 30 seconds • Last updated: {{ now }}</p>
+            <a href="/logout" class="logout">ðŸšª Logout</a>
+            <h1>ðŸŒ‰ BridgeOS Dashboard</h1>
+            <p>Real-time monitoring â€¢ Auto-refresh every 30 seconds â€¢ Last updated: {{ now }}</p>
         </div>
 
         <div class="stats">
@@ -451,7 +452,7 @@ DASHBOARD_HTML = """
         </div>
 
         <div class="section">
-            <h2>👔 Managers</h2>
+            <h2>ðŸ‘” Managers</h2>
             {% if managers %}
                 {% for manager in managers %}
                 <div class="user-card">
@@ -465,15 +466,15 @@ DASHBOARD_HTML = """
                         <div>
                             <strong>Status:</strong>
                             {% if manager.blocked %}
-                                <span class="badge disconnected">🚫 Blocked</span>
+                                <span class="badge disconnected">ðŸš« Blocked</span>
                             {% else %}
-                                <span class="badge connected">✓ Active</span>
+                                <span class="badge connected">âœ“ Active</span>
                             {% endif %}
                         </div>
                         <div>
                             <strong>Subscription:</strong>
                             {% if manager.subscription %}
-                                <span class="badge subscribed">💳 {{ manager.subscription.status|title }}</span>
+                                <span class="badge subscribed">ðŸ’³ {{ manager.subscription.status|title }}</span>
                             {% else %}
                                 <span class="badge disconnected">Free Tier</span>
                             {% endif %}
@@ -481,20 +482,21 @@ DASHBOARD_HTML = """
                         <div>
                             <strong>Worker:</strong> 
                             {% if manager.worker %}
-                                <span class="badge connected">✓ Connected ({{ manager.worker }})</span>
+                                <span class="badge connected">âœ“ Connected ({{ manager.worker }})</span>
                             {% else %}
-                                <span class="badge disconnected">✗ No Worker</span>
+                                <span class="badge disconnected">âœ— No Worker</span>
                             {% endif %}
                         </div>
                     </div>
                     <div class="actions">
+                        <a href="/manager/{{ manager.id }}" class="btn">👁️ View Details</a>
                         <form method="POST" action="/delete_user/{{ manager.id }}" style="display:inline;" 
                               onsubmit="return confirm('Delete this manager and all their data?');">
-                            <button type="submit" class="btn danger">🗑️ Delete Manager</button>
+                            <button type="submit" class="btn danger">ðŸ—‘ï¸ Delete Manager</button>
                         </form>
                         {% if manager.blocked %}
                         <form method="POST" action="/reset_usage/{{ manager.id }}" style="display:inline;">
-                            <button type="submit" class="btn">🔓 Reset Usage</button>
+                            <button type="submit" class="btn">ðŸ”“ Reset Usage</button>
                         </form>
                         {% endif %}
                     </div>
@@ -506,7 +508,7 @@ DASHBOARD_HTML = """
         </div>
 
         <div class="section">
-            <h2>👷 Workers</h2>
+            <h2>ðŸ‘· Workers</h2>
             {% if workers %}
                 {% for worker in workers %}
                 <div class="user-card worker">
@@ -519,7 +521,7 @@ DASHBOARD_HTML = """
                     <div class="actions">
                         <form method="POST" action="/delete_user/{{ worker.id }}" style="display:inline;"
                               onsubmit="return confirm('Delete this worker?');">
-                            <button type="submit" class="btn danger">🗑️ Delete Worker</button>
+                            <button type="submit" class="btn danger">ðŸ—‘ï¸ Delete Worker</button>
                         </form>
                     </div>
                 </div>
@@ -530,7 +532,7 @@ DASHBOARD_HTML = """
         </div>
 
         <div class="section">
-            <h2>💳 Subscriptions</h2>
+            <h2>ðŸ’³ Subscriptions</h2>
             {% if subscriptions_list %}
                 {% for sub in subscriptions_list %}
                 <div class="user-card">
@@ -538,13 +540,13 @@ DASHBOARD_HTML = """
                     <div class="user-info">
                         <div><strong>Status:</strong> 
                             {% if sub.status == 'active' %}
-                                <span class="badge subscribed">✓ Active</span>
+                                <span class="badge subscribed">âœ“ Active</span>
                             {% elif sub.status == 'cancelled' %}
-                                <span class="badge disconnected">⚠️ Cancelled</span>
+                                <span class="badge disconnected">âš ï¸ Cancelled</span>
                             {% elif sub.status == 'expired' %}
-                                <span class="badge disconnected">❌ Expired</span>
+                                <span class="badge disconnected">âŒ Expired</span>
                             {% elif sub.status == 'paused' %}
-                                <span class="badge disconnected">⏸️ Paused</span>
+                                <span class="badge disconnected">â¸ï¸ Paused</span>
                             {% endif %}
                         </div>
                         <div><strong>Plan:</strong> {{ sub.plan|title }}</div>
@@ -560,7 +562,7 @@ DASHBOARD_HTML = """
                     </div>
                     <div class="actions">
                         {% if sub.customer_portal_url %}
-                        <a href="{{ sub.customer_portal_url }}" target="_blank" class="btn">🔗 Customer Portal</a>
+                        <a href="{{ sub.customer_portal_url }}" target="_blank" class="btn">ðŸ”— Customer Portal</a>
                         {% endif %}
                     </div>
                 </div>
@@ -571,11 +573,11 @@ DASHBOARD_HTML = """
         </div>
 
         <div class="section">
-            <h2>💬 Recent Conversations</h2>
+            <h2>ðŸ’¬ Recent Conversations</h2>
             {% if conversations_list %}
                 {% for conv in conversations_list %}
                 <div class="conversation">
-                    <h3>{{ conv.user1 }} ↔ {{ conv.user2 }}</h3>
+                    <h3>{{ conv.user1 }} â†” {{ conv.user2 }}</h3>
                     {% for msg in conv.messages %}
                     <div class="message {{ 'from-manager' if msg.is_manager else 'from-worker' }}">
                         <span class="message-time">{{ msg.time }}</span>
@@ -585,7 +587,7 @@ DASHBOARD_HTML = """
                     <div class="actions">
                         <form method="POST" action="/clear_conversation/{{ conv.key }}" style="display:inline;"
                               onsubmit="return confirm('Clear this conversation history?');">
-                            <button type="submit" class="btn danger">🧹 Clear History</button>
+                            <button type="submit" class="btn danger">ðŸ§¹ Clear History</button>
                         </form>
                     </div>
                 </div>
@@ -676,7 +678,7 @@ LOGIN_HTML = """
 </head>
 <body>
     <div class="login-box">
-        <h1>🌉 BridgeOS</h1>
+        <h1>ðŸŒ‰ BridgeOS</h1>
         <p>Dashboard Login</p>
         {% if error %}
         <div class="error">{{ error }}</div>
@@ -859,6 +861,511 @@ def reset_usage_route(user_id):
 def health_check():
     """Health check endpoint"""
     return jsonify({"status": "healthy"}), 200
+
+# ============================================
+# MANAGER DETAIL PAGE
+# ============================================
+
+# HTML Template for Manager Detail Page
+MANAGER_DETAIL_HTML = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manager {{ manager.id }} - BridgeOS Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .header h1 { font-size: 28px; margin-bottom: 5px; }
+        .header p { opacity: 0.9; font-size: 14px; }
+        .back-btn {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.3); }
+        .logout {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .logout:hover { background: rgba(255,255,255,0.3); }
+        .section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .info-item {
+            padding: 10px 0;
+        }
+        .info-item label {
+            display: block;
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .info-item value {
+            display: block;
+            font-size: 16px;
+            color: #333;
+            font-weight: 500;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .badge.connected { background: #48bb78; color: white; }
+        .badge.disconnected { background: #f56565; color: white; }
+        .badge.subscribed { background: #4299e1; color: white; }
+        .message {
+            padding: 12px;
+            margin: 8px 0;
+            font-size: 13px;
+            border-left: 4px solid #ddd;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+        .message.from-manager { border-left-color: #667eea; }
+        .message.from-worker { border-left-color: #48bb78; }
+        .message-meta {
+            font-size: 11px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+        .message-text {
+            color: #333;
+            word-wrap: break-word;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .btn:hover { background: #5568d3; }
+        .btn.danger { background: #f56565; }
+        .btn.danger:hover { background: #e53e3e; }
+        .btn.secondary { background: #718096; }
+        .btn.secondary:hover { background: #4a5568; }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        .collapsible-header {
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .collapsible-header:hover {
+            color: #667eea;
+        }
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        .collapsible-content.expanded {
+            max-height: 10000px;
+        }
+        .toggle-icon {
+            font-size: 20px;
+            transition: transform 0.3s ease;
+        }
+        .toggle-icon.expanded {
+            transform: rotate(180deg);
+        }
+        .filter-buttons {
+            margin-bottom: 20px;
+        }
+        .filter-btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #e2e8f0;
+            color: #333;
+            border: none;
+            border-radius: 5px;
+            font-size: 13px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .filter-btn:hover { background: #cbd5e0; }
+        .filter-btn.active { background: #667eea; color: white; }
+        .message-count {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+    </style>
+    <script>
+        function toggleCollapsible(id) {
+            const content = document.getElementById(id);
+            const icon = document.getElementById(id + '-icon');
+            content.classList.toggle('expanded');
+            icon.classList.toggle('expanded');
+        }
+        
+        function filterMessages(hours) {
+            // This is a placeholder for future filtering functionality
+            // For now, we'll reload the page with a query parameter
+            window.location.href = '/manager/{{ manager.id }}?hours=' + hours;
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/" class="back-btn">← Back to Dashboard</a>
+            <a href="/logout" class="logout">🚪 Logout</a>
+            <h1>👤 Manager Details</h1>
+            <p>Manager ID: {{ manager.id }}</p>
+        </div>
+
+        <!-- Section 1: Manager Info -->
+        <div class="section">
+            <h2>📋 Manager Information</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Manager ID</label>
+                    <value>{{ manager.id }}</value>
+                </div>
+                <div class="info-item">
+                    <label>Invitation Code</label>
+                    <value>{{ manager.code }}</value>
+                </div>
+                <div class="info-item">
+                    <label>Language</label>
+                    <value>{{ manager.language }}</value>
+                </div>
+                <div class="info-item">
+                    <label>Gender</label>
+                    <value>{{ manager.gender }}</value>
+                </div>
+                <div class="info-item">
+                    <label>Industry</label>
+                    <value>{{ manager.industry }}</value>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Connection & Subscription -->
+        <div class="section">
+            <h2>🔗 Connection & Subscription</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Worker Status</label>
+                    <value>
+                        {% if worker %}
+                            <span class="badge connected">✅ Connected</span>
+                        {% else %}
+                            <span class="badge disconnected">❌ No Worker</span>
+                        {% endif %}
+                    </value>
+                </div>
+                {% if worker %}
+                <div class="info-item">
+                    <label>Worker ID</label>
+                    <value>{{ worker.id }}</value>
+                </div>
+                <div class="info-item">
+                    <label>Worker Language</label>
+                    <value>{{ worker.language }}</value>
+                </div>
+                {% endif %}
+                <div class="info-item">
+                    <label>Messages Sent</label>
+                    <value>
+                        {% if manager.subscription %}
+                            Unlimited
+                        {% else %}
+                            {{ manager.messages_sent }} / {{ manager.message_limit }}
+                            {% if manager.blocked %}
+                                <span class="badge disconnected">🚫 Blocked</span>
+                            {% endif %}
+                        {% endif %}
+                    </value>
+                </div>
+                <div class="info-item">
+                    <label>Subscription</label>
+                    <value>
+                        {% if manager.subscription %}
+                            <span class="badge subscribed">💳 {{ manager.subscription.status|title }}</span>
+                        {% else %}
+                            <span class="badge disconnected">Free Tier</span>
+                        {% endif %}
+                    </value>
+                </div>
+                {% if manager.subscription and manager.subscription.renews_at %}
+                <div class="info-item">
+                    <label>Renews At</label>
+                    <value>{{ manager.subscription.renews_at[:10] }}</value>
+                </div>
+                {% endif %}
+            </div>
+            {% if manager.subscription and manager.subscription.customer_portal_url %}
+            <div style="margin-top: 15px;">
+                <a href="{{ manager.subscription.customer_portal_url }}" target="_blank" class="btn">🔗 Customer Portal</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Section 3: Translation Context (Last 6 Messages) -->
+        <div class="section">
+            <h2>💬 Translation Context (Last 6 Messages)</h2>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
+                These are the messages the bot uses for contextual translation.
+            </p>
+            {% if translation_context %}
+                {% for msg in translation_context %}
+                <div class="message {{ 'from-manager' if msg.is_manager else 'from-worker' }}">
+                    <div class="message-meta">
+                        <strong>{{ msg.from_role }}</strong> • {{ msg.time }} • {{ msg.lang }}
+                    </div>
+                    <div class="message-text">{{ msg.text }}</div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <p>No translation context available yet.</p>
+                    <p style="font-size: 12px; margin-top: 10px;">Messages will appear here once the manager and worker start chatting.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Section 4: Full Message History -->
+        <div class="section">
+            <div class="collapsible-header" onclick="toggleCollapsible('full-history')">
+                <h2>📜 Full Message History ({{ message_count }} messages)</h2>
+                <span class="toggle-icon" id="full-history-icon">▼</span>
+            </div>
+            <div id="full-history" class="collapsible-content">
+                <p style="font-size: 13px; color: #666; margin-bottom: 15px; margin-top: 15px;">
+                    Complete conversation history (last 30 days).
+                </p>
+                
+                <!-- Filter buttons (placeholder for future) -->
+                <div class="filter-buttons">
+                    <button class="filter-btn active" onclick="filterMessages('all')">All Messages</button>
+                    <button class="filter-btn" onclick="filterMessages(24)">Last 24 Hours</button>
+                    <button class="filter-btn" onclick="filterMessages(168)">Last 7 Days</button>
+                    <button class="filter-btn" onclick="filterMessages(720)">Last 30 Days</button>
+                </div>
+
+                {% if full_history %}
+                    <div class="message-count">Showing {{ full_history|length }} messages</div>
+                    {% for msg in full_history %}
+                    <div class="message {{ 'from-manager' if msg.is_manager else 'from-worker' }}">
+                        <div class="message-meta">
+                            <strong>{{ msg.from_role }}</strong> • {{ msg.timestamp }} • {{ msg.lang }}
+                        </div>
+                        <div class="message-text">{{ msg.text }}</div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <p>No message history available yet.</p>
+                        <p style="font-size: 12px; margin-top: 10px;">Messages are stored for 30 days and will appear here.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Section 5: Admin Actions -->
+        <div class="section">
+            <h2>⚙️ Admin Actions</h2>
+            <p style="font-size: 13px; color: #666; margin-bottom: 20px;">
+                Manage this manager's account and data.
+            </p>
+            
+            {% if manager.blocked %}
+            <form method="POST" action="/reset_usage/{{ manager.id }}" style="display:inline;">
+                <button type="submit" class="btn">🔓 Reset Usage Limit</button>
+            </form>
+            {% endif %}
+            
+            <form method="POST" action="/clear_translation_context/{{ manager.id }}" style="display:inline;"
+                  onsubmit="return confirm('Clear translation context (last 6 messages)?');">
+                <button type="submit" class="btn secondary">🧹 Clear Translation Context</button>
+            </form>
+            
+            <form method="POST" action="/clear_full_history/{{ manager.id }}" style="display:inline;"
+                  onsubmit="return confirm('Clear full message history (30 days)?');">
+                <button type="submit" class="btn secondary">🗑️ Clear Full History</button>
+            </form>
+            
+            <form method="POST" action="/delete_user/{{ manager.id }}" style="display:inline;" 
+                  onsubmit="return confirm('Delete this manager and ALL their data? This cannot be undone!');">
+                <button type="submit" class="btn danger">❌ Delete Manager Account</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
+"""
+
+# Route for Manager Detail Page
+@app.route('/manager/<user_id>')
+def manager_detail(user_id):
+    """Show detailed view of a specific manager"""
+    if not session.get('authenticated'):
+        return redirect('/login')
+    
+    # Get manager data
+    manager = database.get_user(user_id)
+    if not manager or manager.get('role') != 'manager':
+        return redirect('/')
+    
+    manager['id'] = user_id
+    
+    # Get config
+    config = load_config()
+    message_limit = config.get('free_message_limit', 50)
+    
+    # Get usage stats
+    usage = usage_tracker.get_usage(user_id)
+    manager['messages_sent'] = usage.get('messages_sent', 0)
+    manager['blocked'] = usage.get('blocked', False)
+    manager['message_limit'] = message_limit
+    
+    # Get subscription
+    subscription = subscription_manager.get_subscription(user_id)
+    manager['subscription'] = subscription
+    
+    # Get worker data (if connected)
+    worker = None
+    worker_id = manager.get('worker')
+    if worker_id:
+        worker = database.get_user(worker_id)
+        if worker:
+            worker['id'] = worker_id
+    
+    # Get translation context (last 6 messages)
+    translation_context = []
+    if worker_id:
+        context_messages = translation_msg_context.get_conversation_history(user_id, worker_id, max_messages=6)
+        for msg in context_messages:
+            is_manager = (msg['from'] == user_id)
+            translation_context.append({
+                'time': datetime.fromisoformat(msg['timestamp']).strftime('%Y-%m-%d %H:%M'),
+                'text': msg['text'],
+                'lang': msg['lang'],
+                'is_manager': is_manager,
+                'from_role': 'Manager' if is_manager else 'Worker'
+            })
+    
+    # Get full message history (last 30 days)
+    full_history = []
+    message_count = 0
+    if worker_id:
+        history_messages = message_history.get_messages(user_id, worker_id)
+        message_count = len(history_messages)
+        
+        # Format messages for display
+        for msg in history_messages:
+            is_manager = (msg['from'] == user_id)
+            full_history.append({
+                'timestamp': datetime.fromisoformat(msg['timestamp']).strftime('%Y-%m-%d %H:%M:%S'),
+                'text': msg['text'],
+                'lang': msg['lang'],
+                'is_manager': is_manager,
+                'from_role': 'Manager' if is_manager else 'Worker'
+            })
+    
+    return render_template_string(
+        MANAGER_DETAIL_HTML,
+        manager=manager,
+        worker=worker,
+        translation_context=translation_context,
+        full_history=full_history,
+        message_count=message_count
+    )
+
+# Additional admin action routes
+@app.route('/clear_translation_context/<user_id>', methods=['POST'])
+def clear_translation_context_route(user_id):
+    """Clear translation context for a manager"""
+    if not session.get('authenticated'):
+        return redirect('/login')
+    
+    manager = database.get_user(user_id)
+    if manager and manager.get('role') == 'manager':
+        worker_id = manager.get('worker')
+        if worker_id:
+            translation_msg_context.clear_conversation(user_id, worker_id)
+    
+    return redirect(f'/manager/{user_id}')
+
+@app.route('/clear_full_history/<user_id>', methods=['POST'])
+def clear_full_history_route(user_id):
+    """Clear full message history for a manager"""
+    if not session.get('authenticated'):
+        return redirect('/login')
+    
+    manager = database.get_user(user_id)
+    if manager and manager.get('role') == 'manager':
+        worker_id = manager.get('worker')
+        if worker_id:
+            message_history.clear_history(user_id, worker_id)
+    
+    return redirect(f'/manager/{user_id}')
+
 
 if __name__ == '__main__':
     import os
