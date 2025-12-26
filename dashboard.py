@@ -423,9 +423,9 @@ DASHBOARD_HTML = """
 <body>
     <div class="container">
         <div class="header">
-            <a href="/logout" class="logout">ðŸšª Logout</a>
-            <h1>ðŸŒ‰ BridgeOS Dashboard</h1>
-            <p>Real-time monitoring â€¢ Auto-refresh every 30 seconds â€¢ Last updated: {{ now }}</p>
+            <a href="/logout" class="logout">🚪Logout</a>
+            <h1>🌉BridgeOS Dashboard</h1>
+            <p>Real-time monitoring • Auto-refresh every 30 seconds • Last updated: {{ now }}</p>
         </div>
 
         <div class="stats">
@@ -452,7 +452,7 @@ DASHBOARD_HTML = """
         </div>
 
         <div class="section">
-            <h2>ðŸ‘” Managers</h2>
+            <h2>👔 Managers</h2>
             {% if managers %}
                 {% for manager in managers %}
                 <div class="user-card">
@@ -468,7 +468,7 @@ DASHBOARD_HTML = """
                             {% if manager.blocked %}
                                 <span class="badge disconnected">ðŸš« Blocked</span>
                             {% else %}
-                                <span class="badge connected">âœ“ Active</span>
+                                <span class="badge connected">✔ Active</span>
                             {% endif %}
                         </div>
                         <div>
@@ -484,7 +484,7 @@ DASHBOARD_HTML = """
                             {% if manager.worker %}
                                 <span class="badge connected">âœ“ Connected ({{ manager.worker }})</span>
                             {% else %}
-                                <span class="badge disconnected">âœ— No Worker</span>
+                                <span class="badge disconnected">✗ No Worker</span>
                             {% endif %}
                         </div>
                     </div>
@@ -492,7 +492,7 @@ DASHBOARD_HTML = """
                         <a href="/manager/{{ manager.id }}" class="btn">👁️ View Details</a>
                         <form method="POST" action="/delete_user/{{ manager.id }}" style="display:inline;" 
                               onsubmit="return confirm('Delete this manager and all their data?');">
-                            <button type="submit" class="btn danger">ðŸ—‘ï¸ Delete Manager</button>
+                            <button type="submit" class="btn danger">🗑️ Delete Manager</button>
                         </form>
                         {% if manager.blocked %}
                         <form method="POST" action="/reset_usage/{{ manager.id }}" style="display:inline;">
@@ -508,7 +508,7 @@ DASHBOARD_HTML = """
         </div>
 
         <div class="section">
-            <h2>ðŸ‘· Workers</h2>
+            <h2>👷Workers</h2>
             {% if workers %}
                 {% for worker in workers %}
                 <div class="user-card worker">
@@ -532,7 +532,7 @@ DASHBOARD_HTML = """
         </div>
 
         <div class="section">
-            <h2>ðŸ’³ Subscriptions</h2>
+            <h2>💳 Subscriptions</h2>
             {% if subscriptions_list %}
                 {% for sub in subscriptions_list %}
                 <div class="user-card">
@@ -540,7 +540,7 @@ DASHBOARD_HTML = """
                     <div class="user-info">
                         <div><strong>Status:</strong> 
                             {% if sub.status == 'active' %}
-                                <span class="badge subscribed">âœ“ Active</span>
+                                <span class="badge subscribed">✔ Active</span>
                             {% elif sub.status == 'cancelled' %}
                                 <span class="badge disconnected">âš ï¸ Cancelled</span>
                             {% elif sub.status == 'expired' %}
@@ -562,7 +562,7 @@ DASHBOARD_HTML = """
                     </div>
                     <div class="actions">
                         {% if sub.customer_portal_url %}
-                        <a href="{{ sub.customer_portal_url }}" target="_blank" class="btn">ðŸ”— Customer Portal</a>
+                        <a href="{{ sub.customer_portal_url }}" target="_blank" class="btn">🔗 Customer Portal</a>
                         {% endif %}
                     </div>
                 </div>
@@ -573,7 +573,7 @@ DASHBOARD_HTML = """
         </div>
 
         <div class="section">
-            <h2>ðŸ’¬ Recent Conversations</h2>
+            <h2>💬 Recent Conversations</h2>
             {% if conversations_list %}
                 {% for conv in conversations_list %}
                 <div class="conversation">
