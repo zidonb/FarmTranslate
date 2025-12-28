@@ -500,7 +500,7 @@ DASHBOARD_HTML = """
                         <div>
                             <strong>Worker:</strong> 
                             {% if manager.worker %}
-                                <span class="badge connected">âœ“ Connected ({{ manager.worker }})</span>
+                                <span class="badge connected">✔ Connected ({{ manager.worker }})</span>
                             {% else %}
                                 <span class="badge disconnected">✗ No Worker</span>
                             {% endif %}
@@ -934,7 +934,7 @@ MANAGER_DETAIL_HTML = """
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             position: relative;
         }
-        .header h1 { font-size: 28px; margin-bottom: 5px; }
+        .header h1 { font-size: 28px; margin-bottom: 5px; margin-left: 80px; }
         .header p { opacity: 0.9; font-size: 14px; }
         .back-btn {
             position: absolute;
