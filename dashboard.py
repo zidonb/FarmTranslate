@@ -595,7 +595,7 @@ DASHBOARD_HTML = """
             {% if conversations_list %}
                 {% for conv in conversations_list %}
                 <div class="conversation">
-                    <h3>{{ conv.user1 }} â†” {{ conv.user2 }}</h3>
+                    <h3>{{ conv.user1 }} ↔ {{ conv.user2 }}</h3>
                     {% for msg in conv.messages %}
                     <div class="message {{ 'from-manager' if msg.is_manager else 'from-worker' }}">
                         <span class="message-time">{{ msg.time }}</span>
