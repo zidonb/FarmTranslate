@@ -441,7 +441,7 @@ DASHBOARD_HTML = """
 <body>
     <div class="container">
         <div class="header">
-            <a href="/logout" class="logout">🚪Logout</a>
+            <a href="/logout" class="logout">🚪 Logout</a>
             <h1>🌉 BridgeOS Dashboard</h1>
             <p>Real-time monitoring • Auto-refresh every 30 seconds • Last updated: {{ now }}</p>
         </div>
