@@ -311,6 +311,7 @@ DASHBOARD_HTML = """
             border-radius: 10px;
             margin-bottom: 30px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
         }
         .header h1 { font-size: 32px; margin-bottom: 10px; }
         .header p { opacity: 0.9; font-size: 14px; }
