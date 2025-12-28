@@ -15,11 +15,11 @@ BridgeOS is an AI-powered Operating System designed to manage foreign workforces
 - Conversation history for contextual understanding
 - Support for 12 languages (including native scripts)
 - Deep-link invitations with one-tap sharing
-- Real-time admin dashboard with manager detail views
+- **Real-time admin dashboard with 2-page manager detail views** ✅ COMPLETE
 - Media forwarding (photos, videos, voice messages, files)
-- **AI-powered daily action items** - Extract tasks from conversations ← NEW
-- **Subscription management with Lemon Squeezy**
-- **Usage tracking with free tier (8 messages) + unlimited paid tier**
+- **AI-powered daily action items** - Extract tasks from conversations ✅
+- **Subscription management with Lemon Squeezy** ✅
+- **Usage tracking with free tier (8 messages) + unlimited paid tier** ✅
 - Telegram notifications for subscription events
 
 ---
@@ -82,7 +82,7 @@ Worker receives: "בדוק את פרה 115 אם היא במחזור" (Hebrew, ma
    ↓
 Bot saves message to BOTH:
    - translation_msg_context (last 6 messages for translation)
-   - message_history (full 30-day history for action items) ← NEW
+   - message_history (full 30-day history for action items)
    ↓
 Bot increments manager's message counter (if not subscribed)
    ↓
@@ -91,7 +91,7 @@ Worker replies: "היא נראית בריאה"
 Manager receives: "She looks healthy"
 ```
 
-### **Daily Action Items Flow:** ← NEW
+### **Daily Action Items Flow:**
 ```
 Manager types: /daily
    ↓
@@ -167,7 +167,8 @@ On expiry: Receives notification, returns to free tier (8 messages)
    - Bot handlers → clean functions (easy to add features)
    - Payment logic → separate module (easy to swap providers)
    - Configuration → centralized, secrets separate
-   - **Message storage** → Two separate tables (translation context vs full history) ← NEW
+   - **Message storage** → Two separate tables (translation context vs full history)
+   - **Dashboard** → Two-page design (overview + detail pages) ✅
 
 ---
 
@@ -177,21 +178,21 @@ bridgeos/
 ├── bot.py                          # Main bot logic (handlers, commands, deep-link support)
 ├── translator.py                   # Translation with multiple LLM providers + action items
 ├── database.py                     # PostgreSQL storage with clean interface
-├── translation_msg_context.py      # Last 6 messages for translation context ← RENAMED
-├── message_history.py              # Full 30-day history for action items ← NEW
+├── translation_msg_context.py      # Last 6 messages for translation context
+├── message_history.py              # Full 30-day history for action items
 ├── usage_tracker.py                # Message limit tracking and enforcement
 ├── subscription_manager.py         # Subscription CRUD operations (database interface)
-├── dashboard.py                    # Flask admin dashboard + Lemon Squeezy webhooks
+├── dashboard.py                    # Flask admin dashboard + Lemon Squeezy webhooks ✅ COMPLETE
 ├── config.py                       # Configuration loader (environment + files)
-├── config.json                     # Non-secret settings (safe to upload to GitHub) ← UPDATED
+├── config.json                     # Non-secret settings (safe to upload to GitHub)
 ├── secrets.json                    # API keys (LOCAL only, in .gitignore)
 ├── requirements.txt                # Python dependencies
 ├── Procfile                        # Railway deployment (web + worker services)
 ├── runtime.txt                     # Python version (3.11.9)
 ├── .gitignore                      # Exclude secrets and data files
 └── docs/                           # Documentation folder
-    ├── BACKGROUND.md               # Project context for new sessions ← UPDATED
-    ├── structure.md                # This file ← UPDATED
+    ├── BACKGROUND.md               # Project context for new sessions
+    ├── structure.md                # This file ✅ UPDATED
     ├── POSTGRESQL_MIGRATION.md     # Database migration guide
     ├── DASHBOARD_SETUP.md          # Dashboard setup instructions
     ├── DEPLOYMENT_CHECKLIST.md     # Lemon Squeezy deployment guide
@@ -209,11 +210,11 @@ bridgeos/
 - InlineKeyboard share button with prefilled message
 - Message routing logic
 - Media forwarding (photos, videos, voice, files, stickers, locations, contacts)
-- **Subscription checking before sending messages**
-- **Subscribe button generation with Lemon Squeezy checkout URL**
+- Subscription checking before sending messages
+- Subscribe button generation with Lemon Squeezy checkout URL
 - Usage limit enforcement (checks before sending, increments after)
-- **Daily action items generation** (`/daily` command) ← NEW
-- Commands: `/start`, `/help`, `/mycode`, `/subscription`, `/daily`, `/refer`, `/reset` ← UPDATED
+- Daily action items generation (`/daily` command)
+- Commands: `/start`, `/help`, `/mycode`, `/subscription`, `/daily`, `/refer`, `/reset`
 - No translation, database, payment, or config logic
 
 ### **translator.py**
@@ -224,15 +225,15 @@ bridgeos/
   - `translate_with_gemini()` - Schema-enforced JSON (prevents answering questions)
   - `translate_with_openai()` - System prompt approach
 - `build_translation_prompt()` - Handles context, gender, industry
-- **`generate_daily_actionitems()`** - Uses Claude for extracting action items in manager's language ← NEW
+- `generate_daily_actionitems()` - Uses Claude for extracting action items in manager's language
 
 ### **database.py**
 - Simple function interface: `get_user()`, `save_user()`, `get_all_users()`
 - PostgreSQL with JSONB storage (maintains same data structure as JSON files)
-- Tables: `users`, `translation_msg_context`, `message_history`, `usage_tracking`, `subscriptions` ← UPDATED
+- Tables: `users`, `translation_msg_context`, `message_history`, `usage_tracking`, `subscriptions`
 - Shared access: Both bot and dashboard use same database
 
-### **translation_msg_context.py** (formerly conversations.py) ← RENAMED
+### **translation_msg_context.py**
 - Translation context management in PostgreSQL
 - `get_conversation_history()` - Retrieve last N messages (default: 6)
 - `add_to_conversation()` - Save message with sliding window
@@ -240,9 +241,9 @@ bridgeos/
 - Pair-based keys: `"userID1_userID2"` (sorted, lowest first)
 - Stores original language + text for better translation context
 - **Sliding window** - Only keeps last 6 messages (configurable via `translation_context_size`)
-- Tables: `translation_msg_context` (conversation_key, messages) ← RENAMED
+- Tables: `translation_msg_context` (conversation_key, messages)
 
-### **message_history.py** ← NEW
+### **message_history.py**
 - **Full conversation history** for action items and analytics
 - `save_message()` - Save message with timestamp + auto-cleanup
 - `get_messages()` - Retrieve messages with optional time filter (e.g., last 24 hours)
@@ -283,31 +284,39 @@ bridgeos/
 - Tables: `subscriptions` (telegram_user_id, data)
 - **Separation principle**: Bot and dashboard both call subscription_manager, never duplicate logic
 
-### **dashboard.py**
+### **dashboard.py** ✅ COMPLETE
 - Flask web application for admin monitoring
 - **Lemon Squeezy webhook handler** (`/webhook/lemonsqueezy`)
-- Real-time data from PostgreSQL (auto-refresh every 30s)
+- Real-time data from PostgreSQL
 - Password protected (`zb280072A` - change this!)
-- **Two-page design**: ← NEW
-  - **Page 1: Overview** - Stats + manager table with [View] buttons
-  - **Page 2: Manager Details** - Full info + conversations (accessible via `/manager/{id}`)
-- Features:
-  - Statistics (total managers, workers, connections, messages, **subscriptions**)
-  - Manager list with codes, connection status, usage stats, and **subscription badges**
-  - **Click [View] → Manager detail page** ← NEW
-  - Worker list with manager info
-  - **Subscription list with status, plan, dates, portal links**
-  - **Translation context (last 6 messages)** - Always visible on detail page ← NEW
-  - **Full message history** - Collapsible/expandable with filters ← NEW
-  - Admin actions (delete users, clear conversations, reset usage limits)
+- **Two-page design**: ✅ IMPLEMENTED
+  - **Page 1: Overview (/)** - Stats + manager/worker/subscription tables
+  - **Page 2: Manager Details (/manager/{id})** - Comprehensive manager view ✅ COMPLETE
+- **Manager Detail Page Features**: ✅ COMPLETE
+  - **Clean Header Layout**: Title + ID on left, navigation buttons stacked on right
+  - **Section 1**: Manager info (ID, code, language, gender, industry)
+  - **Section 2**: Connection & subscription (worker details, subscription status, portal link)
+  - **Section 3**: Translation context (last 6 messages, always visible)
+  - **Section 4**: Full message history (collapsible, 30 days, filter buttons)
+  - **Section 5**: Admin actions (reset usage, clear contexts, delete account)
+- **Routes**:
+  - `/` - Main dashboard (overview)
+  - `/manager/<user_id>` - Manager detail page ✅ COMPLETE
+  - `/clear_translation_context/<user_id>` - Clear last 6 messages ✅ COMPLETE
+  - `/clear_full_history/<user_id>` - Clear 30-day history ✅ COMPLETE
+  - `/delete_user/<user_id>` - Delete manager/worker
+  - `/reset_usage/<user_id>` - Reset message limits
+  - `/webhook/lemonsqueezy` - Payment webhook handler
+  - `/login` - Password authentication
+  - `/logout` - Session termination
 - **Webhook Processing**:
   - Verifies HMAC-SHA256 signature
   - Processes 11 subscription event types
   - Updates PostgreSQL via subscription_manager
   - Sends Telegram notifications via Bot API
   - Always returns 200 OK (prevents retry storms)
-- Usage tracking display: Shows messages sent / limit for each manager
-- Reset usage button for blocked managers
+- **Scalability**: Overview stays fast (no message loading), details load on-demand
+- **Responsive Design**: Works on desktop, tablet, and mobile
 
 ### **config.py**
 - Single source of truth for configuration
@@ -317,7 +326,7 @@ bridgeos/
   - Environment variables (Railway deployment)
 - All other files import: `from config import load_config`
 
-### **config.json** (Safe to upload) ← UPDATED
+### **config.json** (Safe to upload)
 ```json
 {
   "translation_provider": "claude",
@@ -362,9 +371,9 @@ bridgeos/
 }
 ```
 
-**Config Options:** ← UPDATED
-- `translation_context_size: 3` - Messages per side for translation (6 total) ← RENAMED from `history_size`
-- `message_retention_days: 30` - How long to keep full message history ← NEW
+**Config Options:**
+- `translation_context_size: 3` - Messages per side for translation (6 total)
+- `message_retention_days: 30` - How long to keep full message history
 - `free_message_limit: 8` - Free tier limit (testing mode)
 - `testing_mode: true` - Enable testing features
 - `test_user_ids: ["6425887398"]` - Whitelist for unlimited messages during testing
@@ -417,7 +426,7 @@ bridgeos/
 
 ### **4. Provider Flexibility**
 Different LLMs have different strengths:
-- **Claude Sonnet 4**: Best overall quality, strong system prompts, industry context, **action items generation** ← NEW
+- **Claude Sonnet 4**: Best overall quality, strong system prompts, industry context, action items generation
 - **Gemini Flash**: Schema enforcement prevents hallucinations, 40x cheaper
 - **OpenAI GPT-4o**: Alternative option, structured outputs
 
@@ -444,7 +453,7 @@ Different LLMs have different strengths:
 - Both bot and dashboard access same database
 - Scalable to 50k+ users
 - No file locking issues
-- **5 tables**: users, translation_msg_context, message_history, usage_tracking, subscriptions ← UPDATED
+- **5 tables**: users, translation_msg_context, message_history, usage_tracking, subscriptions
 
 ### **8. Normalized Conversation Keys**
 - Key format: `"lowerID_higherID"` (always sorted)
@@ -539,20 +548,20 @@ Bot ← subscription_manager → PostgreSQL ← subscription_manager ← Webhook
 - User selects their own language → native names improve UX
 - Maintains accessibility while being culturally appropriate
 
-### **13. Dual Storage Architecture** ← NEW
+### **13. Dual Storage Architecture**
 
 **Problem**: Translation needs last 6 messages (fast), action items need 30 days (comprehensive)
 
 **Solution**: Two separate PostgreSQL tables with different purposes
 
-**Table 1: `translation_msg_context`** (formerly `conversations`)
+**Table 1: `translation_msg_context`**
 - **Purpose**: Fast translation with recent context
 - **Storage**: Last 6 messages only (sliding window)
 - **Retention**: Automatic (keeps newest 6)
 - **Use case**: Real-time translation
 - **Performance**: Minimal data, fast queries
 
-**Table 2: `message_history`** ← NEW
+**Table 2: `message_history`**
 - **Purpose**: Full conversation history for action items and analytics
 - **Storage**: All messages for 30 days
 - **Retention**: Automatic cleanup (deletes messages >30 days on every save)
@@ -570,7 +579,7 @@ Bot ← subscription_manager → PostgreSQL ← subscription_manager ← Webhook
 - Storage: ~$0.06/month for 1000 users (negligible)
 - Maintenance: Zero (automatic cleanup)
 
-### **14. On-Demand Daily Action Items** ← NEW
+### **14. On-Demand Daily Action Items**
 
 **Why on-demand vs auto-scheduled?**
 - ✅ Validates demand (are users actually using it?)
@@ -582,7 +591,6 @@ Bot ← subscription_manager → PostgreSQL ← subscription_manager ← Webhook
 - Short and memorable (6 characters)
 - Natural ("I want my daily report")
 - Scalable for future `/weekly`, `/monthly`
-- ❌ Rejected: `/summary` (sounds like summarization), `/actionitems` (too long)
 
 **Scope:**
 - **Timeframe**: Last 24 hours (not calendar day - avoids timezone complexity)
@@ -603,37 +611,40 @@ Bot ← subscription_manager → PostgreSQL ← subscription_manager ← Webhook
 - Filter by timestamp (last 24 hours)
 - Extract action items only (skip greetings, confirmations)
 
-**Future Enhancement:**
-- Task tracking with checkboxes (Telegram InlineKeyboard)
-- Worker clicks "✅ Done" → Manager gets notification
-- Not part of MVP, but technically feasible
-
-### **15. Dashboard Scalability** ← NEW
+### **15. Dashboard Scalability** ✅ IMPLEMENTED
 
 **Problem**: Showing ALL conversations for ALL managers doesn't scale
 
-**Solution**: Two-page hybrid approach
+**Solution**: Two-page hybrid approach ✅ COMPLETE
 
-**Page 1: Dashboard Overview**
+**Page 1: Dashboard Overview (/)**
 - Stats cards (managers, workers, connections, messages, subscriptions)
-- Managers table (compact view with [View] buttons)
-- No conversations shown (keeps page fast)
-- Search/filter capabilities (future)
+- Managers table with **👁️ View Details** button ✅
+- Workers table
+- Subscriptions table
+- Recent conversations (last 10 messages from translation context)
+- **Performance**: Fast (no message_history loading)
 
-**Page 2: Manager Detail Page** (`/manager/{id}`)
-- Accessed by clicking [View] on manager row
+**Page 2: Manager Detail Page (/manager/{id})** ✅ NEW
+- **Header Layout** (Flexbox design): ✅ COMPLETE
+  - Left: 👤 Manager Details + Manager ID underneath
+  - Right: ← Back to Dashboard + 🚪 Logout (stacked vertically)
+  - Clean, professional, no overlapping elements
 - **Section 1**: Manager info (ID, code, language, gender, industry)
 - **Section 2**: Connection & subscription (worker info, subscription status, portal link)
-- **Section 3**: Translation context (last 6 messages, always visible)
-- **Section 4**: Full message history (collapsible/expandable with date filters)
-- **Section 5**: Admin actions (reset usage, clear history, delete account)
+- **Section 3**: Translation context (last 6 messages, always visible, color-coded)
+- **Section 4**: Full message history (collapsible/expandable, 30 days, filter buttons)
+- **Section 5**: Admin actions (reset usage, clear contexts, delete account)
 
 **Benefits:**
-- ✅ Scalability - Overview stays fast
+- ✅ Scalability - Overview stays fast, details load on-demand
 - ✅ Privacy - Only load conversations when needed
 - ✅ Usability - Natural click-through workflow
 - ✅ Debugging - Easy to help specific managers
 - ✅ Context - See everything about one manager in one place
+- ✅ Professional UI - Clean header layout, no overlapping elements
+
+**Implementation Status**: ✅ COMPLETE (December 28, 2025)
 
 ---
 
@@ -649,7 +660,7 @@ CREATE TABLE users (
 )
 ```
 
-**translation_msg_context table:** ← RENAMED
+**translation_msg_context table:**
 ```sql
 CREATE TABLE translation_msg_context (
     conversation_key TEXT PRIMARY KEY,
@@ -657,7 +668,7 @@ CREATE TABLE translation_msg_context (
 )
 ```
 
-**message_history table:** ← NEW
+**message_history table:**
 ```sql
 CREATE TABLE message_history (
     conversation_key TEXT PRIMARY KEY,
@@ -705,7 +716,7 @@ CREATE TABLE subscriptions (
 }
 ```
 
-### **Translation Context (in JSONB)** ← UPDATED
+### **Translation Context (in JSONB)**
 ```json
 [
   {
@@ -724,7 +735,7 @@ CREATE TABLE subscriptions (
 ```
 **Note**: Only last 6 messages (sliding window)
 
-### **Message History (in JSONB)** ← NEW
+### **Message History (in JSONB)**
 ```json
 [
   {
@@ -793,8 +804,8 @@ CREATE TABLE subscriptions (
 │         PostgreSQL DB                │
 │  ┌────────────────────────────────┐  │
 │  │ users                          │  │
-│  │ translation_msg_context        │  │  ← RENAMED
-│  │ message_history                │  │  ← NEW (30-day retention)
+│  │ translation_msg_context        │  │
+│  │ message_history                │  │
 │  │ usage_tracking                 │  │
 │  │ subscriptions                  │  │
 │  └────────────────────────────────┘  │
@@ -830,7 +841,7 @@ Next message: bot.py checks subscription_manager.is_subscribed()
 Allowed (unlimited messages)
 ```
 
-### **Message Flow Architecture:** ← NEW
+### **Message Flow Architecture:**
 ```
 User sends message
      ↓
@@ -843,6 +854,21 @@ Translation uses: translation_msg_context (fast, 6 messages)
 Daily action items use: message_history (comprehensive, 24 hours filtered)
 ```
 
+### **Dashboard Architecture:** ✅ COMPLETE
+```
+Main Dashboard (/)
+     ↓
+Manager clicks [👁️ View Details]
+     ↓
+Manager Detail Page (/manager/{id})
+     ├─→ Header: Title (left) + Navigation (right, stacked)
+     ├─→ Section 1: Manager Info
+     ├─→ Section 2: Connection & Subscription
+     ├─→ Section 3: Translation Context (6 messages)
+     ├─→ Section 4: Full History (30 days, collapsible)
+     └─→ Section 5: Admin Actions
+```
+
 ---
 
 ## **Commands**
@@ -852,7 +878,7 @@ Daily action items use: message_history (comprehensive, 24 hours filtered)
 - `/help` - Show available commands
 - `/mycode` - Show invitation code and link
 - `/subscription` - Manage subscription (view status, subscribe, portal link)
-- `/daily` - Get daily action items (last 24 hours) ← NEW
+- `/daily` - Get daily action items (last 24 hours)
 - `/refer` - Recommend BridgeOS to other managers
 - `/reset` - Delete account and start over
 
@@ -909,7 +935,7 @@ Manage or cancel anytime.
 [⚙️ Manage Subscription]
 ```
 
-**`/daily` (Managers only):** ← NEW
+**`/daily` (Managers only):**
 
 **When messages exist:**
 ```
@@ -967,7 +993,7 @@ Total messages: 12
 - Claude Sonnet: ~$600/month
 - Gemini Flash: ~$15/month
 
-**Daily Action Items Costs (per 1,000 users, 1 request/day):** ← NEW
+**Daily Action Items Costs (per 1,000 users, 1 request/day):**
 - Claude Sonnet: ~$15/month (30 requests × $0.0005 per request)
 - Negligible compared to translation costs
 
@@ -1081,22 +1107,25 @@ worker: python bot.py
 - Telegram notifications for subscription events
 - Customer portal for billing management
 - Freemium model (8 free → $9/month unlimited in testing)
-- **Dual storage architecture** (translation context + full history) ← NEW
-- **`/daily` command** (AI-powered action items extraction) ← NEW
-- **Manager language support** (action items in manager's language) ← NEW
-- **Anti-summarization prompt** (ensures bullet points, not summaries) ← NEW
-- **Testing mode whitelist** (unlimited messages for test users) ← NEW
+- **Dual storage architecture** (translation context + full history)
+- **`/daily` command** (AI-powered action items extraction)
+- **Manager language support** (action items in manager's language)
+- **Anti-summarization prompt** (ensures bullet points, not summaries)
+- **Testing mode whitelist** (unlimited messages for test users)
+- **Dashboard redesign** (2-page manager detail view) ✅ COMPLETE
+- **Professional header layout** (clean, no overlapping elements) ✅ COMPLETE
 
-🔄 **In Progress:**
-- Dashboard redesign (2-page manager detail view)
-- Real user testing
-- Cost monitoring
+📋 **Ready for Production:**
+- Dashboard fully functional and tested
+- All routes operational
+- Admin actions working
+- Responsive design verified
 
-📋 **Next Up:**
-- Implement manager detail page (`/manager/{id}`)
-- Add translation context display (6 messages)
-- Add full history with date filters
-- Task tracking with checkboxes (future enhancement)
+🔄 **Future Enhancements:**
+- Functional filter buttons (24h, 7d, 30d) - Currently placeholders
+- Pagination for large histories (>100 messages)
+- Search functionality on main dashboard
+- Task tracking with checkboxes (Telegram InlineKeyboard)
 - Analytics dashboard (conversion tracking)
 - Multi-worker support (v2)
 - Voice message transcription + translation
@@ -1129,7 +1158,7 @@ https://t.me/FarmTranslateBot
 ### **Bot Configuration (@BotFather):**
 - Description: Set via `/setdescription`
 - About: Set via `/setabouttext`
-- Commands: Set via `/setcommands`
+- Commands: Set via `/setcommands` (includes `/daily`)
 
 ---
 
@@ -1148,10 +1177,11 @@ https://t.me/FarmTranslateBot
 11. **Subscription checking** - Subscribed users bypass usage limits entirely
 12. **Payment via Lemon Squeezy** - Webhook-based, Merchant of Record
 13. **Customer portal for cancellation** - No cancel command needed
-14. **Dual storage** - Translation context (6 messages) + Full history (30 days) ← NEW
-15. **Action items for managers only** - Workers don't get `/daily` command ← NEW
-16. **Manager language output** - Action items MUST be in manager's registered language ← NEW
-17. **Testing mode** - Specific users bypass limits for development ← NEW
+14. **Dual storage** - Translation context (6 messages) + Full history (30 days)
+15. **Action items for managers only** - Workers don't get `/daily` command
+16. **Manager language output** - Action items MUST be in manager's registered language
+17. **Testing mode** - Specific users bypass limits for development
+18. **Dashboard scalability** - Two-page design (overview + detail) ✅
 
 ---
 
@@ -1171,7 +1201,7 @@ https://t.me/FarmTranslateBot
 5. Check PostgreSQL `subscriptions` table
 6. Verify Telegram notifications
 
-### **Daily Action Items Testing:** ← NEW
+### **Daily Action Items Testing:**
 1. Send multiple messages between manager and worker
 2. Manager types `/daily`
 3. Check if action items are extracted correctly (not summarized)
@@ -1179,6 +1209,22 @@ https://t.me/FarmTranslateBot
 5. Test with no messages (last 24 hours)
 6. Test with messages but no action items
 7. Verify format (bullets with • symbol)
+
+### **Dashboard Testing:** ✅ COMPLETE
+1. Login to dashboard (password: `zb280072A`)
+2. Verify stats cards display correctly
+3. Click "👁️ View Details" on a manager
+4. Verify all 5 sections load:
+   - Manager info
+   - Connection & subscription
+   - Translation context (6 messages)
+   - Full history (collapsible)
+   - Admin actions
+5. Test collapsible functionality (click header)
+6. Test admin actions (clear context, clear history)
+7. Test on mobile (responsive design)
+8. Verify header layout (no overlapping elements)
+9. Test navigation (back button, logout button)
 
 ### **Subscription Testing Checklist:**
 - [ ] Free tier: Send 8 messages, see limit
@@ -1212,7 +1258,7 @@ See `docs/TESTING_GUIDE.md` for detailed procedures.
 - Total messages sent
 - Subscription count
 - Usage stats per manager
-- **Manager detail pages** with full conversation history ← NEW
+- **Manager detail pages** with full conversation history ✅
 
 ### **External Tools (Future):**
 - Lemon Squeezy dashboard for revenue
@@ -1243,21 +1289,43 @@ See `docs/TESTING_GUIDE.md` for detailed procedures.
 - Test webhook endpoint with curl
 - Check Railway logs for incoming requests
 
-**"Action items showing old messages"** ← NEW
+**"Action items showing old messages"**
 - Check `message_retention_days` in config.json
 - Verify cleanup is running (check logs for "Cleaned up X old messages")
 - Query PostgreSQL: `SELECT * FROM message_history WHERE conversation_key='...'`
 
-**"Action items not extracting properly"** ← NEW
+**"Action items not extracting properly"**
 - Check Claude API response in logs
 - Verify prompt includes industry context AND manager language
 - Test with different message content
 - Check if messages exist in last 24 hours
 
-**"Action items in wrong language"** ← NEW
+**"Action items in wrong language"**
 - Verify manager's language in database: `SELECT data FROM users WHERE user_id='...'`
 - Check translator.py receives `manager_language` parameter
 - Test prompt with explicit language instruction
+
+**"Dashboard manager detail page not loading"**
+- Check if manager ID exists in database
+- Verify `/manager/<user_id>` route is accessible
+- Check Railway logs for Python errors
+- Verify message_history import in dashboard.py
+
+**"Translation context empty on detail page"**
+- Check if manager has worker connected
+- Verify messages exist in translation_msg_context table
+- Query: `SELECT * FROM translation_msg_context WHERE conversation_key='...'`
+
+**"Full history not displaying"**
+- Check if messages exist in message_history table
+- Verify collapsible section is expanding (JavaScript)
+- Check for JavaScript console errors
+- Test with different browsers
+
+**"Header elements overlapping"** ✅ FIXED
+- Verify flexbox CSS is applied to `.header`
+- Check `.header-left` and `.header-right` wrapper divs exist
+- Ensure back button and logout button are in `.header-right`
 
 ### **Maintenance Tasks:**
 - Monitor Railway database size (PostgreSQL)
@@ -1265,16 +1333,20 @@ See `docs/TESTING_GUIDE.md` for detailed procedures.
 - Check subscription renewal rates
 - Monitor translation costs vs revenue
 - Update bot commands in @BotFather if changed
-- **Monitor message history retention** - Verify auto-cleanup is working ← NEW
-- **Test action items quality** - Ensure no summarization creep ← NEW
+- **Monitor message history retention** - Verify auto-cleanup is working
+- **Test action items quality** - Ensure no summarization creep
+- **Test dashboard on mobile** - Verify responsive design ✅
+- **Monitor dashboard performance** - Check page load times ✅
 
 ---
 
 ## **Future Enhancements**
 
 ### **Phase 2:**
-- **Dashboard manager detail pages** - Click manager → see full info + conversations ← IN PROGRESS
-- **Task tracking with checkboxes** (Telegram InlineKeyboard) ← NEW
+- **Functional filter buttons** - Make 24h, 7d, 30d filters work (currently placeholders)
+- **Pagination** - Add page numbers for large histories (20 per page)
+- **Search on main dashboard** - Filter managers by name, code, language
+- **Task tracking with checkboxes** (Telegram InlineKeyboard)
   - Parse action items from `/daily` response
   - Add "✅ Done" buttons for workers
   - Track completion status
@@ -1289,16 +1361,20 @@ See `docs/TESTING_GUIDE.md` for detailed procedures.
 - Video call integration (with live translation)
 - Mobile app (native experience)
 - Desktop app (for office computers)
-- **Auto-scheduled action items** (premium feature) ← NEW
+- **Auto-scheduled action items** (premium feature)
+- **Export conversations** (CSV/JSON)
+- **Activity timeline** on dashboard
+- **Bulk admin actions** (reset all blocked users)
 
 ### **Phase 4:**
 - Multi-language group chats
 - Translation quality feedback
 - Custom industry vocabulary
 - Integration with HR systems
-- **Advanced analytics** (task completion rates, response times) ← NEW
+- **Advanced analytics** (task completion rates, response times)
+- **Real-time dashboard updates** (WebSocket)
 
 ---
 
-**Last Updated**: December 26, 2025
-**Version**: 3.0 (with `/daily` command, dual storage, and dashboard redesign plan)
+**Last Updated**: December 28, 2025
+**Version**: 3.2 (Dashboard redesign complete with improved header layout, ready for production)
