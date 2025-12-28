@@ -929,38 +929,44 @@ MANAGER_DETAIL_HTML = """
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 30px 30px 30px 120px;
+            padding: 30px;
             border-radius: 10px;
             margin-bottom: 30px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
         }
-        .header h1 { font-size: 28px; margin-bottom: 5px; margin-left: 80px; }
-        .header p { opacity: 0.9; font-size: 14px; }
-        .back-btn {
-            position: absolute;
-            top: 30px;
-            left: 30px;
+        .header-left {
+            flex: 1;
+        }
+        .header-left h1 { 
+            font-size: 28px; 
+            margin-bottom: 8px; 
+        }
+        .header-left p { 
+            opacity: 0.9; 
+            font-size: 14px; 
+            margin: 0;
+        }
+        .header-right {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-end;
+        }
+        .back-btn, .logout {
             background: rgba(255,255,255,0.2);
             color: white;
             padding: 8px 16px;
             border-radius: 5px;
             text-decoration: none;
             font-size: 14px;
+            white-space: nowrap;
         }
-        .back-btn:hover { background: rgba(255,255,255,0.3); }
-        .logout {
-            position: absolute;
-            top: 30px;
-            right: 30px;
-            background: rgba(255,255,255,0.2);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-size: 14px;
+        .back-btn:hover, .logout:hover { 
+            background: rgba(255,255,255,0.3); 
         }
-        .logout:hover { background: rgba(255,255,255,0.3); }
         .section {
             background: white;
             padding: 25px;
@@ -1115,10 +1121,14 @@ MANAGER_DETAIL_HTML = """
 <body>
     <div class="container">
         <div class="header">
-            <a href="/" class="back-btn">← Back to Dashboard</a>
-            <a href="/logout" class="logout">🚪 Logout</a>
-            <h1>👤 Manager Details</h1>
-            <p>Manager ID: {{ manager.id }}</p>
+            <div class="header-left">
+                <h1>👤 Manager Details</h1>
+                <p>Manager ID: {{ manager.id }}</p>
+            </div>
+            <div class="header-right">
+                <a href="/" class="back-btn">← Back to Dashboard</a>
+                <a href="/logout" class="logout">🚪 Logout</a>
+            </div>
         </div>
 
         <!-- Section 1: Manager Info -->
