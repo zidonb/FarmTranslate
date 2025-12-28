@@ -587,7 +587,7 @@ DASHBOARD_HTML = """
                     <div class="actions">
                         <form method="POST" action="/clear_conversation/{{ conv.key }}" style="display:inline;"
                               onsubmit="return confirm('Clear this conversation history?');">
-                            <button type="submit" class="btn danger">ðŸ§¹ Clear History</button>
+                            <button type="submit" class="btn danger">🧹 Clear History</button>
                         </form>
                     </div>
                 </div>
@@ -678,7 +678,7 @@ LOGIN_HTML = """
 </head>
 <body>
     <div class="login-box">
-        <h1>ðŸŒ‰ BridgeOS</h1>
+        <h1>🌉 BridgeOS</h1>
         <p>Dashboard Login</p>
         {% if error %}
         <div class="error">{{ error }}</div>

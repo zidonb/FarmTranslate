@@ -31,3 +31,4 @@
 - cahce daily, save daily
 - I18N
 - reset/cancel and so on - lemon squeezy events and check its working
+- Logout on first page
