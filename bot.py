@@ -250,6 +250,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 /daily - Get daily action items
 /subscription - View subscription status
 /refer - Recommend to other managers
+/feedback - Send feedback to BridgeOS team
 /reset - Delete account and start over
 
 💬 *How to use:*
@@ -261,6 +262,7 @@ Just type your message and it will be automatically translated and sent to your 
 
 /help - Show this help message
 /refer - Recommend to other managers
+/feedback - Send feedback to BridgeOS team
 /reset - Delete account
 
 💬 *How to use:*
@@ -554,6 +556,18 @@ async def subscription_command(update: Update, context: ContextTypes.DEFAULT_TYP
         else:
             await update.message.reply_text(message, parse_mode='Markdown')
 
+async def feedback_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /feedback command - collect user feedback"""
+    # Set flag to capture next message as feedback
+    context.user_data['awaiting_feedback'] = True
+    
+    await update.message.reply_text(
+        "💡 *Send Your Feedback*\n\n"
+        "Type your message below and I'll forward it to the BridgeOS team.\n\n"
+        "Share suggestions, report bugs, or tell us what you think!",
+        parse_mode='Markdown'
+    )
+
 # ============================================
 # MESSAGE HANDLING
 # ============================================
@@ -561,6 +575,55 @@ async def subscription_command(update: Update, context: ContextTypes.DEFAULT_TYP
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle regular messages - translate and forward"""
     user_id = str(update.effective_user.id)
+    
+    # Check if user is sending feedback
+    if context.user_data.get('awaiting_feedback'):
+        # Clear the flag first
+        context.user_data['awaiting_feedback'] = False
+        
+        # Get admin ID from config
+        config = load_config()
+        admin_id = config.get('admin_telegram_id')
+        
+        if not admin_id:
+            await update.message.reply_text(
+                "⚠️ Error: Admin not configured. Please contact support."
+            )
+            return
+        
+        # Get user info for the feedback message
+        user_name = update.effective_user.first_name or "Unknown"
+        username = update.effective_user.username
+        text = update.message.text
+        
+        # Format feedback message
+        feedback_msg = f"💬 *Feedback from {user_name}*\n"
+        if username:
+            feedback_msg += f"@{username} "
+        feedback_msg += f"(ID: {user_id})\n\n{text}"
+        
+        # Forward to admin
+        try:
+            await context.bot.send_message(
+                chat_id=admin_id,
+                text=feedback_msg,
+                parse_mode='Markdown'
+            )
+            
+            await update.message.reply_text(
+                "✅ *Feedback Sent!*\n\n"
+                "Thank you for sharing your thoughts with us. "
+                "We read every message and truly appreciate your input!",
+                parse_mode='Markdown'
+            )
+        except Exception as e:
+            print(f"Error sending feedback: {e}")
+            await update.message.reply_text(
+                "⚠️ Sorry, there was an error sending your feedback. Please try again later."
+            )
+        
+        return
+    
     user = database.get_user(user_id)
     
     if not user:
@@ -821,6 +884,7 @@ def main():
     app.add_handler(CommandHandler('refer', refer_command))
     app.add_handler(CommandHandler('daily', daily_command))
     app.add_handler(CommandHandler('subscription', subscription_command))
+    app.add_handler(CommandHandler('feedback', feedback_command))
     app.add_handler(CommandHandler('reset', reset))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     

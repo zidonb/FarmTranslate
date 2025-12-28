@@ -33,6 +33,7 @@
       "description": "General workplace communication between managers and workers."
     }
   },
+  "admin_telegram_id": "6425887398",
   "translation_context_size": 3,
   "message_retention_days": 30,
   "free_message_limit": 8,

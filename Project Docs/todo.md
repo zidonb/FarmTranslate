@@ -24,11 +24,9 @@
 - save all conversations for data, monitization.
 - save  also for summary and action item features.
 
-- if after start i stop clicking button, can i continue?
 - Language support in the registraion process
 - Menu look and feel
-- /suggest command, for features suggestions [to bridgeos dev team, me]
+- /suggest command, for features suggestions [to bridgeos dev team, which is me...]
 - cahce daily, save daily
 - I18N
 - reset/cancel and so on - lemon squeezy events and check its working
-- Logout on first page
