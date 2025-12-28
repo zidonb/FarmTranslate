@@ -21,30 +21,26 @@ DASHBOARD_PASSWORD = "zb280072A"  # Change this!
 # LEMON SQUEEZY WEBHOOK HANDLER
 # ============================================
 
+
 def verify_signature(payload_body, signature_header, secret):
     """Verify Lemon Squeezy webhook signature"""
     computed_signature = hmac.new(
-        secret.encode('utf-8'),
-        payload_body,
-        hashlib.sha256
+        secret.encode("utf-8"), payload_body, hashlib.sha256
     ).hexdigest()
     return hmac.compare_digest(computed_signature, signature_header)
-
 
 
 def send_telegram_notification(chat_id, text):
     """Send Telegram message directly via Bot API"""
     try:
         config = load_config()
-        token = config['telegram_token']
-        
+        token = config["telegram_token"]
+
         url = f"https://api.telegram.org/bot{token}/sendMessage"
-        response = requests.post(url, json={
-            "chat_id": chat_id,
-            "text": text,
-            "parse_mode": "Markdown"
-        })
-        
+        response = requests.post(
+            url, json={"chat_id": chat_id, "text": text, "parse_mode": "Markdown"}
+        )
+
         if response.status_code == 200:
             print(f"âœ… Notification sent to {chat_id}")
         else:
@@ -52,129 +48,142 @@ def send_telegram_notification(chat_id, text):
     except Exception as e:
         print(f"âŒ Error sending notification: {e}")
 
-@app.route('/webhook/lemonsqueezy', methods=['POST'])
+
+@app.route("/webhook/lemonsqueezy", methods=["POST"])
 def lemonsqueezy_webhook():
     """Handle Lemon Squeezy webhook events"""
     try:
         config = load_config()
-        webhook_secret = config['lemonsqueezy']['webhook_secret']
-        
+        webhook_secret = config["lemonsqueezy"]["webhook_secret"]
+
         payload_body = request.get_data()
-        signature_header = request.headers.get('X-Signature')
-        
+        signature_header = request.headers.get("X-Signature")
+
         if not signature_header:
             print("ERROR: No signature header")
             return jsonify({"error": "No signature"}), 401
-        
+
         if not verify_signature(payload_body, signature_header, webhook_secret):
             print("ERROR: Invalid signature")
             return jsonify({"error": "Invalid signature"}), 401
-        
+
         data = request.json
-        event_name = data['meta']['event_name']
-        custom_data = data['meta'].get('custom_data', {})
-        telegram_id = custom_data.get('telegram_id')
-        
+        event_name = data["meta"]["event_name"]
+        custom_data = data["meta"].get("custom_data", {})
+        telegram_id = custom_data.get("telegram_id")
+
         if not telegram_id:
             print(f"WARNING: No telegram_id in webhook for event {event_name}")
             return jsonify({"status": "success", "note": "no telegram_id"}), 200
-        
+
         print(f"Processing event: {event_name} for telegram_id: {telegram_id}")
-        
+
         # Handle different event types
-        if event_name == 'subscription_created':
+        if event_name == "subscription_created":
             handle_subscription_created(telegram_id, data)
-        elif event_name == 'subscription_updated':
+        elif event_name == "subscription_updated":
             handle_subscription_updated(telegram_id, data)
-        elif event_name == 'subscription_cancelled':
+        elif event_name == "subscription_cancelled":
             handle_subscription_cancelled(telegram_id, data)
-        elif event_name == 'subscription_resumed':
+        elif event_name == "subscription_resumed":
             handle_subscription_resumed(telegram_id, data)
-        elif event_name == 'subscription_expired':
+        elif event_name == "subscription_expired":
             handle_subscription_expired(telegram_id, data)
-        elif event_name == 'subscription_paused':
+        elif event_name == "subscription_paused":
             handle_subscription_paused(telegram_id, data)
-        elif event_name == 'subscription_unpaused':
+        elif event_name == "subscription_unpaused":
             handle_subscription_unpaused(telegram_id, data)
-        elif event_name == 'subscription_payment_success':
+        elif event_name == "subscription_payment_success":
             handle_subscription_payment_success(telegram_id, data)
-        elif event_name == 'subscription_payment_failed':
+        elif event_name == "subscription_payment_failed":
             handle_subscription_payment_failed(telegram_id, data)
-        elif event_name == 'subscription_payment_recovered':
+        elif event_name == "subscription_payment_recovered":
             handle_subscription_payment_recovered(telegram_id, data)
         else:
             print(f"Unhandled event: {event_name}")
-        
+
         return jsonify({"status": "success"}), 200
-    
+
     except Exception as e:
         print(f"ERROR processing webhook: {e}")
         return jsonify({"status": "error", "message": str(e)}), 200
 
+
 def handle_subscription_created(telegram_id: str, data: dict):
     """Handle subscription_created event"""
-    attrs = data['data']['attributes']
+    attrs = data["data"]["attributes"]
     subscription_data = {
-        'status': 'active',
-        'lemon_subscription_id': data['data']['id'],
-        'lemon_customer_id': str(attrs['customer_id']),
-        'started_at': attrs['created_at'],
-        'renews_at': attrs['renews_at'],
-        'ends_at': attrs.get('ends_at'),
-        'cancelled_at': None,
-        'plan': 'monthly',
-        'customer_portal_url': attrs['urls']['customer_portal']
+        "status": "active",
+        "lemon_subscription_id": data["data"]["id"],
+        "lemon_customer_id": str(attrs["customer_id"]),
+        "started_at": attrs["created_at"],
+        "renews_at": attrs["renews_at"],
+        "ends_at": attrs.get("ends_at"),
+        "cancelled_at": None,
+        "plan": "monthly",
+        "customer_portal_url": attrs["urls"]["customer_portal"],
     }
     subscription_manager.save_subscription(telegram_id, subscription_data)
-    print(f"âœ… Subscription created for {telegram_id}: {subscription_data['lemon_subscription_id']}")
-    
+    print(
+        f"âœ… Subscription created for {telegram_id}: {subscription_data['lemon_subscription_id']}"
+    )
+
     # Send notification to user
     send_telegram_notification(
         telegram_id,
         "âœ… *Subscription Active!*\n\n"
         "You now have unlimited messages.\n"
-        "Thank you for subscribing to BridgeOS! ðŸŽ‰"
+        "Thank you for subscribing to BridgeOS! ðŸŽ‰",
     )
+
 
 def handle_subscription_updated(telegram_id: str, data: dict):
     """Handle subscription_updated event"""
-    attrs = data['data']['attributes']
+    attrs = data["data"]["attributes"]
     subscription = subscription_manager.get_subscription(telegram_id)
     if not subscription:
         print(f"WARNING: Subscription not found for {telegram_id}, creating new")
         handle_subscription_created(telegram_id, data)
         return
-    subscription['renews_at'] = attrs['renews_at']
-    subscription['ends_at'] = attrs.get('ends_at')
-    subscription['customer_portal_url'] = attrs['urls']['customer_portal']
-    if attrs['cancelled']:
-        subscription['status'] = 'cancelled'
-        if not subscription.get('cancelled_at'):
-            subscription['cancelled_at'] = datetime.utcnow().isoformat()
+    subscription["renews_at"] = attrs["renews_at"]
+    subscription["ends_at"] = attrs.get("ends_at")
+    subscription["customer_portal_url"] = attrs["urls"]["customer_portal"]
+    if attrs["cancelled"]:
+        subscription["status"] = "cancelled"
+        if not subscription.get("cancelled_at"):
+            subscription["cancelled_at"] = datetime.utcnow().isoformat()
     subscription_manager.save_subscription(telegram_id, subscription)
     print(f"âœ… Subscription updated for {telegram_id}")
 
+
 def handle_subscription_cancelled(telegram_id: str, data: dict):
     """Handle subscription_cancelled event"""
-    attrs = data['data']['attributes']
+    attrs = data["data"]["attributes"]
     subscription = subscription_manager.get_subscription(telegram_id)
     if not subscription:
         print(f"WARNING: Subscription not found for {telegram_id}")
         return
-    subscription['status'] = 'cancelled'
-    subscription['cancelled_at'] = datetime.utcnow().isoformat()
-    subscription['ends_at'] = attrs.get('ends_at')
+    subscription["status"] = "cancelled"
+    subscription["cancelled_at"] = datetime.utcnow().isoformat()
+    subscription["ends_at"] = attrs.get("ends_at")
     subscription_manager.save_subscription(telegram_id, subscription)
-    print(f"âš ï¸ Subscription cancelled for {telegram_id}, access until: {attrs.get('ends_at')}")
-    
+    print(
+        f"âš ï¸ Subscription cancelled for {telegram_id}, access until: {attrs.get('ends_at')}"
+    )
+
     # Send notification to user
-    ends_at_display = attrs.get('ends_at', 'end of billing period')[:10] if attrs.get('ends_at') else 'end of billing period'
+    ends_at_display = (
+        attrs.get("ends_at", "end of billing period")[:10]
+        if attrs.get("ends_at")
+        else "end of billing period"
+    )
     send_telegram_notification(
         telegram_id,
         f"âš ï¸ *Subscription Cancelled*\n\n"
         f"You'll keep access until {ends_at_display}.\n"
-        f"You can resubscribe anytime."
+        f"You can resubscribe anytime.",
     )
+
 
 def handle_subscription_resumed(telegram_id: str, data: dict):
     """Handle subscription_resumed event"""
@@ -182,19 +191,20 @@ def handle_subscription_resumed(telegram_id: str, data: dict):
     if not subscription:
         print(f"WARNING: Subscription not found for {telegram_id}")
         return
-    subscription['status'] = 'active'
-    subscription['cancelled_at'] = None
-    subscription['ends_at'] = None
+    subscription["status"] = "active"
+    subscription["cancelled_at"] = None
+    subscription["ends_at"] = None
     subscription_manager.save_subscription(telegram_id, subscription)
     print(f"âœ… Subscription resumed for {telegram_id}")
-    
+
     # Send notification to user
     send_telegram_notification(
         telegram_id,
         "âœ… *Subscription Resumed!*\n\n"
         "Your subscription is active again.\n"
-        "Welcome back! ðŸŽ‰"
+        "Welcome back! ðŸŽ‰",
     )
+
 
 def handle_subscription_expired(telegram_id: str, data: dict):
     """Handle subscription_expired event"""
@@ -202,18 +212,19 @@ def handle_subscription_expired(telegram_id: str, data: dict):
     if not subscription:
         print(f"WARNING: Subscription not found for {telegram_id}")
         return
-    subscription['status'] = 'expired'
+    subscription["status"] = "expired"
     subscription_manager.save_subscription(telegram_id, subscription)
     print(f"âŒ Subscription expired for {telegram_id}")
-    
+
     # Send notification to user
     send_telegram_notification(
         telegram_id,
         "âŒ *Subscription Expired*\n\n"
         "Your subscription has ended.\n"
         "You're back on the free tier (50 messages).\n\n"
-        "Subscribe again to continue unlimited messaging."
+        "Subscribe again to continue unlimited messaging.",
     )
+
 
 def handle_subscription_paused(telegram_id: str, data: dict):
     """Handle subscription_paused event"""
@@ -221,9 +232,10 @@ def handle_subscription_paused(telegram_id: str, data: dict):
     if not subscription:
         print(f"WARNING: Subscription not found for {telegram_id}")
         return
-    subscription['status'] = 'paused'
+    subscription["status"] = "paused"
     subscription_manager.save_subscription(telegram_id, subscription)
     print(f"â¸ï¸ Subscription paused for {telegram_id}")
+
 
 def handle_subscription_unpaused(telegram_id: str, data: dict):
     """Handle subscription_unpaused event"""
@@ -231,38 +243,44 @@ def handle_subscription_unpaused(telegram_id: str, data: dict):
     if not subscription:
         print(f"WARNING: Subscription not found for {telegram_id}")
         return
-    subscription['status'] = 'active'
+    subscription["status"] = "active"
     subscription_manager.save_subscription(telegram_id, subscription)
     print(f"â–¶ï¸ Subscription unpaused for {telegram_id}")
+
 
 def handle_subscription_payment_success(telegram_id: str, data: dict):
     """Handle subscription_payment_success event"""
     print(f"âœ… Payment successful for {telegram_id}")
 
+
 def handle_subscription_payment_failed(telegram_id: str, data: dict):
     """Handle subscription_payment_failed event"""
     print(f"âš ï¸ Payment failed for {telegram_id}")
-    
+
     # Send notification to user
     subscription = subscription_manager.get_subscription(telegram_id)
-    portal_url = subscription.get('customer_portal_url') if subscription else None
-    
-    message = "âš ï¸ *Payment Failed*\n\n" \
-              "Your last payment didn't go through.\n" \
-              "We'll retry automatically in 3 days.\n\n"
-    
+    portal_url = subscription.get("customer_portal_url") if subscription else None
+
+    message = (
+        "âš ï¸ *Payment Failed*\n\n"
+        "Your last payment didn't go through.\n"
+        "We'll retry automatically in 3 days.\n\n"
+    )
+
     if portal_url:
         message += f"Update your payment method: {portal_url}"
-    
+
     send_telegram_notification(telegram_id, message)
+
 
 def handle_subscription_payment_recovered(telegram_id: str, data: dict):
     """Handle subscription_payment_recovered event"""
     subscription = subscription_manager.get_subscription(telegram_id)
-    if subscription and subscription['status'] == 'paused':
-        subscription['status'] = 'active'
+    if subscription and subscription["status"] == "paused":
+        subscription["status"] = "active"
         subscription_manager.save_subscription(telegram_id, subscription)
     print(f"âœ… Payment recovered for {telegram_id}")
+
 
 # ============================================
 # DASHBOARD (Original Code)
@@ -521,7 +539,7 @@ DASHBOARD_HTML = """
                     <div class="actions">
                         <form method="POST" action="/delete_user/{{ worker.id }}" style="display:inline;"
                               onsubmit="return confirm('Delete this worker?');">
-                            <button type="submit" class="btn danger">ðŸ—‘ï¸ Delete Worker</button>
+                            <button type="submit" class="btn danger">🗑️ Delete Worker</button>
                         </form>
                     </div>
                 </div>
@@ -695,105 +713,124 @@ LOGIN_HTML = """
 </html>
 """
 
-@app.route('/login', methods=['GET', 'POST'])
+
+@app.route("/login", methods=["GET", "POST"])
 def login():
-    if request.method == 'POST':
-        password = request.form.get('password', '')
+    if request.method == "POST":
+        password = request.form.get("password", "")
         if password == DASHBOARD_PASSWORD:
-            session['authenticated'] = True
-            return redirect('/')
+            session["authenticated"] = True
+            return redirect("/")
         else:
             return render_template_string(LOGIN_HTML, error="Invalid password")
     return render_template_string(LOGIN_HTML)
 
-@app.route('/logout')
+
+@app.route("/logout")
 def logout():
     session.clear()
-    return redirect('/login')
+    return redirect("/login")
 
-@app.route('/')
+
+@app.route("/")
 def dashboard():
-    if not session.get('authenticated'):
-        return redirect('/login')
-    
+    if not session.get("authenticated"):
+        return redirect("/login")
+
     all_users = database.get_all_users()
     config = load_config()
-    message_limit = config.get('free_message_limit', 50)
-    
+    message_limit = config.get("free_message_limit", 50)
+
     managers = []
     workers = []
-    
+
     for user_id, user_data in all_users.items():
-        user_data['id'] = user_id
-        if user_data.get('role') == 'manager':
+        user_data["id"] = user_id
+        if user_data.get("role") == "manager":
             usage = usage_tracker.get_usage(user_id)
-            user_data['messages_sent'] = usage.get('messages_sent', 0)
-            user_data['blocked'] = usage.get('blocked', False)
-            user_data['message_limit'] = message_limit
-            
+            user_data["messages_sent"] = usage.get("messages_sent", 0)
+            user_data["blocked"] = usage.get("blocked", False)
+            user_data["message_limit"] = message_limit
+
             # Get subscription status
             subscription = subscription_manager.get_subscription(user_id)
-            user_data['subscription'] = subscription
-            
+            user_data["subscription"] = subscription
+
             managers.append(user_data)
-        elif user_data.get('role') == 'worker':
+        elif user_data.get("role") == "worker":
             workers.append(user_data)
-    
+
     all_conversations = translation_msg_context.load_conversations()
     conversations_list = []
-    
+
     for conv_key, messages in all_conversations.items():
-        user1, user2 = conv_key.split('_')
+        user1, user2 = conv_key.split("_")
         user1_data = database.get_user(user1)
         user2_data = database.get_user(user2)
-        
+
         formatted_messages = []
         for msg in messages[-10:]:
-            msg_time = datetime.fromisoformat(msg['timestamp']).strftime('%H:%M')
+            msg_time = datetime.fromisoformat(msg["timestamp"]).strftime("%H:%M")
             is_manager = False
             from_role = "User"
-            if user1_data and user1_data.get('role') == 'manager' and msg['from'] == user1:
+            if (
+                user1_data
+                and user1_data.get("role") == "manager"
+                and msg["from"] == user1
+            ):
                 is_manager = True
                 from_role = "Manager"
-            elif user2_data and user2_data.get('role') == 'manager' and msg['from'] == user2:
+            elif (
+                user2_data
+                and user2_data.get("role") == "manager"
+                and msg["from"] == user2
+            ):
                 is_manager = True
                 from_role = "Manager"
             else:
                 from_role = "Worker"
-            
-            formatted_messages.append({
-                'time': msg_time,
-                'text': msg['text'],
-                'lang': msg['lang'],
-                'is_manager': is_manager,
-                'from_role': from_role
-            })
-        
-        conversations_list.append({
-            'key': conv_key,
-            'user1': user1,
-            'user2': user2,
-            'messages': formatted_messages
-        })
-    
+
+            formatted_messages.append(
+                {
+                    "time": msg_time,
+                    "text": msg["text"],
+                    "lang": msg["lang"],
+                    "is_manager": is_manager,
+                    "from_role": from_role,
+                }
+            )
+
+        conversations_list.append(
+            {
+                "key": conv_key,
+                "user1": user1,
+                "user2": user2,
+                "messages": formatted_messages,
+            }
+        )
+
     # Get subscription stats
     all_subscriptions = subscription_manager.get_all_subscriptions()
-    active_subscriptions = sum(1 for s in all_subscriptions.values() if s.get('status') in ['active', 'cancelled'])
-    
+    active_subscriptions = sum(
+        1
+        for s in all_subscriptions.values()
+        if s.get("status") in ["active", "cancelled"]
+    )
+
     # Format subscriptions for display
     subscriptions_list = []
     for telegram_id, sub_data in all_subscriptions.items():
-        sub_data['telegram_id'] = telegram_id
+        sub_data["telegram_id"] = telegram_id
         subscriptions_list.append(sub_data)
-    
+
     stats = {
-        'total_managers': len(managers),
-        'total_workers': len(workers),
-        'active_connections': sum(1 for m in managers if m.get('worker')),
-        'total_messages': sum(len(msgs) for msgs in all_conversations.values()),
-        'total_subscriptions': active_subscriptions
+        "total_managers": len(managers),
+        "total_workers": len(workers),
+        "active_connections": sum(1 for m in managers if m.get("worker")),
+        "total_messages": sum(len(msgs) for msgs in all_conversations.values()),
+        "total_subscriptions": active_subscriptions,
     }
-    
+
     return render_template_string(
         DASHBOARD_HTML,
         managers=managers,
@@ -801,66 +838,71 @@ def dashboard():
         conversations_list=conversations_list,
         subscriptions_list=subscriptions_list,
         stats=stats,
-        now=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        now=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     )
 
-@app.route('/delete_user/<user_id>', methods=['POST'])
+
+@app.route("/delete_user/<user_id>", methods=["POST"])
 def delete_user(user_id):
-    if not session.get('authenticated'):
-        return redirect('/login')
-    
+    if not session.get("authenticated"):
+        return redirect("/login")
+
     user = database.get_user(user_id)
     if not user:
-        return redirect('/')
-    
-    if user.get('role') == 'manager':
-        worker_id = user.get('worker')
+        return redirect("/")
+
+    if user.get("role") == "manager":
+        worker_id = user.get("worker")
         if worker_id:
             translation_msg_context.clear_conversation(user_id, worker_id)
             all_users = database.get_all_users()
             if worker_id in all_users:
                 del all_users[worker_id]
                 database.save_data(all_users)
-    
-    elif user.get('role') == 'worker':
-        manager_id = user.get('manager')
+
+    elif user.get("role") == "worker":
+        manager_id = user.get("manager")
         if manager_id:
             manager = database.get_user(manager_id)
             if manager:
-                manager['worker'] = None
+                manager["worker"] = None
                 database.save_user(manager_id, manager)
             translation_msg_context.clear_conversation(user_id, manager_id)
-    
+
     all_users = database.get_all_users()
     if user_id in all_users:
         del all_users[user_id]
         database.save_data(all_users)
-    
-    return redirect('/')
 
-@app.route('/clear_conversation/<conv_key>', methods=['POST'])
+    return redirect("/")
+
+
+@app.route("/clear_conversation/<conv_key>", methods=["POST"])
 def clear_conversation_route(conv_key):
-    if not session.get('authenticated'):
-        return redirect('/login')
-    
-    user1, user2 = conv_key.split('_')
+    if not session.get("authenticated"):
+        return redirect("/login")
+
+    user1, user2 = conv_key.split("_")
     translation_msg_context.clear_conversation(user1, user2)
-    
-    return redirect('/')
 
-@app.route('/reset_usage/<user_id>', methods=['POST'])
+    return redirect("/")
+
+
+@app.route("/reset_usage/<user_id>", methods=["POST"])
 def reset_usage_route(user_id):
-    if not session.get('authenticated'):
-        return redirect('/login')
-    
-    usage_tracker.reset_user_usage(user_id)
-    
-    return redirect('/')
+    if not session.get("authenticated"):
+        return redirect("/login")
 
-@app.route('/health', methods=['GET'])
+    usage_tracker.reset_user_usage(user_id)
+
+    return redirect("/")
+
+
+@app.route("/health", methods=["GET"])
 def health_check():
     """Health check endpoint"""
     return jsonify({"status": "healthy"}), 200
+
 
 # ============================================
 # MANAGER DETAIL PAGE
@@ -1260,114 +1302,128 @@ MANAGER_DETAIL_HTML = """
 </html>
 """
 
+
 # Route for Manager Detail Page
-@app.route('/manager/<user_id>')
+@app.route("/manager/<user_id>")
 def manager_detail(user_id):
     """Show detailed view of a specific manager"""
-    if not session.get('authenticated'):
-        return redirect('/login')
-    
+    if not session.get("authenticated"):
+        return redirect("/login")
+
     # Get manager data
     manager = database.get_user(user_id)
-    if not manager or manager.get('role') != 'manager':
-        return redirect('/')
-    
-    manager['id'] = user_id
-    
+    if not manager or manager.get("role") != "manager":
+        return redirect("/")
+
+    manager["id"] = user_id
+
     # Get config
     config = load_config()
-    message_limit = config.get('free_message_limit', 50)
-    
+    message_limit = config.get("free_message_limit", 50)
+
     # Get usage stats
     usage = usage_tracker.get_usage(user_id)
-    manager['messages_sent'] = usage.get('messages_sent', 0)
-    manager['blocked'] = usage.get('blocked', False)
-    manager['message_limit'] = message_limit
-    
+    manager["messages_sent"] = usage.get("messages_sent", 0)
+    manager["blocked"] = usage.get("blocked", False)
+    manager["message_limit"] = message_limit
+
     # Get subscription
     subscription = subscription_manager.get_subscription(user_id)
-    manager['subscription'] = subscription
-    
+    manager["subscription"] = subscription
+
     # Get worker data (if connected)
     worker = None
-    worker_id = manager.get('worker')
+    worker_id = manager.get("worker")
     if worker_id:
         worker = database.get_user(worker_id)
         if worker:
-            worker['id'] = worker_id
-    
+            worker["id"] = worker_id
+
     # Get translation context (last 6 messages)
     translation_context = []
     if worker_id:
-        context_messages = translation_msg_context.get_conversation_history(user_id, worker_id, max_messages=6)
+        context_messages = translation_msg_context.get_conversation_history(
+            user_id, worker_id, max_messages=6
+        )
         for msg in context_messages:
-            is_manager = (msg['from'] == user_id)
-            translation_context.append({
-                'time': datetime.fromisoformat(msg['timestamp']).strftime('%Y-%m-%d %H:%M'),
-                'text': msg['text'],
-                'lang': msg['lang'],
-                'is_manager': is_manager,
-                'from_role': 'Manager' if is_manager else 'Worker'
-            })
-    
+            is_manager = msg["from"] == user_id
+            translation_context.append(
+                {
+                    "time": datetime.fromisoformat(msg["timestamp"]).strftime(
+                        "%Y-%m-%d %H:%M"
+                    ),
+                    "text": msg["text"],
+                    "lang": msg["lang"],
+                    "is_manager": is_manager,
+                    "from_role": "Manager" if is_manager else "Worker",
+                }
+            )
+
     # Get full message history (last 30 days)
     full_history = []
     message_count = 0
     if worker_id:
         history_messages = message_history.get_messages(user_id, worker_id)
         message_count = len(history_messages)
-        
+
         # Format messages for display
         for msg in history_messages:
-            is_manager = (msg['from'] == user_id)
-            full_history.append({
-                'timestamp': datetime.fromisoformat(msg['timestamp']).strftime('%Y-%m-%d %H:%M:%S'),
-                'text': msg['text'],
-                'lang': msg['lang'],
-                'is_manager': is_manager,
-                'from_role': 'Manager' if is_manager else 'Worker'
-            })
-    
+            is_manager = msg["from"] == user_id
+            full_history.append(
+                {
+                    "timestamp": datetime.fromisoformat(msg["timestamp"]).strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    ),
+                    "text": msg["text"],
+                    "lang": msg["lang"],
+                    "is_manager": is_manager,
+                    "from_role": "Manager" if is_manager else "Worker",
+                }
+            )
+
     return render_template_string(
         MANAGER_DETAIL_HTML,
         manager=manager,
         worker=worker,
         translation_context=translation_context,
         full_history=full_history,
-        message_count=message_count
+        message_count=message_count,
     )
 
+
 # Additional admin action routes
-@app.route('/clear_translation_context/<user_id>', methods=['POST'])
+@app.route("/clear_translation_context/<user_id>", methods=["POST"])
 def clear_translation_context_route(user_id):
     """Clear translation context for a manager"""
-    if not session.get('authenticated'):
-        return redirect('/login')
-    
+    if not session.get("authenticated"):
+        return redirect("/login")
+
     manager = database.get_user(user_id)
-    if manager and manager.get('role') == 'manager':
-        worker_id = manager.get('worker')
+    if manager and manager.get("role") == "manager":
+        worker_id = manager.get("worker")
         if worker_id:
             translation_msg_context.clear_conversation(user_id, worker_id)
-    
-    return redirect(f'/manager/{user_id}')
 
-@app.route('/clear_full_history/<user_id>', methods=['POST'])
+    return redirect(f"/manager/{user_id}")
+
+
+@app.route("/clear_full_history/<user_id>", methods=["POST"])
 def clear_full_history_route(user_id):
     """Clear full message history for a manager"""
-    if not session.get('authenticated'):
-        return redirect('/login')
-    
+    if not session.get("authenticated"):
+        return redirect("/login")
+
     manager = database.get_user(user_id)
-    if manager and manager.get('role') == 'manager':
-        worker_id = manager.get('worker')
+    if manager and manager.get("role") == "manager":
+        worker_id = manager.get("worker")
         if worker_id:
             message_history.clear_history(user_id, worker_id)
-    
-    return redirect(f'/manager/{user_id}')
+
+    return redirect(f"/manager/{user_id}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import os
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
