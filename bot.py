@@ -9,6 +9,7 @@ import message_history
 import usage_tracker
 import subscription_manager
 from config import load_config
+import feedback
 from datetime import datetime, timezone
 
 # Conversation states
@@ -608,6 +609,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 chat_id=admin_id,
                 text=feedback_msg,
                 parse_mode='Markdown'
+            )
+            
+            # Save to database
+            feedback.save_feedback(
+                telegram_user_id=user_id,
+                user_name=user_name,
+                username=username,
+                message=text
             )
             
             await update.message.reply_text(

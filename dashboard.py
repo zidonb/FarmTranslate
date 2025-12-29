@@ -4,6 +4,7 @@ import translation_msg_context
 import message_history
 import usage_tracker
 import subscription_manager
+import feedback
 from config import load_config
 from datetime import datetime
 import secrets
@@ -615,6 +616,41 @@ DASHBOARD_HTML = """
                 <p style="color: #999;">No conversations yet.</p>
             {% endif %}
         </div>
+        <div class="section">
+            <h2>💬 User Feedback</h2>
+            {% if feedback_list %}
+                {% for fb in feedback_list %}
+                <div class="user-card">
+                    <h3>{{ fb.user_name }}{% if fb.username %} (@{{ fb.username }}){% endif %}</h3>
+                    <div class="user-info">
+                        <div><strong>User ID:</strong> {{ fb.telegram_user_id }}</div>
+                        <div><strong>Date:</strong> {{ fb.created_at.strftime('%Y-%m-%d %H:%M') if fb.created_at else 'N/A' }}</div>
+                        <div>
+                            <strong>Status:</strong>
+                            {% if fb.status == 'read' %}
+                                <span class="badge connected">✅ Read</span>
+                            {% else %}
+                                <span class="badge disconnected">⭕ Unread</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div style="background: #f9f9f9; padding: 15px; border-radius: 5px; margin: 10px 0; border-left: 4px solid #667eea;">
+                        <strong>Message:</strong><br>
+                        {{ fb.message }}
+                    </div>
+                    <div class="actions">
+                        {% if fb.status == 'unread' %}
+                        <form method="POST" action="/mark_feedback_read/{{ fb.id }}" style="display:inline;">
+                            <button type="submit" class="btn">✅ Mark as Read</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p style="color: #999;">No feedback received yet.</p>
+            {% endif %}
+        </div>
     </div>
 </body>
 </html>
@@ -824,6 +860,9 @@ def dashboard():
         sub_data["telegram_id"] = telegram_id
         subscriptions_list.append(sub_data)
 
+    # Get feedback
+    feedback_list = feedback.get_all_feedback(limit=50)
+
     stats = {
         "total_managers": len(managers),
         "total_workers": len(workers),
@@ -838,6 +877,7 @@ def dashboard():
         workers=workers,
         conversations_list=conversations_list,
         subscriptions_list=subscriptions_list,
+        feedback_list=feedback_list,  # ← ADD THIS LINE
         stats=stats,
         now=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     )
@@ -904,6 +944,13 @@ def health_check():
     """Health check endpoint"""
     return jsonify({"status": "healthy"}), 200
 
+@app.route("/mark_feedback_read/<int:feedback_id>", methods=["POST"])
+def mark_feedback_read_route(feedback_id):
+    if not session.get("authenticated"):
+        return redirect("/login")
+    
+    feedback.mark_as_read(feedback_id)
+    return redirect("/")
 
 # ============================================
 # MANAGER DETAIL PAGE
