@@ -1,4 +1,3 @@
-import json
 import random
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, ConversationHandler
@@ -10,7 +9,10 @@ import usage_tracker
 import subscription_manager
 from config import load_config
 import feedback
+import tasks 
 from datetime import datetime, timezone
+import json
+
 
 # Conversation states
 LANGUAGE, GENDER, INDUSTRY = range(3)
@@ -247,12 +249,13 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 📋 *Available Commands:*
 
 /help - Show this help message
-/mycode - Show your connection code
+/tasks - View your task list
 /daily - Get daily action items
 /subscription - View subscription status
+/reset - Delete account and start over
+/mycode - Show your connection code
 /refer - Recommend to other managers
 /feedback - Send feedback to BridgeOS team
-/reset - Delete account and start over
 
 💬 *How to use:*
 Just type your message and it will be automatically translated and sent to your contact!
@@ -262,6 +265,7 @@ Just type your message and it will be automatically translated and sent to your 
 📋 *Available Commands:*
 
 /help - Show this help message
+/tasks - View your task list
 /refer - Recommend to other managers
 /feedback - Send feedback to BridgeOS team
 /reset - Delete account
@@ -341,7 +345,7 @@ async def refer_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Reset user account - delete all data and allow re-registration"""
-    user_id = str(update.effective_user.id)
+    user_id = str(query.from_user.id)
     user = database.get_user(user_id)
     
     if not user:
@@ -557,6 +561,140 @@ async def subscription_command(update: Update, context: ContextTypes.DEFAULT_TYP
         else:
             await update.message.reply_text(message, parse_mode='Markdown')
 
+async def tasks_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show task list for manager or worker"""
+    user_id = str(update.effective_user.id)
+    user = database.get_user(user_id)
+    
+    if not user:
+        await update.message.reply_text("Please use /start to register first.")
+        return
+    
+    if user['role'] == 'manager':
+        # Get manager's tasks
+        pending_tasks = tasks.get_manager_tasks(user_id, status='pending')
+        completed_tasks = tasks.get_manager_tasks(user_id, status='completed', limit_hours=24)
+        
+        if not pending_tasks and not completed_tasks:
+            await update.message.reply_text(
+                "📋 *Your Tasks*\n\n"
+                "No tasks yet.\n\n"
+                "Create a task by sending a message starting with **\n"
+                "Example: ** Check cow 115 for heat",
+                parse_mode='Markdown'
+            )
+            return
+        
+        # Format response
+        response = "📋 *Your Tasks*\n\n"
+        
+        # Pending tasks
+        if pending_tasks:
+            response += f"⏳ *PENDING ({len(pending_tasks)})*\n"
+            response += "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            for task in pending_tasks:
+                created_time = task['created_at'].strftime('%H:%M') if task.get('created_at') else 'Unknown'
+                response += f"• {task['description']}\n"
+                response += f"  _Created: Today at {created_time}_\n\n"
+        
+        # Completed tasks (today only)
+        if completed_tasks:
+            response += f"\n✅ *COMPLETED TODAY ({len(completed_tasks)})*\n"
+            response += "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            for task in completed_tasks:
+                completed_time = task['completed_at'].strftime('%H:%M') if task.get('completed_at') else 'Unknown'
+                response += f"• {task['description']}\n"
+                response += f"  _Completed at {completed_time}_\n\n"
+        
+        await update.message.reply_text(response, parse_mode='Markdown')
+    
+    elif user['role'] == 'worker':
+        # Get worker's tasks
+        pending_tasks = tasks.get_worker_tasks(user_id, status='pending')
+        completed_tasks = tasks.get_worker_tasks(user_id, status='completed', limit_hours=24)
+        
+        if not pending_tasks and not completed_tasks:
+            await update.message.reply_text(
+                "📋 *Your Tasks*\n\n"
+                "No tasks assigned yet.\n\n"
+                "Your manager will send you tasks when needed.",
+                parse_mode='Markdown'
+            )
+            return
+        
+        # Format response
+        response = "📋 *Your Tasks*\n\n"
+        
+        # Pending tasks
+        if pending_tasks:
+            response += f"⏳ *TO DO ({len(pending_tasks)})*\n"
+            response += "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            for task in pending_tasks:
+                response += f"• {task['description']}\n\n"
+            response += "_Tap the ✅ Mark Done button on each task message to complete it._\n\n"
+        
+        # Completed tasks (today only)
+        if completed_tasks:
+            response += f"\n✅ *COMPLETED TODAY ({len(completed_tasks)})*\n"
+            response += "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            for task in completed_tasks:
+                response += f"• {task['description']} ✓\n"
+        
+        await update.message.reply_text(response, parse_mode='Markdown')
+
+async def view_tasks_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle 'View All Tasks' button click from task creation confirmation"""
+    query = update.callback_query
+    user_id = str(query.from_user.id)
+    
+    # Answer the callback immediately
+    await query.answer()
+    
+    # Call the tasks_command logic
+    # We need to create a fake update object for tasks_command
+    # Simpler: just duplicate the logic here
+    
+    user = database.get_user(user_id)
+    
+    if not user or user['role'] != 'manager':
+        await query.edit_message_text("⚠️ Only managers can view tasks.")
+        return
+    
+    # Get manager's tasks
+    pending_tasks = tasks.get_manager_tasks(user_id, status='pending')
+    completed_tasks = tasks.get_manager_tasks(user_id, status='completed', limit_hours=24)
+    
+    if not pending_tasks and not completed_tasks:
+        await query.edit_message_text(
+            "📋 *Your Tasks*\n\n"
+            "No other tasks yet.\n\n"
+            "Create more tasks by sending messages starting with **",
+            parse_mode='Markdown'
+        )
+        return
+    
+    # Format response (same as tasks_command)
+    response = "📋 *Your Tasks*\n\n"
+    
+    if pending_tasks:
+        response += f"⏳ *PENDING ({len(pending_tasks)})*\n"
+        response += "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        for task in pending_tasks:
+            created_time = task['created_at'].strftime('%H:%M') if task.get('created_at') else 'Unknown'
+            response += f"• {task['description']}\n"
+            response += f"  _Created: Today at {created_time}_\n\n"
+    
+    if completed_tasks:
+        response += f"\n✅ *COMPLETED TODAY ({len(completed_tasks)})*\n"
+        response += "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        for task in completed_tasks:
+            completed_time = task['completed_at'].strftime('%H:%M') if task.get('completed_at') else 'Unknown'
+            response += f"• {task['description']}\n"
+            response += f"  _Completed at {completed_time}_\n\n"
+    
+    await query.edit_message_text(response, parse_mode='Markdown')
+
+
 async def feedback_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /feedback command - collect user feedback"""
     # Set flag to capture next message as feedback
@@ -574,7 +712,7 @@ async def feedback_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ============================================
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle regular messages - translate and forward"""
+    """Handle regular messages - translate and forward, or create tasks"""
     user_id = str(update.effective_user.id)
     
     # Check if user is sending feedback
@@ -639,6 +777,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Please use /start to register first.")
         return
     
+    text = update.message.text
+    
+    # Check if it's a task (** prefix at beginning)
+    if text.startswith('**'):
+        await handle_task_creation(update, context)
+        return
+    
     # Load config for limits and pricing
     config = load_config()
     free_limit = config.get('free_message_limit', 50)
@@ -657,7 +802,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 # Generate subscribe button
                 checkout_url = subscription_manager.create_checkout_url(telegram_id)
                 keyboard = InlineKeyboardMarkup([[
-                    InlineKeyboardButton(f"🏢 Upgrade to Business License (${monthly_price:.0f}/month)", url=checkout_url)
+                    InlineKeyboardButton(f"💳 Upgrade to Business License (${monthly_price:.0f}/month)", url=checkout_url)
                 ]])
                 
                 await update.message.reply_text(
@@ -678,7 +823,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
                 return
     
-    text = update.message.text
     user_lang = user['language']
     
     translation_context_size = config.get('translation_context_size', 5)
@@ -810,6 +954,170 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text=f"🗣️ From {sender_name}: {translated}"
         )
 
+
+async def handle_task_creation(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle task creation when manager sends ** prefix"""
+    user_id = str(update.effective_user.id)
+    user = database.get_user(user_id)
+    text = update.message.text
+    
+    # Only managers can create tasks
+    if user['role'] != 'manager':
+        await update.message.reply_text(
+            "⚠️ Only managers can create tasks.\n"
+            "To send a regular message, don't use **"
+        )
+        return
+    
+    # Check if manager has a worker
+    worker_id = user.get('worker')
+    if not worker_id:
+        await update.message.reply_text(
+            "⚠️ You don't have a worker connected yet.\n"
+            "Share your invitation (use /mycode) with your worker first."
+        )
+        return
+    
+    # Extract task description (remove ** prefix)
+    task_description = text[2:].strip()
+    
+    # Validate not empty
+    if not task_description:
+        await update.message.reply_text(
+            "⚠️ Please provide a task description after **\n\n"
+            "Example: ** Check cow 115 for heat"
+        )
+        return
+    
+    # Get worker data
+    worker = database.get_user(worker_id)
+    if not worker:
+        await update.message.reply_text(
+            "⚠️ Your worker's account no longer exists.\n"
+            "Use /reset to start over."
+        )
+        return
+    
+    # Translate task to worker's language
+    try:
+        translated_task = translator.translate(
+            text=task_description,
+            from_lang=user['language'],
+            to_lang=worker['language'],
+            target_gender=worker.get('gender'),
+            industry=user.get('industry')
+        )
+    except Exception as e:
+        print(f"Error translating task: {e}")
+        await update.message.reply_text(
+            f"⚠️ Error translating task: {str(e)}\n"
+            "Please try again."
+        )
+        return
+    
+    # Save task to database
+    try:
+        task_id = tasks.create_task(
+            manager_id=user_id,
+            worker_id=worker_id,
+            description=task_description,
+            description_translated=translated_task
+        )
+    except Exception as e:
+        print(f"Error creating task: {e}")
+        await update.message.reply_text(
+            f"⚠️ Error creating task: {str(e)}\n"
+            "Please try again."
+        )
+        return
+    
+    # Send to worker with checkbox button
+    keyboard = InlineKeyboardMarkup([[
+        InlineKeyboardButton("✅ Mark Done", callback_data=f"task_done_{task_id}")
+    ]])
+    
+    manager_name = update.effective_user.first_name or "Manager"
+    
+    try:
+        await context.bot.send_message(
+            chat_id=worker_id,
+            text=f"📋 *Task from {manager_name}:*\n{translated_task}",
+            reply_markup=keyboard,
+            parse_mode='Markdown'
+        )
+    except Exception as e:
+        print(f"Error sending task to worker: {e}")
+        await update.message.reply_text(
+            f"⚠️ Error sending task to worker: {str(e)}"
+        )
+        return
+    
+    # Confirm to manager with "View All Tasks" button
+    keyboard = InlineKeyboardMarkup([[
+        InlineKeyboardButton("📋 View All Tasks", callback_data="view_tasks")
+    ]])
+    
+    await update.message.reply_text(
+        f"✅ *Task sent to worker:*\n\"{task_description}\"",
+        reply_markup=keyboard,
+        parse_mode='Markdown'
+    )
+
+async def task_completion_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle when worker clicks 'Mark Done' button"""
+    query = update.callback_query
+    user_id = str(update.effective_user.id)
+    
+    # Extract task_id from callback_data (format: "task_done_123")
+    try:
+        task_id = int(query.data.split('_')[2])
+    except (IndexError, ValueError):
+        await query.answer("⚠️ Invalid task ID")
+        return
+    
+    # Verify user is a worker
+    user = database.get_user(user_id)
+    if not user or user['role'] != 'worker':
+        await query.answer("⚠️ Only workers can complete tasks")
+        return
+    
+    # Complete the task
+    task = tasks.complete_task(task_id)
+    
+    if not task:
+        await query.answer("⚠️ Task not found or already completed")
+        return
+    
+    # Verify this worker is assigned to this task
+    if task['worker_id'] != user_id:
+        await query.answer("⚠️ This task is not assigned to you")
+        return
+    
+    # Update the message to show completion
+    try:
+        await query.edit_message_text(
+            text=f"📋 *Task:*\n{task['description_translated']}\n\n✅ *Completed!*",
+            parse_mode='Markdown'
+        )
+    except Exception as e:
+        print(f"Error updating message: {e}")
+    
+    # Notify worker
+    await query.answer("✅ Task marked as completed")
+    
+    # Notify manager
+    manager_id = task['manager_id']
+    worker_name = update.effective_user.first_name or "Worker"
+    completed_time = task['completed_at'].strftime('%H:%M') if task.get('completed_at') else 'now'
+    
+    try:
+        await context.bot.send_message(
+            chat_id=manager_id,
+            text=f"✅ *Task completed by {worker_name}:*\n\"{task['description']}\"\n\n🕐 Completed at: {completed_time}",
+            parse_mode='Markdown'
+        )
+    except Exception as e:
+        print(f"Error notifying manager: {e}")
 # ============================================
 # MEDIA HANDLING
 # ============================================
@@ -889,12 +1197,16 @@ def main():
     
     app.add_handler(conv_handler)
     app.add_handler(CommandHandler('help', help_command))
-    app.add_handler(CommandHandler('mycode', mycode_command))
-    app.add_handler(CommandHandler('refer', refer_command))
+    app.add_handler(CommandHandler('tasks', tasks_command))
     app.add_handler(CommandHandler('daily', daily_command))
+    app.add_handler(CommandHandler('reset', reset))
     app.add_handler(CommandHandler('subscription', subscription_command))
     app.add_handler(CommandHandler('feedback', feedback_command))
-    app.add_handler(CommandHandler('reset', reset))
+    app.add_handler(CommandHandler('mycode', mycode_command))
+    app.add_handler(CommandHandler('refer', refer_command))
+    # Add callback handlers for tasks
+    app.add_handler(CallbackQueryHandler(task_completion_callback, pattern='^task_done_'))
+    app.add_handler(CallbackQueryHandler(view_tasks_callback, pattern='^view_tasks$'))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     
     # Handle all media types (photos, videos, voice, files, stickers, etc.)
