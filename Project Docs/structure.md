@@ -18,6 +18,7 @@ BridgeOS is an AI-powered Operating System designed to manage foreign workforces
 - **Real-time admin dashboard with 2-page manager detail views** ✅ COMPLETE
 - Media forwarding (photos, videos, voice messages, files)
 - **AI-powered daily action items** - Extract tasks from conversations ✅
+- **Task tracking with checkboxes** - `**` prefix creates trackable tasks ✅ COMPLETE
 - **Subscription management with Lemon Squeezy** ✅
 - **Usage tracking with free tier (8 messages) + unlimited paid tier** ✅
 - Telegram notifications for subscription events
@@ -89,6 +90,41 @@ Bot increments manager's message counter (if not subscribed)
 Worker replies: "היא נראית בריאה"
    ↓
 Manager receives: "She looks healthy"
+```
+
+### **Task Tracking Flow:** ✅ NEW
+```
+Manager types: ** Check cow 115 for heat
+   ↓
+Bot detects ** prefix → This is a task (not regular message)
+   ↓
+Bot extracts task description: "Check cow 115 for heat"
+   ↓
+Bot translates to worker's language
+   ↓
+Bot saves to tasks table (status: pending)
+   ↓
+Worker receives:
+   "📋 Task from Manager:
+   בדוק את פרה 115 אם היא במחזור
+   
+   [✅ Mark Done]"
+   ↓
+Manager receives confirmation:
+   "✅ Task sent to worker:
+   'Check cow 115 for heat'
+   
+   [📋 View All Tasks]"
+   ↓
+Worker taps [✅ Mark Done]
+   ↓
+Bot updates task status to 'completed'
+   ↓
+Manager receives notification:
+   "✅ Task completed by Worker:
+   'Check cow 115 for heat'
+   
+   🕐 Completed at: 14:23"
 ```
 
 ### **Daily Action Items Flow:**
@@ -166,6 +202,7 @@ On expiry: Receives notification, returns to free tier (8 messages)
    - Database → PostgreSQL with JSON storage (scalable, shared data)
    - Bot handlers → clean functions (easy to add features)
    - Payment logic → separate module (easy to swap providers)
+   - Task tracking → separate module (easy to extend)
    - Configuration → centralized, secrets separate
    - **Message storage** → Two separate tables (translation context vs full history)
    - **Dashboard** → Two-page design (overview + detail pages) ✅
@@ -175,13 +212,14 @@ On expiry: Receives notification, returns to free tier (8 messages)
 ## **File Structure**
 ```
 bridgeos/
-├── bot.py                          # Main bot logic (handlers, commands, deep-link support)
+├── bot.py                          # Main bot logic (handlers, commands, task creation)
 ├── translator.py                   # Translation with multiple LLM providers + action items
 ├── database.py                     # PostgreSQL storage with clean interface
 ├── translation_msg_context.py      # Last 6 messages for translation context
 ├── message_history.py              # Full 30-day history for action items
 ├── usage_tracker.py                # Message limit tracking and enforcement
 ├── subscription_manager.py         # Subscription CRUD operations (database interface)
+├── tasks.py                        # Task tracking CRUD operations ✅ NEW
 ├── dashboard.py                    # Flask admin dashboard + Lemon Squeezy webhooks ✅ COMPLETE
 ├── config.py                       # Configuration loader (environment + files)
 ├── config.json                     # Non-secret settings (safe to upload to GitHub)
@@ -208,14 +246,32 @@ bridgeos/
 - User registration flow (language → gender → industry OR auto-connect via deep-link)
 - Deep-link support (`/start invite_BRIDGE-12345`)
 - InlineKeyboard share button with prefilled message
-- Message routing logic
+- Message routing logic (regular messages vs tasks)
+- **Task detection** - `**` prefix triggers task creation ✅
+- **Task creation handler** - Translates and sends tasks with checkboxes ✅
+- **Task completion handler** - Processes checkbox clicks ✅
 - Media forwarding (photos, videos, voice, files, stickers, locations, contacts)
 - Subscription checking before sending messages
 - Subscribe button generation with Lemon Squeezy checkout URL
 - Usage limit enforcement (checks before sending, increments after)
 - Daily action items generation (`/daily` command)
-- Commands: `/start`, `/help`, `/mycode`, `/subscription`, `/daily`, `/refer`, `/reset`
+- Commands: `/start`, `/help`, `/mycode`, `/tasks`, `/subscription`, `/daily`, `/refer`, `/reset` ✅
 - No translation, database, payment, or config logic
+
+### **tasks.py** ✅ NEW MODULE
+- **Database CRUD** - Pure PostgreSQL operations for tasks
+- No translation logic, no business rules, no Telegram API
+- Functions:
+  - `create_task()` - Save new task, return task_id
+  - `complete_task()` - Mark task completed, return task details
+  - `get_manager_tasks()` - Get all tasks for manager (filtered by status/time)
+  - `get_worker_tasks()` - Get all tasks for worker (filtered by status/time)
+  - `get_task_by_id()` - Get single task
+  - `delete_task()` - Admin function
+  - `clear_tasks_for_conversation()` - Admin function
+  - `get_task_stats()` - Statistics for dashboard
+- Tables: `tasks` (id, manager_id, worker_id, description, description_translated, status, created_at, completed_at)
+- **Separation principle**: Bot calls tasks.py, never duplicates SQL logic
 
 ### **translator.py**
 - Provider-agnostic `translate()` function
@@ -230,7 +286,7 @@ bridgeos/
 ### **database.py**
 - Simple function interface: `get_user()`, `save_user()`, `get_all_users()`
 - PostgreSQL with JSONB storage (maintains same data structure as JSON files)
-- Tables: `users`, `translation_msg_context`, `message_history`, `usage_tracking`, `subscriptions`
+- Tables: `users`, `translation_msg_context`, `message_history`, `usage_tracking`, `subscriptions`, `tasks` ✅
 - Shared access: Both bot and dashboard use same database
 
 ### **translation_msg_context.py**
@@ -453,7 +509,7 @@ Different LLMs have different strengths:
 - Both bot and dashboard access same database
 - Scalable to 50k+ users
 - No file locking issues
-- **5 tables**: users, translation_msg_context, message_history, usage_tracking, subscriptions
+- **6 tables**: users, translation_msg_context, message_history, usage_tracking, subscriptions, tasks ✅
 
 ### **8. Normalized Conversation Keys**
 - Key format: `"lowerID_higherID"` (always sorted)
@@ -646,6 +702,65 @@ Bot ← subscription_manager → PostgreSQL ← subscription_manager ← Webhook
 
 **Implementation Status**: ✅ COMPLETE (December 28, 2025)
 
+### **16. Task Tracking with `**` Prefix** ✅ NEW
+
+**Problem**: Daily action items show what needs doing, but don't track completion
+
+**Solution**: Inline task creation with checkboxes
+
+**Design Pattern:**
+- **Trigger**: `**` (two stars) at beginning of message
+- **Inline**: Manager types task in conversation flow (no separate command)
+- **Translation**: Task automatically translated to worker's language
+- **Tracking**: PostgreSQL table stores pending/completed status
+- **Notification**: Manager gets notified when worker completes task
+
+**Key Benefits:**
+- ✅ **Zero cognitive overhead** - No new commands to learn
+- ✅ **Conversational** - Tasks feel like natural communication
+- ✅ **Visual distinction** - Easy to identify tasks in chat history
+- ✅ **Accountability** - Explicit completion tracking
+- ✅ **Future-proof** - Ready for multi-worker support
+
+**Architecture:**
+```
+Manager: ** Check cow 115
+     ↓
+Bot detects ** → routes to task creation (not translation)
+     ↓
+Saves to tasks table (pending)
+     ↓
+Worker receives with [✅ Mark Done] button
+     ↓
+Worker clicks → updates status to completed
+     ↓
+Manager receives completion notification
+```
+
+**Database Design:**
+```sql
+CREATE TABLE tasks (
+    id SERIAL PRIMARY KEY,
+    manager_id TEXT NOT NULL,
+    worker_id TEXT NOT NULL,
+    description TEXT NOT NULL,
+    description_translated TEXT,
+    status TEXT DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT NOW(),
+    completed_at TIMESTAMP
+)
+```
+
+**Separation from `/daily`:**
+- `/daily` = AI-generated summary (read-only awareness)
+- `**` tasks = Explicit assignments (tracked accountability)
+- They complement each other (manager checks `/daily`, then assigns specific tasks with `**`)
+
+**Multi-Worker Ready:**
+- Current: Query by manager_id returns all tasks
+- Future: Add worker selection UI when creating task
+- Database schema unchanged (already stores worker_id per task)
+
 ---
 
 ## **Data Models**
@@ -689,6 +804,22 @@ CREATE TABLE usage_tracking (
 CREATE TABLE subscriptions (
     telegram_user_id TEXT PRIMARY KEY,
     data JSONB NOT NULL
+)
+```
+
+**tasks table:** ✅ NEW
+```sql
+CREATE TABLE tasks (
+    id SERIAL PRIMARY KEY,
+    manager_id TEXT NOT NULL,
+    worker_id TEXT NOT NULL,
+    description TEXT NOT NULL,
+    description_translated TEXT,
+    status TEXT DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT NOW(),
+    completed_at TIMESTAMP,
+    INDEX (manager_id, status),
+    INDEX (worker_id, status)
 )
 ```
 
@@ -788,6 +919,18 @@ CREATE TABLE subscriptions (
 - `paused` - Payment failed, blocked immediately
 - `none` - No subscription record (free tier user)
 
+### **Task Data (in PostgreSQL rows)** ✅ NEW
+```
+| id | manager_id | worker_id | description | description_translated | status | created_at | completed_at |
+|----|------------|-----------|-------------|------------------------|--------|------------|--------------|
+| 1  | 123        | 456       | Check cow 115| בדוק פרה 115          | pending| 2025-12-29 | NULL         |
+| 2  | 123        | 456       | Fix gate    | תקן שער                | completed| 2025-12-29 | 2025-12-29  |
+```
+
+**Task Status Values:**
+- `pending` - Task assigned, not yet completed
+- `completed` - Task marked done by worker
+
 ---
 
 ## **Architecture**
@@ -808,6 +951,7 @@ CREATE TABLE subscriptions (
 │  │ message_history                │  │
 │  │ usage_tracking                 │  │
 │  │ subscriptions                  │  │
+│  │ tasks ✅ NEW                   │  │
 │  └────────────────────────────────┘  │
 └──────────┬───────────────────────────┘
            │
@@ -845,6 +989,11 @@ Allowed (unlimited messages)
 ```
 User sends message
      ↓
+bot.py checks: Starts with **?
+     ├─→ YES: Route to handle_task_creation() ✅
+     └─→ NO: Route to handle_normal_message()
+     ↓
+[If normal message:]
 bot.py saves to TWO tables:
      ├─→ translation_msg_context (last 6 messages, sliding window)
      └─→ message_history (full 30 days, auto-cleanup)
@@ -852,6 +1001,25 @@ bot.py saves to TWO tables:
 Translation uses: translation_msg_context (fast, 6 messages)
      ↓
 Daily action items use: message_history (comprehensive, 24 hours filtered)
+```
+
+### **Task Flow Architecture:** ✅ NEW
+```
+Manager types: ** Check cow 115
+     ↓
+bot.py: handle_task_creation()
+     ├─→ Translate to worker's language
+     ├─→ tasks.create_task() → Returns task_id
+     ├─→ Send to worker with InlineKeyboard button (callback_data="task_done_{task_id}")
+     └─→ Confirm to manager with "View All Tasks" button
+     ↓
+Worker clicks [✅ Mark Done]
+     ↓
+bot.py: task_completion_callback()
+     ├─→ Extract task_id from callback_data
+     ├─→ tasks.complete_task(task_id) → Returns task details
+     ├─→ Update message: "✅ Completed!"
+     └─→ Notify manager: "Task completed by Worker"
 ```
 
 ### **Dashboard Architecture:** ✅ COMPLETE
@@ -877,18 +1045,60 @@ Manager Detail Page (/manager/{id})
 - `/start` - Register and get invitation link
 - `/help` - Show available commands
 - `/mycode` - Show invitation code and link
-- `/subscription` - Manage subscription (view status, subscribe, portal link)
+- `/tasks` - View pending and completed tasks ✅ NEW
 - `/daily` - Get daily action items (last 24 hours)
+- `/subscription` - Manage subscription (view status, subscribe, portal link)
 - `/refer` - Recommend BridgeOS to other managers
 - `/reset` - Delete account and start over
 
 ### **Worker Commands:**
 - `/start invite_BRIDGE-12345` - Connect to manager via deep-link
 - `/help` - Show available commands
+- `/tasks` - View their pending and completed tasks ✅ NEW
 - `/refer` - Recommend BridgeOS to other managers
 - `/reset` - Delete account
 
 ### **Command Details:**
+
+**`/tasks` (Both managers and workers):** ✅ NEW
+
+**Manager view:**
+```
+📋 Your Tasks
+
+⏳ PENDING (2)
+━━━━━━━━━━━━━━━━━━━━━━━━━
+• Check cow 115 for heat
+  Created: Today at 10:30
+
+• Fix broken gate in section 3
+  Created: Today at 11:15
+
+✅ COMPLETED TODAY (3)
+━━━━━━━━━━━━━━━━━━━━━━━━━
+• Morning milking
+  Completed at 08:45
+• Feed inventory check
+  Completed at 09:20
+• Clean milking area
+  Completed at 12:00
+```
+
+**Worker view:**
+```
+📋 Your Tasks
+
+⏳ TO DO (2)
+━━━━━━━━━━━━━━━━━━━━━━━━━
+• בדוק פרה 115
+• תקן שער שבור בחלק 3
+
+Tap the ✅ Mark Done button on each task message to complete it.
+
+✅ COMPLETED TODAY (1)
+━━━━━━━━━━━━━━━━━━━━━━━━━
+• חליבת בוקר ✓
+```
 
 **`/subscription` (Managers only):**
 
@@ -997,6 +1207,10 @@ Total messages: 12
 - Claude Sonnet: ~$15/month (30 requests × $0.0005 per request)
 - Negligible compared to translation costs
 
+**Task Tracking Costs:**
+- Zero AI costs (pure database operations)
+- Storage negligible (~$0.02/month for 1000 users with 100 tasks each)
+
 **Revenue (at 20% conversion to paid):**
 - 200 subscribers × $9 = $1,800/month
 - **Profit margin**: $1,800 - $15 (translation) - $15 (action items) - $20 (hosting) = $1,750/month
@@ -1070,7 +1284,7 @@ worker: python bot.py
 ### **To Normalize PostgreSQL Schema (future):**
 1. Create proper tables with foreign keys
 2. Write migration script from JSONB to tables
-3. Update `database.py`, `translation_msg_context.py`, `message_history.py`, `subscription_manager.py` internals
+3. Update `database.py`, `translation_msg_context.py`, `message_history.py`, `subscription_manager.py`, `tasks.py` internals
 4. **No changes needed in bot.py or translator.py** ✅
 
 ### **To Add Payment Provider (future):**
@@ -1095,7 +1309,7 @@ worker: python bot.py
 - Deep-link invitation system with share button
 - 5-digit invitation codes (BRIDGE-12345)
 - One-to-one manager-worker model
-- Commands: `/start`, `/help`, `/mycode`, `/subscription`, `/daily`, `/refer`, `/reset`
+- Commands: `/start`, `/help`, `/mycode`, `/tasks`, `/subscription`, `/daily`, `/refer`, `/reset` ✅
 - PostgreSQL database (scalable to 50k+ users)
 - Real-time admin dashboard (monitoring & management)
 - Media forwarding (photos, videos, voice, files, etc.)
@@ -1114,20 +1328,33 @@ worker: python bot.py
 - **Testing mode whitelist** (unlimited messages for test users)
 - **Dashboard redesign** (2-page manager detail view) ✅ COMPLETE
 - **Professional header layout** (clean, no overlapping elements) ✅ COMPLETE
+- **Task tracking with `**` prefix** ✅ COMPLETE (December 29, 2025)
+- **`/tasks` command for managers and workers** ✅ COMPLETE
+- **Inline task completion with checkboxes** ✅ COMPLETE
+- **Task completion notifications** ✅ COMPLETE
 
-📋 **Ready for Production:**
-- Dashboard fully functional and tested
-- All routes operational
-- Admin actions working
-- Responsive design verified
+📋 **Ready for Testing:**
+- Task tracking fully implemented
+- Need to test: create task, complete task, `/tasks` command
+- Need to verify: translations work, notifications work
+- Ready for Railway deployment
+
+🔄 **Next Steps:**
+1. Test task tracking feature locally
+2. Deploy to Railway
+3. Test in production with real users
+4. Monitor task completion rates
 
 🔄 **Future Enhancements:**
-- Functional filter buttons (24h, 7d, 30d) - Currently placeholders
+- Functional filter buttons (24h, 7d, 30d) on dashboard - Currently placeholders
 - Pagination for large histories (>100 messages)
 - Search functionality on main dashboard
-- Task tracking with checkboxes (Telegram InlineKeyboard)
+- **Task history in dashboard** - Show tasks in manager detail page
+- **Task analytics** - Completion rates, average time to complete
+- Multi-worker support (1 manager → N workers) - Database already supports it
+- Team plans (manager + 5 workers = $15/month)
+- Annual subscriptions (discount)
 - Analytics dashboard (conversion tracking)
-- Multi-worker support (v2)
 - Voice message transcription + translation
 - Mobile app (optional)
 
@@ -1158,7 +1385,7 @@ https://t.me/FarmTranslateBot
 ### **Bot Configuration (@BotFather):**
 - Description: Set via `/setdescription`
 - About: Set via `/setabouttext`
-- Commands: Set via `/setcommands` (includes `/daily`)
+- Commands: Set via `/setcommands` (includes `/tasks`, `/daily`)
 
 ---
 
@@ -1182,6 +1409,8 @@ https://t.me/FarmTranslateBot
 16. **Manager language output** - Action items MUST be in manager's registered language
 17. **Testing mode** - Specific users bypass limits for development
 18. **Dashboard scalability** - Two-page design (overview + detail) ✅
+19. **Task tracking prefix** - `**` at beginning of message creates tracked task ✅
+20. **Task completion** - Only workers can mark tasks done ✅
 
 ---
 
@@ -1209,6 +1438,41 @@ https://t.me/FarmTranslateBot
 5. Test with no messages (last 24 hours)
 6. Test with messages but no action items
 7. Verify format (bullets with • symbol)
+
+### **Task Tracking Testing:** ✅ NEW
+1. **Task Creation:**
+   - [ ] Manager sends: `** Check cow 115 for heat`
+   - [ ] Manager receives confirmation with "View All Tasks" button
+   - [ ] Worker receives task in their language with [✅ Mark Done] button
+   - [ ] Task saved to PostgreSQL with status='pending'
+   - [ ] Description is in manager's language
+   - [ ] Description_translated is in worker's language
+
+2. **Task Completion:**
+   - [ ] Worker clicks [✅ Mark Done] button
+   - [ ] Message updates to show "✅ Completed!"
+   - [ ] Manager receives notification: "Task completed by Worker"
+   - [ ] PostgreSQL updated: status='completed', completed_at=timestamp
+   - [ ] Worker can't click button twice (graceful handling)
+
+3. **`/tasks` Command:**
+   - [ ] Manager types `/tasks` → sees pending and completed tasks (today)
+   - [ ] Worker types `/tasks` → sees their pending and completed tasks (today)
+   - [ ] Empty state: "No tasks yet" message
+   - [ ] Timestamps formatted correctly (HH:MM)
+
+4. **Edge Cases:**
+   - [ ] Manager sends `**` (empty) → Error message: "Provide task description"
+   - [ ] Worker tries `** task` → Blocked: "Only managers can create tasks"
+   - [ ] Manager with no worker tries `** task` → Error: "No worker connected"
+   - [ ] Worker clicks done on wrong task → Blocked: "Not assigned to you"
+   - [ ] Click done on already completed task → "Already completed"
+
+5. **Integration:**
+   - [ ] Regular messages still work (not affected by task feature)
+   - [ ] Tasks don't count toward message limits
+   - [ ] Tasks survive bot restart (PostgreSQL persistence)
+   - [ ] Multiple tasks tracked independently
 
 ### **Dashboard Testing:** ✅ COMPLETE
 1. Login to dashboard (password: `zb280072A`)
@@ -1247,6 +1511,7 @@ See `docs/TESTING_GUIDE.md` for detailed procedures.
 4. **Database**: Railway PostgreSQL uses SSL by default
 5. **Telegram Bot Token**: Keep secret, rotate if compromised
 6. **Lemon Squeezy Webhook Secret**: Different from API key, keep separate
+7. **Task Verification**: Workers can only complete their own tasks (verified by worker_id)
 
 ---
 
@@ -1265,6 +1530,12 @@ See `docs/TESTING_GUIDE.md` for detailed procedures.
 - Sentry for error tracking
 - PostHog for product analytics
 - Railway metrics for performance
+
+### **Task Analytics (Future):**
+- Task completion rates
+- Average time to complete tasks
+- Most common task types
+- Worker efficiency metrics
 
 ---
 
@@ -1305,6 +1576,24 @@ See `docs/TESTING_GUIDE.md` for detailed procedures.
 - Check translator.py receives `manager_language` parameter
 - Test prompt with explicit language instruction
 
+**"Task not created"** ✅ NEW
+- Check if message starts with `**` (two stars)
+- Verify manager has worker connected
+- Check Railway logs for errors in `handle_task_creation()`
+- Query tasks table: `SELECT * FROM tasks WHERE manager_id='...'`
+
+**"Worker can't complete task"** ✅ NEW
+- Verify task exists: `SELECT * FROM tasks WHERE id=...`
+- Check task status (already completed?)
+- Verify worker_id matches task assignment
+- Check callback_data format in logs
+
+**"Tasks not showing in `/tasks` command"** ✅ NEW
+- Query tasks table for user
+- Check `limit_hours` parameter (default: 24 hours)
+- Verify task timestamps are recent
+- Check if status filter is correct
+
 **"Dashboard manager detail page not loading"**
 - Check if manager ID exists in database
 - Verify `/manager/<user_id>` route is accessible
@@ -1337,6 +1626,8 @@ See `docs/TESTING_GUIDE.md` for detailed procedures.
 - **Test action items quality** - Ensure no summarization creep
 - **Test dashboard on mobile** - Verify responsive design ✅
 - **Monitor dashboard performance** - Check page load times ✅
+- **Monitor task completion rates** - Track how many tasks get completed ✅
+- **Review task database size** - Consider cleanup policy for old completed tasks
 
 ---
 
@@ -1346,12 +1637,13 @@ See `docs/TESTING_GUIDE.md` for detailed procedures.
 - **Functional filter buttons** - Make 24h, 7d, 30d filters work (currently placeholders)
 - **Pagination** - Add page numbers for large histories (20 per page)
 - **Search on main dashboard** - Filter managers by name, code, language
-- **Task tracking with checkboxes** (Telegram InlineKeyboard)
-  - Parse action items from `/daily` response
-  - Add "✅ Done" buttons for workers
-  - Track completion status
-  - Notify manager when completed
+- **Task history in dashboard** - Show tasks in manager detail page
+- **Task due dates** - Optional deadline for tasks
+- **Task priority** - High/medium/low priority markers
+- **Task categories** - Group tasks (safety, maintenance, daily)
 - Multi-worker support (1 manager → N workers)
+  - Worker selection when creating task
+  - Group tasks by worker in `/tasks` view
 - Team plans (manager + 5 workers = $15/month)
 - Annual subscriptions (discount)
 - Analytics dashboard (conversion funnel)
@@ -1365,16 +1657,21 @@ See `docs/TESTING_GUIDE.md` for detailed procedures.
 - **Export conversations** (CSV/JSON)
 - **Activity timeline** on dashboard
 - **Bulk admin actions** (reset all blocked users)
+- **Recurring tasks** - Auto-create daily/weekly tasks
+- **Task notes/comments** - Workers can add notes when completing
+- **Task reassignment** - Move task to different worker
 
 ### **Phase 4:**
 - Multi-language group chats
 - Translation quality feedback
 - Custom industry vocabulary
 - Integration with HR systems
-- **Advanced analytics** (task completion rates, response times)
+- **Advanced analytics** (task completion rates, response times, worker efficiency)
 - **Real-time dashboard updates** (WebSocket)
+- **Task templates** - Pre-defined common tasks
+- **Task dependencies** - Task B can't start until Task A done
 
 ---
 
-**Last Updated**: December 28, 2025
-**Version**: 3.2 (Dashboard redesign complete with improved header layout, ready for production)
+**Last Updated**: December 29, 2025  
+**Version**: 3.3 (Task tracking feature complete and ready for testing)

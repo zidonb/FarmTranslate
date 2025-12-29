@@ -345,7 +345,7 @@ async def refer_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Reset user account - delete all data and allow re-registration"""
-    user_id = str(query.from_user.id)
+    user_id = update.effective_user.id
     user = database.get_user(user_id)
     
     if not user:
@@ -1066,7 +1066,7 @@ async def handle_task_creation(update: Update, context: ContextTypes.DEFAULT_TYP
 async def task_completion_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle when worker clicks 'Mark Done' button"""
     query = update.callback_query
-    user_id = str(update.effective_user.id)
+    user_id = str(query.from_user.id)
     
     # Extract task_id from callback_data (format: "task_done_123")
     try:
