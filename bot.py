@@ -345,7 +345,7 @@ async def refer_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Reset user account - delete all data and allow re-registration"""
-    user_id = update.effective_user.id
+    user_id = str(update.effective_user.id)
     user = database.get_user(user_id)
     
     if not user:
