@@ -21,18 +21,13 @@
 
 
 - gemini-flash
-- save all conversations for data, monitization.
-
-
+- Add bot to registered manager and workers group
 - Menu look and feel
 - cahce daily, save daily
-- Language support in the registraion process
-- I18N
+- Language support in the registraion process + I18N
 - reset/cancel and so on - lemon squeezy events and check its working
-
 - check feedback table and task table in dashboard. 
 - save conversation of all time
-
 - Multi-worker support
 
 
