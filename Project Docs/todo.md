@@ -20,7 +20,8 @@
 - [ ] `/reset` - Complete re-registration
 
 
-- gemini-flash
+- **gemini-flash**
+- 👨 Male
 - Add bot to registered manager and workers group
 - Menu look and feel
 - cahce daily, save daily
