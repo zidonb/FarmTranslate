@@ -1,0 +1,165 @@
+{
+  "en": {
+    "start": {
+      "welcome_back": "Welcome back! You're registered as {role}.\nYour language: {language}\n\nUse /help to see available commands.",
+      "welcome_new": "Welcome to BridgeOS! 🌉\n\nSelect your language:"
+    },
+    "registration": {
+      "gender_question": "What is your gender?\n(This helps with accurate translations)",
+      "gender_options": {
+        "male": "Male",
+        "female": "Female",
+        "prefer_not_to_say": "Prefer not to say"
+      },
+      "invalid_code": "❌ Invalid invitation code.\n\nPlease ask your contact for a new invitation link.",
+      "worker_already_connected": "❌ This contact already has a worker connected.\nAsk them to use /reset first.",
+      "connection_success": "✅ Connected to your contact! You can start chatting now.\n\nUse /help to see available commands.",
+      "manager_notification": "✅ {worker_name} connected as your worker!",
+      "industry_question": "What industry do you work in?\n\nThis helps provide accurate translations of technical terms and workplace-specific language.",
+      "share_invitation_text": "🌉 Join BridgeOS!\nChat with me in your language:\n{deep_link}",
+      "share_invitation_button": "🚀 Send Invitation Now",
+      "registration_complete": "✅ Registration complete!\n\n📋 Your invitation code: {code}\n🔗 Invitation link:\n{deep_link}\n\n👉 Tap the button below to share with your contact:",
+      "ready_to_start": "Ready to start! Use /help anytime.",
+      "cancelled": "Registration cancelled. Use /start to try again."
+    },
+    "help": {
+      "not_registered": "Please use /start to register first.",
+      "manager_commands": "📋 *Available Commands:*\n\n/help - Show this help message\n/tasks - View your task list\n/daily - Get daily action items\n/subscription - View subscription status\n/reset - Delete account and start over\n/mycode - Show your connection code\n/refer - Recommend to other managers\n/feedback - Send feedback to BridgeOS team\n\n💬 *How to use:*\nJust type your message and it will be automatically translated and sent to your contact!",
+      "worker_commands": "📋 *Available Commands:*\n\n/help - Show this help message\n/tasks - View your task list\n/refer - Recommend to other managers\n/feedback - Send feedback to BridgeOS team\n/reset - Delete account\n\n💬 *How to use:*\nJust type your message and it will be automatically translated and sent to your contact!"
+    },
+    "mycode": {
+      "not_registered": "Please use /start to register first.",
+      "not_manager": "Only managers have connection codes.",
+      "share_button": "📤 Share Invitation",
+      "status": "👥 Worker connected: {status}\n\n📋 Your invitation code: {code}\n🔗 Invitation link:\n{deep_link}\n\n👉 Tap the button below to share with your contact:",
+      "worker_status_yes": "Yes ✅",
+      "worker_status_no": "No ❌"
+    },
+    "refer": {
+      "share_text": "🌉 Check out BridgeOS!\n\nI use it to communicate with my team in real-time - we speak different languages but chat naturally!\n\n🌍 {language_count} languages supported\n✅ Instant translation\n🏭 Industry-specific terms\n💬 Simple & effective\n\nTry it free: https://t.me/FarmTranslateBot",
+      "button": "📤 Recommend BridgeOS",
+      "message": "🌉 Love BridgeOS?\n\nHelp other managers break language barriers!\n\nRecommend BridgeOS to colleagues, friends, or anyone who manages teams speaking different languages.\n\n👉 Tap the button to share:"
+    },
+    "reset": {
+      "no_account": "You don't have an account to reset.",
+      "worker_notification": "⚠️ Your contact has reset their account.\nYour account has also been reset.\n\nYou'll need a new invitation to reconnect.",
+      "manager_notification": "ℹ️ {worker_name} has reset their account and is no longer connected.",
+      "success": "✅ Your account has been reset!\n\nAll your data and connections have been deleted.\nUse /start to register again."
+    },
+    "daily": {
+      "not_registered": "Please use /start to register first.",
+      "not_manager": "Only managers can generate summaries.\n\nThis feature helps managers track action items and tasks.",
+      "no_worker": "You don't have a worker connected yet.\n\nConnect with a worker first to see conversation summaries.",
+      "generating": "⏳ Generating Daily Action Items (Last 24 Hours)...\n\nAnalyzing last 24 hours of conversation.",
+      "result_header": "📋 *Daily Action Items (Last 24 Hours)*\n\n{action_items}",
+      "message_count": "\n\n_Total messages: {count}_",
+      "error": "❌ Error generating daily action items: {error}\n\nPlease try again later or contact support."
+    },
+    "subscription": {
+      "not_registered": "Please use /start to register first.",
+      "worker_unlimited": "Workers have unlimited messages! 🎉\n\nOnly managers need subscriptions.",
+      "no_subscription": {
+        "title": "📋 *Subscription Status*\n\n",
+        "status": "Status: ❌ No Active Subscription\n",
+        "usage": "Messages Used: {messages_sent} / {free_limit} (Free Tier)\n\n",
+        "benefits_header": "💳 *Subscribe to BridgeOS:*\n",
+        "benefits": "• Unlimited messages\n• ${price}/month\n• Cancel anytime",
+        "button": "🏢 Upgrade to Business License (${price}/month)"
+      },
+      "active_subscription": {
+        "title": "📋 *Your Subscription*\n\n",
+        "status": "{emoji} Status: {status}\n",
+        "plan": "💳 Plan: Unlimited Messages\n",
+        "price": "💵 Price: ${price}/month\n",
+        "renews": "📅 Renews: {date}\n",
+        "access_until": "📅 Access Until: {date}\n",
+        "footer": "\n_Manage or cancel anytime._",
+        "manage_button": "⚙️ Manage Business License"
+      }
+    },
+    "tasks": {
+      "not_registered": "Please use /start to register first.",
+      "manager": {
+        "title": "📋 *Your Tasks*\n\n",
+        "no_tasks": "No tasks yet.\n\nCreate a task by sending a message starting with **\nExample: ** Check cow 115 for heat",
+        "pending_header": "⏳ *PENDING ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
+        "task_item": "• {description}\n  _Created: Today at {time}_\n\n",
+        "completed_header": "\n✅ *COMPLETED TODAY ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
+        "completed_item": "• {description}\n  _Completed at {time}_\n\n"
+      },
+      "worker": {
+        "title": "📋 *Your Tasks*\n\n",
+        "no_tasks": "No tasks assigned yet.\n\nYour manager will send you tasks when needed.",
+        "todo_header": "⏳ *TO DO ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
+        "task_item": "• {description}\n\n",
+        "instruction": "_Tap the ✅ Mark Done button on each task message to complete it._\n\n",
+        "completed_header": "\n✅ *COMPLETED TODAY ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
+        "completed_item": "• {description} ✓\n"
+      }
+    },
+    "view_tasks_callback": {
+      "not_manager": "⚠️ Only managers can view tasks.",
+      "no_other_tasks": "📋 *Your Tasks*\n\nNo other tasks yet.\n\nCreate more tasks by sending messages starting with **"
+    },
+    "feedback": {
+      "prompt": "💡 *Send Your Feedback*\n\nType your message below and I'll forward it to the BridgeOS team.\n\nShare suggestions, report bugs, or tell us what you think!"
+    },
+    "feedback_handling": {
+      "admin_error": "⚠️ Error: Admin not configured. Please contact support.",
+      "success": "✅ *Feedback Sent!*\n\nThank you for sharing your thoughts with us. We read every message and truly appreciate your input!",
+      "error": "⚠️ Sorry, there was an error sending your feedback. Please try again later."
+    },
+    "handle_message": {
+      "not_registered": "Please use /start to register first.",
+      "limit_reached": {
+        "title": "⚠️ *Free Plan Limit Reached*\n\n",
+        "message": "Your business has used its allocation of {free_limit} translated messages.\nTo continue operations without interruption, please upgrade your account to the *Business License*.\n\n",
+        "benefits_header": "*BridgeOS Business License:*\n",
+        "benefits": "✅ Full Business Access (Unlimited usage)\n✅ Manager Dashboard\n✅ Priority Processing\n✅ Industry-Specific Translations\n✅ Multi-Language Support (12 languages)\n• *Price:* ${price}/month (Cancel anytime)\n\n",
+        "cta": "Tap below to upgrade:",
+        "button": "💳 Upgrade to Business License (${price}/month)"
+      },
+      "manager": {
+        "no_worker": "⚠️ You don't have a contact connected yet.\nShare your invitation (use /mycode) with your contact.",
+        "worker_not_found": "⚠️ Your contact's account no longer exists.\nUse /reset to start over.",
+        "message_prefix": "🗣️ From {name}: {translated}",
+        "last_message": "⚠️ *That was your last free message!*\n\nYou've used all {free_limit} free messages.\n\n💳 Subscribe for unlimited messages (${price}/month):",
+        "last_message_button": "🏢 Upgrade to Business License (${price}/month)"
+      },
+      "worker": {
+        "no_manager": "⚠️ You're not connected to a contact.\nAsk your contact for their invitation link.",
+        "manager_not_found": "⚠️ Your contact's account no longer exists.\nUse /reset and wait for a new invitation.",
+        "message_prefix": "🗣️ From {name}: {translated}"
+      }
+    },
+    "handle_task_creation": {
+      "not_manager": "⚠️ Only managers can create tasks.\nTo send a regular message, don't use **",
+      "no_worker": "⚠️ You don't have a worker connected yet.\nShare your invitation (use /mycode) with your worker first.",
+      "empty_description": "⚠️ Please provide a task description after **\n\nExample: ** Check cow 115 for heat",
+      "worker_not_found": "⚠️ Your worker's account no longer exists.\nUse /reset to start over.",
+      "translation_error": "⚠️ Error translating task: {error}\nPlease try again.",
+      "creation_error": "⚠️ Error creating task: {error}\nPlease try again.",
+      "send_error": "⚠️ Error sending task to worker: {error}",
+      "worker_task": "📋 *Task from {manager_name}:*\n{task}",
+      "mark_done_button": "✅ Mark Done",
+      "manager_confirmation": "✅ *Task sent to worker:*\n\"{task}\"",
+      "view_all_button": "📋 View All Tasks"
+    },
+    "task_completion_callback": {
+      "invalid_task_id": "⚠️ Invalid task ID",
+      "not_worker": "⚠️ Only workers can complete tasks",
+      "not_found": "⚠️ Task not found or already completed",
+      "not_assigned": "⚠️ This task is not assigned to you",
+      "task_completed": "📋 *Task:*\n{task}\n\n✅ *Completed!*",
+      "completion_confirmation": "✅ Task marked as completed",
+      "manager_notification": "✅ *Task completed by {worker_name}:*\n\"{task}\"\n\n🕐 Completed at: {time}"
+    },
+    "handle_media": {
+      "not_registered": "Please use /start to register first.",
+      "manager_no_worker": "⚠️ You don't have a contact connected yet.\nShare your invitation (use /mycode) with your contact.",
+      "worker_no_manager": "⚠️ You're not connected to a contact.\nAsk your contact for their invitation link.",
+      "contact_not_found": "⚠️ Your contact's account no longer exists.\nUse /reset to start over.",
+      "media_prefix": "📎 From {sender_name}:"
+    }
+  }
+}

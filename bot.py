@@ -12,7 +12,7 @@ import feedback
 import tasks 
 from datetime import datetime, timezone
 import json
-
+from i18n import get_text
 
 # Conversation states
 LANGUAGE, GENDER, INDUSTRY = range(3)
@@ -72,11 +72,24 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def language_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """User selected language"""
-    context.user_data['language'] = update.message.text
+    selected_language = update.message.text
+    context.user_data['language'] = selected_language
     
-    keyboard = [['Male', 'Female'], ['Prefer not to say']]
+    # Get translated gender question
+    gender_question = get_text(
+        selected_language,
+        'registration.gender_question',
+        default="What is your gender?\n(This helps with accurate translations)"
+    )
+    
+    # Get translated gender options
+    male = get_text(selected_language, 'registration.gender_options.male', default="Male")
+    female = get_text(selected_language, 'registration.gender_options.female', default="Female")
+    prefer_not = get_text(selected_language, 'registration.gender_options.prefer_not_to_say', default="Prefer not to say")
+    
+    keyboard = [[male, female], [prefer_not]]
     await update.message.reply_text(
-        "What is your gender?\n(This helps with accurate translations)",
+        gender_question,
         reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
     )
     return GENDER

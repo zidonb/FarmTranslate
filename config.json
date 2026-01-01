@@ -61,6 +61,22 @@
     "हिन्दी",
     "Filipino"
   ],
+  
+  "language_mapping": {
+    "English": "en",
+    "עברית": "he",
+    "العربية": "ar",
+    "ไทย": "th",
+    "Español": "es",
+    "Türkçe": "tr",
+    "Français": "fr",
+    "Deutsch": "de",
+    "Português": "pt",
+    "Русский": "ru",
+    "हिन्दी": "hi",
+    "Filipino": "tl"
+  },
+
   "translation_provider": "claude",
   "claude": {
     "model": "claude-sonnet-4-20250514"
