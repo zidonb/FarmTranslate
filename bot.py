@@ -39,11 +39,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Check if user already registered
     if user:
-        await update.message.reply_text(
-            f"Welcome back! You're registered as {user['role']}.\n"
-            f"Your language: {user['language']}\n\n"
-            f"Use /help to see available commands."
+        welcome_text = get_text(
+            user['language'],
+            'start.welcome_back',
+            default="Welcome back! You're registered as {role}.\nYour language: {language}\n\nUse /help to see available commands.",
+            role=user['role'],
+            language=user['language']
         )
+        await update.message.reply_text(welcome_text)
         return ConversationHandler.END
     
     # Clear any existing conversation state to allow clean restart
@@ -64,8 +67,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Build keyboard dynamically (2 languages per row)
     keyboard = [available_languages[i:i+2] for i in range(0, len(available_languages), 2)]
     
+    welcome_new_text = get_text(
+        'English',  # Default to English for new users who haven't selected language yet
+        'start.welcome_new',
+        default="Welcome to BridgeOS! 🌉\n\nSelect your language:"
+    )
+    
     await update.message.reply_text(
-        "Welcome to BridgeOS! 🌉\n\nSelect your language:",
+        welcome_new_text,
         reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
     )
     return LANGUAGE
@@ -96,14 +105,33 @@ async def language_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def gender_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """User selected gender - check if they have an invite code or ask for industry"""
-    context.user_data['gender'] = update.message.text
+    
+    # Get user's selected language
+    language = context.user_data['language']
+    
+    # Get the SAME translated gender options we showed in language_selected()
+    male = get_text(language, 'registration.gender_options.male', default="Male")
+    female = get_text(language, 'registration.gender_options.female', default="Female")
+    prefer_not = get_text(language, 'registration.gender_options.prefer_not_to_say', default="Prefer not to say")
+    
+    # Create reverse mapping: translated text → English
+    gender_reverse_map = {
+        male: 'Male',
+        female: 'Female',
+        prefer_not: 'Prefer not to say'
+    }
+    
+    # Convert tapped button (in user's language) to English
+    english_gender = gender_reverse_map.get(update.message.text, 'Prefer not to say')
+    
+    # Save ENGLISH version (what translator.py expects)
+    context.user_data['gender'] = english_gender
     
     # Check if user came via deep-link with invite code
     if 'invite_code' in context.user_data:
         code = context.user_data['invite_code']
         user_id = str(update.effective_user.id)
-        language = context.user_data['language']
-        gender = context.user_data['gender']
+        gender = context.user_data['gender']  # Now in English
         
         # Find manager with this code
         all_users = database.get_all_users()
@@ -115,9 +143,13 @@ async def gender_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 break
         
         if not manager_id:
+            invalid_code_text = get_text(
+                language,
+                'registration.invalid_code',
+                default="❌ Invalid invitation code.\n\nPlease ask your contact for a new invitation link."
+            )
             await update.message.reply_text(
-                "❌ Invalid invitation code.\n\n"
-                "Please ask your contact for a new invitation link.",
+                invalid_code_text,
                 reply_markup=ReplyKeyboardRemove()
             )
             return ConversationHandler.END
@@ -125,9 +157,13 @@ async def gender_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Check if manager already has a worker
         manager = database.get_user(manager_id)
         if manager.get('worker'):
+            already_connected_text = get_text(
+                language,
+                'registration.worker_already_connected',
+                default="❌ This contact already has a worker connected.\nAsk them to use /reset first."
+            )
             await update.message.reply_text(
-                "❌ This contact already has a worker connected.\n"
-                "Ask them to use /reset first.",
+                already_connected_text,
                 reply_markup=ReplyKeyboardRemove()
             )
             return ConversationHandler.END
@@ -135,7 +171,7 @@ async def gender_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Save worker
         worker_data = {
             'language': language,
-            'gender': gender,
+            'gender': gender,  # English gender (e.g., "Male")
             'role': 'worker',
             'manager': manager_id
         }
@@ -145,17 +181,27 @@ async def gender_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
         manager['worker'] = user_id
         database.save_user(manager_id, manager)
         
+        connection_success_text = get_text(
+            language,
+            'registration.connection_success',
+            default="✅ Connected to your contact! You can start chatting now.\n\nUse /help to see available commands."
+        )
         await update.message.reply_text(
-            "✅ Connected to your contact! You can start chatting now.\n\n"
-            "Use /help to see available commands.",
+            connection_success_text,
             reply_markup=ReplyKeyboardRemove()
         )
         
         # Notify manager
         worker_name = update.effective_user.first_name
+        manager_notification_text = get_text(
+            manager['language'],  # Use manager's language for notification
+            'registration.manager_notification',
+            default="✅ {worker_name} connected as your worker!",
+            worker_name=worker_name
+        )
         await context.bot.send_message(
             chat_id=manager_id,
-            text=f"✅ {worker_name} connected as your worker!"
+            text=manager_notification_text
         )
         
         return ConversationHandler.END
@@ -171,8 +217,14 @@ async def gender_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     keyboard = [industry_buttons[i:i+2] for i in range(0, len(industry_buttons), 2)]
     
+    industry_question_text = get_text(
+        language,
+        'registration.industry_question',
+        default="What industry do you work in?\n\nThis helps provide accurate translations of technical terms and workplace-specific language."
+    )
+    
     await update.message.reply_text(
-        "What industry do you work in?\n\nThis helps provide accurate translations of technical terms and workplace-specific language.",
+        industry_question_text,
         reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
     )
     return INDUSTRY
@@ -213,22 +265,45 @@ async def industry_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     deep_link = f"https://t.me/{bot_username}?start=invite_{code}"
     
     # Create share button with prefilled message
-    share_text = f"🌉 Join BridgeOS!\nChat with me in your language:\n{deep_link}"
+    share_text = get_text(
+        language,
+        'registration.share_invitation_text',
+        default="🌉 Join BridgeOS!\nChat with me in your language:\n{deep_link}",
+        deep_link=deep_link
+    )
+    
+    share_button_text = get_text(
+        language,
+        'registration.share_invitation_button',
+        default="🚀 Send Invitation Now"
+    )
+    
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🚀 Send Invitation Now", switch_inline_query=share_text)]
+        [InlineKeyboardButton(share_button_text, switch_inline_query=share_text)]
     ])
     
     # Send invitation message with share button
+    registration_complete_text = get_text(
+        language,
+        'registration.registration_complete',
+        default="✅ Registration complete!\n\n📋 Your invitation code: {code}\n🔗 Invitation link:\n{deep_link}\n\n👉 Tap the button below to share with your contact:",
+        code=code,
+        deep_link=deep_link
+    )
+    
     await update.message.reply_text(
-        f"✅ Registration complete!\n\n"
-        f"📋 Your invitation code: {code}\n"
-        f"🔗 Invitation link:\n{deep_link}\n\n"
-        f"👉 Tap the button below to share with your contact:",
+        registration_complete_text,
         reply_markup=keyboard
     )
 
+    ready_text = get_text(
+        language,
+        'registration.ready_to_start',
+        default="Ready to start! Use /help anytime."
+    )
+    
     await update.message.reply_text(
-        "Ready to start! Use /help anytime.",
+        ready_text,
         reply_markup=ReplyKeyboardRemove()
     )
     
@@ -236,8 +311,17 @@ async def industry_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Cancel conversation"""
+    # Try to get user's language from context, fallback to English
+    language = context.user_data.get('language', 'English')
+    
+    cancelled_text = get_text(
+        language,
+        'registration.cancelled',
+        default="Registration cancelled. Use /start to try again."
+    )
+    
     await update.message.reply_text(
-        "Registration cancelled. Use /start to try again.",
+        cancelled_text,
         reply_markup=ReplyKeyboardRemove()
     )
     return ConversationHandler.END
@@ -252,40 +336,28 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = database.get_user(user_id)
     
     if not user:
-        await update.message.reply_text(
-            "Please use /start to register first."
+        not_registered_text = get_text(
+            'English',  # Default to English for non-registered users
+            'help.not_registered',
+            default="Please use /start to register first."
         )
+        await update.message.reply_text(not_registered_text)
         return
     
+    language = user['language']
+    
     if user['role'] == 'manager':
-        help_text = """
-📋 *Available Commands:*
-
-/help - Show this help message
-/tasks - View your task list
-/daily - Get daily action items
-/subscription - View subscription status
-/reset - Delete account and start over
-/mycode - Show your connection code
-/refer - Recommend to other managers
-/feedback - Send feedback to BridgeOS team
-
-💬 *How to use:*
-Just type your message and it will be automatically translated and sent to your contact!
-        """
+        help_text = get_text(
+            language,
+            'help.manager_commands',
+            default="📋 *Available Commands:*\n\n/help - Show this help message\n/tasks - View your task list\n/daily - Get daily action items\n/subscription - View subscription status\n/reset - Delete account and start over\n/mycode - Show your connection code\n/refer - Recommend to other managers\n/feedback - Send feedback to BridgeOS team\n\n💬 *How to use:*\nJust type your message and it will be automatically translated and sent to your contact!"
+        )
     else:
-        help_text = """
-📋 *Available Commands:*
-
-/help - Show this help message
-/tasks - View your task list
-/refer - Recommend to other managers
-/feedback - Send feedback to BridgeOS team
-/reset - Delete account
-
-💬 *How to use:*
-Just type your message and it will be automatically translated and sent to your contact!
-        """
+        help_text = get_text(
+            language,
+            'help.worker_commands',
+            default="📋 *Available Commands:*\n\n/help - Show this help message\n/tasks - View your task list\n/refer - Recommend to other managers\n/feedback - Send feedback to BridgeOS team\n/reset - Delete account\n\n💬 *How to use:*\nJust type your message and it will be automatically translated and sent to your contact!"
+        )
     
     await update.message.reply_text(help_text, parse_mode='Markdown')
 
@@ -295,11 +367,23 @@ async def mycode_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = database.get_user(user_id)
     
     if not user:
-        await update.message.reply_text("Please use /start to register first.")
+        not_registered_text = get_text(
+            'English',
+            'mycode.not_registered',
+            default="Please use /start to register first."
+        )
+        await update.message.reply_text(not_registered_text)
         return
     
+    language = user['language']
+    
     if user['role'] != 'manager':
-        await update.message.reply_text("Only managers have connection codes.")
+        not_manager_text = get_text(
+            language,
+            'mycode.not_manager',
+            default="Only managers have connection codes."
+        )
+        await update.message.reply_text(not_manager_text)
         return
     
     code = user.get('code', 'No code found')
@@ -310,49 +394,83 @@ async def mycode_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     deep_link = f"https://t.me/{bot_username}?start=invite_{code}"
     
     # Create share button with prefilled message
-    share_text = f"🌉 Join BridgeOS!\nChat with me in your language:\n{deep_link}"
+    share_text = get_text(
+        language,
+        'registration.share_invitation_text',  # Reuse from registration
+        default="🌉 Join BridgeOS!\nChat with me in your language:\n{deep_link}",
+        deep_link=deep_link
+    )
+    
+    share_button_text = get_text(
+        language,
+        'mycode.share_button',
+        default="📤 Share Invitation"
+    )
+    
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("📤 Share Invitation", switch_inline_query=share_text)]
+        [InlineKeyboardButton(share_button_text, switch_inline_query=share_text)]
     ])
     
+    # Get status text
+    worker_status = get_text(
+        language,
+        'mycode.worker_status_yes' if has_worker else 'mycode.worker_status_no',
+        default='Yes ✅' if has_worker else 'No ❌'
+    )
+    
     # Send status and invitation
+    status_text = get_text(
+        language,
+        'mycode.status',
+        default="👥 Worker connected: {status}\n\n📋 Your invitation code: {code}\n🔗 Invitation link:\n{deep_link}\n\n👉 Tap the button below to share with your contact:",
+        status=worker_status,
+        code=code,
+        deep_link=deep_link
+    )
+    
     await update.message.reply_text(
-        f"👥 Worker connected: {'Yes ✅' if has_worker else 'No ❌'}\n\n"
-        f"📋 Your invitation code: {code}\n"
-        f"🔗 Invitation link:\n{deep_link}\n\n"
-        f"👉 Tap the button below to share with your contact:",
+        status_text,
         reply_markup=keyboard
     )
 
 async def refer_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Let users share the bot with other managers/colleagues"""
+    user_id = str(update.effective_user.id)
+    user = database.get_user(user_id)
+    
+    # Get user's language, fallback to English if not registered
+    language = user['language'] if user else 'English'
     
     # Load config for dynamic language count
     config = load_config()
     language_count = len(config.get('languages', []))
     
     # Shareable message for other potential managers
-    share_text = (
-        "🌉 Check out BridgeOS!\n\n"
-        "I use it to communicate with my team in real-time - "
-        "we speak different languages but chat naturally!\n\n"
-        f"🌍 {language_count} languages supported\n"  # ← Dynamic!
-        "✅ Instant translation\n"
-        "🏭 Industry-specific terms\n"
-        "💬 Simple & effective\n\n"
-        "Try it free: https://t.me/FarmTranslateBot"
+    share_text = get_text(
+        language,
+        'refer.share_text',
+        default="🌉 Check out BridgeOS!\n\nI use it to communicate with my team in real-time - we speak different languages but chat naturally!\n\n🌍 {language_count} languages supported\n✅ Instant translation\n🏭 Industry-specific terms\n💬 Simple & effective\n\nTry it free: https://t.me/FarmTranslateBot",
+        language_count=language_count
+    )
+    
+    button_text = get_text(
+        language,
+        'refer.button',
+        default="📤 Recommend BridgeOS"
     )
     
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("📤 Recommend BridgeOS", switch_inline_query=share_text)]
+        [InlineKeyboardButton(button_text, switch_inline_query=share_text)]
     ])
     
+    message_text = get_text(
+        language,
+        'refer.message',
+        default="🌉 Love BridgeOS?\n\nHelp other managers break language barriers!\n\nRecommend BridgeOS to colleagues, friends, or anyone who manages teams speaking different languages.\n\n👉 Tap the button to share:"
+    )
+    
     await update.message.reply_text(
-        "🌉 Love BridgeOS?\n\n"
-        "Help other managers break language barriers!\n\n"
-        "Recommend BridgeOS to colleagues, friends, or anyone "
-        "who manages teams speaking different languages.\n\n"
-        "👉 Tap the button to share:",
+        message_text,
         reply_markup=keyboard
     )
 
@@ -362,8 +480,15 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = database.get_user(user_id)
     
     if not user:
-        await update.message.reply_text("You don't have an account to reset.")
+        no_account_text = get_text(
+            'English',  # Default to English for non-registered users
+            'reset.no_account',
+            default="You don't have an account to reset."
+        )
+        await update.message.reply_text(no_account_text)
         return
+    
+    language = user['language']
     
     if user['role'] == 'manager':
         worker_id = user.get('worker')
@@ -378,11 +503,14 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     database.save_data(all_users)
                 
                 try:
+                    worker_notification_text = get_text(
+                        worker['language'],  # Use worker's language
+                        'reset.worker_notification',
+                        default="⚠️ Your contact has reset their account.\nYour account has also been reset.\n\nYou'll need a new invitation to reconnect."
+                    )
                     await context.bot.send_message(
                         chat_id=worker_id,
-                        text="⚠️ Your contact has reset their account.\n"
-                             "Your account has also been reset.\n\n"
-                             "You'll need a new invitation to reconnect."
+                        text=worker_notification_text
                     )
                 except Exception:
                     pass
@@ -397,9 +525,15 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 
                 try:
                     worker_name = update.effective_user.first_name
+                    manager_notification_text = get_text(
+                        manager['language'],  # Use manager's language
+                        'reset.manager_notification',
+                        default="ℹ️ {worker_name} has reset their account and is no longer connected.",
+                        worker_name=worker_name
+                    )
                     await context.bot.send_message(
                         chat_id=manager_id,
-                        text=f"ℹ️ {worker_name} has reset their account and is no longer connected."
+                        text=manager_notification_text
                     )
                 except Exception:
                     pass
@@ -411,46 +545,58 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
         del all_users[user_id]
         database.save_data(all_users)
     
-    await update.message.reply_text(
-        "✅ Your account has been reset!\n\n"
-        "All your data and connections have been deleted.\n"
-        "Use /start to register again."
+    success_text = get_text(
+        language,
+        'reset.success',
+        default="✅ Your account has been reset!\n\nAll your data and connections have been deleted.\nUse /start to register again."
     )
-
-
-
+    
+    await update.message.reply_text(success_text)
 
 async def daily_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Generate AI-powered Action itesms of last 24 hours"""
+    """Generate AI-powered Action items of last 24 hours"""
     user_id = str(update.effective_user.id)
     user = database.get_user(user_id)
     
     if not user:
-        await update.message.reply_text("Please use /start to register first.")
+        not_registered_text = get_text(
+            'English',
+            'daily.not_registered',
+            default="Please use /start to register first."
+        )
+        await update.message.reply_text(not_registered_text)
         return
+    
+    language = user['language']
     
     # Only managers can get summaries
     if user['role'] != 'manager':
-        await update.message.reply_text(
-            "Only managers can generate summaries.\n\n"
-            "This feature helps managers track action items and tasks."
+        not_manager_text = get_text(
+            language,
+            'daily.not_manager',
+            default="Only managers can generate summaries.\n\nThis feature helps managers track action items and tasks."
         )
+        await update.message.reply_text(not_manager_text)
         return
     
     # Check if manager has a worker
     worker_id = user.get('worker')
     if not worker_id:
-        await update.message.reply_text(
-            "You don't have a worker connected yet.\n\n"
-            "Connect with a worker first to see conversation summaries."
+        no_worker_text = get_text(
+            language,
+            'daily.no_worker',
+            default="You don't have a worker connected yet.\n\nConnect with a worker first to see conversation summaries."
         )
+        await update.message.reply_text(no_worker_text)
         return
     
     # Send "generating" message
-    generating_msg = await update.message.reply_text(
-        "⏳ Generating Daily Action Items (Last 24 Hours)...\n\n"
-        "Analyzing last 24 hours of conversation."
+    generating_text = get_text(
+        language,
+        'daily.generating',
+        default="⏳ Generating Daily Action Items (Last 24 Hours)...\n\nAnalyzing last 24 hours of conversation."
     )
+    generating_msg = await update.message.reply_text(generating_text)
     
     try:
         # Get messages from last 24 hours
@@ -470,11 +616,22 @@ async def daily_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         message_count = len(messages)
         
         # Format response
-        response = f"📋 *Daily Action Items (Last 24 Hours)*\n\n{action_items_text}"
+        response = get_text(
+            language,
+            'daily.result_header',
+            default="📋 *Daily Action Items (Last 24 Hours)*\n\n{action_items}",
+            action_items=action_items_text
+        )
         
         # Add message count if there are messages
         if message_count > 0:
-            response += f"\n\n_Total messages: {message_count}_"
+            message_count_text = get_text(
+                language,
+                'daily.message_count',
+                default="\n\n_Total messages: {count}_",
+                count=message_count
+            )
+            response += message_count_text
         
         # Delete "generating" message
         await generating_msg.delete()
@@ -487,11 +644,13 @@ async def daily_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await generating_msg.delete()
         
         # Send error message
-        await update.message.reply_text(
-            f"âŒ Error generating daily action items: {str(e)}\n\n"
-            f"Please try again later or contact support."
+        error_text = get_text(
+            language,
+            'daily.error',
+            default="❌ Error generating daily action items: {error}\n\nPlease try again later or contact support.",
+            error=str(e)
         )
-
+        await update.message.reply_text(error_text)
 
 async def subscription_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show subscription status and management"""
@@ -499,13 +658,24 @@ async def subscription_command(update: Update, context: ContextTypes.DEFAULT_TYP
     user = database.get_user(user_id)
     
     if not user:
-        await update.message.reply_text("Please use /start to register first.")
+        not_registered_text = get_text(
+            'English',
+            'subscription.not_registered',
+            default="Please use /start to register first."
+        )
+        await update.message.reply_text(not_registered_text)
         return
     
+    language = user['language']
+    
     if user['role'] != 'manager':
+        worker_unlimited_text = get_text(
+            language,
+            'subscription.worker_unlimited',
+            default="Workers have unlimited messages! 🎉\n\nOnly managers need subscriptions."
+        )
         await update.message.reply_text(
-            "Workers have unlimited messages! 🎉\n\n"
-            "Only managers need subscriptions.",
+            worker_unlimited_text,
             parse_mode='Markdown'
         )
         return
@@ -524,18 +694,39 @@ async def subscription_command(update: Update, context: ContextTypes.DEFAULT_TYP
         usage = usage_tracker.get_usage(user_id)
         messages_sent = usage.get('messages_sent', 0)
         
+        button_text = get_text(
+            language,
+            'subscription.no_subscription.button',
+            default="🏢 Upgrade to Business License (${price}/month)",
+            price=f"{monthly_price:.0f}"
+        )
+        
         keyboard = InlineKeyboardMarkup([[
-            InlineKeyboardButton(f"🏢 Upgrade to Business License (${monthly_price:.0f}/month)", url=checkout_url)
+            InlineKeyboardButton(button_text, url=checkout_url)
         ]])
         
+        # Build message parts
+        title = get_text(language, 'subscription.no_subscription.title', default="📋 *Subscription Status*\n\n")
+        status = get_text(language, 'subscription.no_subscription.status', default="Status: ❌ No Active Subscription\n")
+        usage_text = get_text(
+            language,
+            'subscription.no_subscription.usage',
+            default="Messages Used: {messages_sent} / {free_limit} (Free Tier)\n\n",
+            messages_sent=messages_sent,
+            free_limit=free_limit
+        )
+        benefits_header = get_text(language, 'subscription.no_subscription.benefits_header', default="💳 *Subscribe to BridgeOS:*\n")
+        benefits = get_text(
+            language,
+            'subscription.no_subscription.benefits',
+            default="• Unlimited messages\n• ${price}/month\n• Cancel anytime",
+            price=f"{monthly_price:.0f}"
+        )
+        
+        message = title + status + usage_text + benefits_header + benefits
+        
         await update.message.reply_text(
-            f"📋 *Subscription Status*\n\n"
-            f"Status: ❌ No Active Subscription\n"
-            f"Messages Used: {messages_sent} / {free_limit} (Free Tier)\n\n"
-            f"💳 *Subscribe to BridgeOS:*\n"
-            f"• Unlimited messages\n"
-            f"• ${monthly_price:.0f}/month\n"
-            f"• Cancel anytime",
+            message,
             reply_markup=keyboard,
             parse_mode='Markdown'
         )
@@ -554,25 +745,58 @@ async def subscription_command(update: Update, context: ContextTypes.DEFAULT_TYP
             'expired': '❌'
         }.get(status, '❓')
         
-        message = f"📋 *Your Subscription*\n\n" \
-                  f"{status_emoji} Status: {status.title()}\n" \
-                  f"💳 Plan: Unlimited Messages\n" \
-                  f"💵 Price: ${monthly_price:.0f}/month\n"
+        # Build message parts
+        title = get_text(language, 'subscription.active_subscription.title', default="📋 *Your Subscription*\n\n")
+        status_text = get_text(
+            language,
+            'subscription.active_subscription.status',
+            default="{emoji} Status: {status}\n",
+            emoji=status_emoji,
+            status=status.title()
+        )
+        plan = get_text(language, 'subscription.active_subscription.plan', default="💳 Plan: Unlimited Messages\n")
+        price = get_text(
+            language,
+            'subscription.active_subscription.price',
+            default="💵 Price: ${price}/month\n",
+            price=f"{monthly_price:.0f}"
+        )
+        
+        message = title + status_text + plan + price
         
         if status == 'active':
-            message += f"📅 Renews: {renews_at}\n"
+            renews = get_text(
+                language,
+                'subscription.active_subscription.renews',
+                default="📅 Renews: {date}\n",
+                date=renews_at
+            )
+            message += renews
         elif status == 'cancelled' and ends_at:
-            message += f"📅 Access Until: {ends_at[:10]}\n"
+            access_until = get_text(
+                language,
+                'subscription.active_subscription.access_until',
+                default="📅 Access Until: {date}\n",
+                date=ends_at[:10]
+            )
+            message += access_until
         
-        message += "\n_Manage or cancel anytime._"
+        footer = get_text(language, 'subscription.active_subscription.footer', default="\n_Manage or cancel anytime._")
+        message += footer
         
         if portal_url:
+            manage_button_text = get_text(
+                language,
+                'subscription.active_subscription.manage_button',
+                default="⚙️ Manage Business License"
+            )
             keyboard = InlineKeyboardMarkup([[
-                InlineKeyboardButton("⚙️ Manage Business License", url=portal_url)
+                InlineKeyboardButton(manage_button_text, url=portal_url)
             ]])
             await update.message.reply_text(message, reply_markup=keyboard, parse_mode='Markdown')
         else:
             await update.message.reply_text(message, parse_mode='Markdown')
+
 
 async def tasks_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show task list for manager or worker"""
@@ -580,8 +804,15 @@ async def tasks_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = database.get_user(user_id)
     
     if not user:
-        await update.message.reply_text("Please use /start to register first.")
+        not_registered_text = get_text(
+            'English',
+            'tasks.not_registered',
+            default="Please use /start to register first."
+        )
+        await update.message.reply_text(not_registered_text)
         return
+    
+    language = user['language']
     
     if user['role'] == 'manager':
         # Get manager's tasks
@@ -589,35 +820,62 @@ async def tasks_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         completed_tasks = tasks.get_manager_tasks(user_id, status='completed', limit_hours=24)
         
         if not pending_tasks and not completed_tasks:
+            title = get_text(language, 'tasks.manager.title', default="📋 *Your Tasks*\n\n")
+            no_tasks = get_text(
+                language,
+                'tasks.manager.no_tasks',
+                default="No tasks yet.\n\nCreate a task by sending a message starting with **\nExample: ** Check cow 115 for heat"
+            )
             await update.message.reply_text(
-                "📋 *Your Tasks*\n\n"
-                "No tasks yet.\n\n"
-                "Create a task by sending a message starting with **\n"
-                "Example: ** Check cow 115 for heat",
+                title + no_tasks,
                 parse_mode='Markdown'
             )
             return
         
         # Format response
-        response = "📋 *Your Tasks*\n\n"
+        response = get_text(language, 'tasks.manager.title', default="📋 *Your Tasks*\n\n")
         
         # Pending tasks
         if pending_tasks:
-            response += f"⏳ *PENDING ({len(pending_tasks)})*\n"
-            response += "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            pending_header = get_text(
+                language,
+                'tasks.manager.pending_header',
+                default="⏳ *PENDING ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
+                count=len(pending_tasks)
+            )
+            response += pending_header
+            
             for task in pending_tasks:
                 created_time = task['created_at'].strftime('%H:%M') if task.get('created_at') else 'Unknown'
-                response += f"• {task['description']}\n"
-                response += f"  _Created: Today at {created_time}_\n\n"
+                task_item = get_text(
+                    language,
+                    'tasks.manager.task_item',
+                    default="• {description}\n  _Created: Today at {time}_\n\n",
+                    description=task['description'],
+                    time=created_time
+                )
+                response += task_item
         
         # Completed tasks (today only)
         if completed_tasks:
-            response += f"\n✅ *COMPLETED TODAY ({len(completed_tasks)})*\n"
-            response += "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            completed_header = get_text(
+                language,
+                'tasks.manager.completed_header',
+                default="\n✅ *COMPLETED TODAY ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
+                count=len(completed_tasks)
+            )
+            response += completed_header
+            
             for task in completed_tasks:
                 completed_time = task['completed_at'].strftime('%H:%M') if task.get('completed_at') else 'Unknown'
-                response += f"• {task['description']}\n"
-                response += f"  _Completed at {completed_time}_\n\n"
+                completed_item = get_text(
+                    language,
+                    'tasks.manager.completed_item',
+                    default="• {description}\n  _Completed at {time}_\n\n",
+                    description=task['description'],
+                    time=completed_time
+                )
+                response += completed_item
         
         await update.message.reply_text(response, parse_mode='Markdown')
     
@@ -627,34 +885,68 @@ async def tasks_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         completed_tasks = tasks.get_worker_tasks(user_id, status='completed', limit_hours=24)
         
         if not pending_tasks and not completed_tasks:
+            title = get_text(language, 'tasks.worker.title', default="📋 *Your Tasks*\n\n")
+            no_tasks = get_text(
+                language,
+                'tasks.worker.no_tasks',
+                default="No tasks assigned yet.\n\nYour manager will send you tasks when needed."
+            )
             await update.message.reply_text(
-                "📋 *Your Tasks*\n\n"
-                "No tasks assigned yet.\n\n"
-                "Your manager will send you tasks when needed.",
+                title + no_tasks,
                 parse_mode='Markdown'
             )
             return
         
         # Format response
-        response = "📋 *Your Tasks*\n\n"
+        response = get_text(language, 'tasks.worker.title', default="📋 *Your Tasks*\n\n")
         
         # Pending tasks
         if pending_tasks:
-            response += f"⏳ *TO DO ({len(pending_tasks)})*\n"
-            response += "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            todo_header = get_text(
+                language,
+                'tasks.worker.todo_header',
+                default="⏳ *TO DO ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
+                count=len(pending_tasks)
+            )
+            response += todo_header
+            
             for task in pending_tasks:
-                response += f"• {task['description']}\n\n"
-            response += "_Tap the ✅ Mark Done button on each task message to complete it._\n\n"
+                task_item = get_text(
+                    language,
+                    'tasks.worker.task_item',
+                    default="• {description}\n\n",
+                    description=task['description']
+                )
+                response += task_item
+            
+            instruction = get_text(
+                language,
+                'tasks.worker.instruction',
+                default="_Tap the ✅ Mark Done button on each task message to complete it._\n\n"
+            )
+            response += instruction
         
         # Completed tasks (today only)
         if completed_tasks:
-            response += f"\n✅ *COMPLETED TODAY ({len(completed_tasks)})*\n"
-            response += "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            completed_header = get_text(
+                language,
+                'tasks.worker.completed_header',
+                default="\n✅ *COMPLETED TODAY ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
+                count=len(completed_tasks)
+            )
+            response += completed_header
+            
             for task in completed_tasks:
-                response += f"• {task['description']} ✓\n"
+                completed_item = get_text(
+                    language,
+                    'tasks.worker.completed_item',
+                    default="• {description} ✓\n",
+                    description=task['description']
+                )
+                response += completed_item
         
         await update.message.reply_text(response, parse_mode='Markdown')
-
+        
 async def view_tasks_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle 'View All Tasks' button click from task creation confirmation"""
     query = update.callback_query
@@ -663,60 +955,99 @@ async def view_tasks_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
     # Answer the callback immediately
     await query.answer()
     
-    # Call the tasks_command logic
-    # We need to create a fake update object for tasks_command
-    # Simpler: just duplicate the logic here
-    
     user = database.get_user(user_id)
     
     if not user or user['role'] != 'manager':
-        await query.edit_message_text("⚠️ Only managers can view tasks.")
+        not_manager_text = get_text(
+            user['language'] if user else 'English',
+            'view_tasks_callback.not_manager',
+            default="⚠️ Only managers can view tasks."
+        )
+        await query.edit_message_text(not_manager_text)
         return
+    
+    language = user['language']
     
     # Get manager's tasks
     pending_tasks = tasks.get_manager_tasks(user_id, status='pending')
     completed_tasks = tasks.get_manager_tasks(user_id, status='completed', limit_hours=24)
     
     if not pending_tasks and not completed_tasks:
+        no_other_tasks = get_text(
+            language,
+            'view_tasks_callback.no_other_tasks',
+            default="📋 *Your Tasks*\n\nNo other tasks yet.\n\nCreate more tasks by sending messages starting with **"
+        )
         await query.edit_message_text(
-            "📋 *Your Tasks*\n\n"
-            "No other tasks yet.\n\n"
-            "Create more tasks by sending messages starting with **",
+            no_other_tasks,
             parse_mode='Markdown'
         )
         return
     
     # Format response (same as tasks_command)
-    response = "📋 *Your Tasks*\n\n"
+    response = get_text(language, 'tasks.manager.title', default="📋 *Your Tasks*\n\n")
     
     if pending_tasks:
-        response += f"⏳ *PENDING ({len(pending_tasks)})*\n"
-        response += "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        pending_header = get_text(
+            language,
+            'tasks.manager.pending_header',
+            default="⏳ *PENDING ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
+            count=len(pending_tasks)
+        )
+        response += pending_header
+        
         for task in pending_tasks:
             created_time = task['created_at'].strftime('%H:%M') if task.get('created_at') else 'Unknown'
-            response += f"• {task['description']}\n"
-            response += f"  _Created: Today at {created_time}_\n\n"
+            task_item = get_text(
+                language,
+                'tasks.manager.task_item',
+                default="• {description}\n  _Created: Today at {created_time}_\n\n",
+                description=task['description'],
+                created_time=created_time
+            )
+            response += task_item
     
     if completed_tasks:
-        response += f"\n✅ *COMPLETED TODAY ({len(completed_tasks)})*\n"
-        response += "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        completed_header = get_text(
+            language,
+            'tasks.manager.completed_header',
+            default="\n✅ *COMPLETED TODAY ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
+            count=len(completed_tasks)
+        )
+        response += completed_header
+        
         for task in completed_tasks:
             completed_time = task['completed_at'].strftime('%H:%M') if task.get('completed_at') else 'Unknown'
-            response += f"• {task['description']}\n"
-            response += f"  _Completed at {completed_time}_\n\n"
+            completed_item = get_text(
+                language,
+                'tasks.manager.completed_item',
+                default="• {description}\n  _Completed at {completed_time}_\n\n",
+                description=task['description'],
+                completed_time=completed_time
+            )
+            response += completed_item
     
     await query.edit_message_text(response, parse_mode='Markdown')
 
-
 async def feedback_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /feedback command - collect user feedback"""
+    user_id = str(update.effective_user.id)
+    user = database.get_user(user_id)
+    
+    # Get user's language, fallback to English if not registered
+    language = user['language'] if user else 'English'
+    
     # Set flag to capture next message as feedback
     context.user_data['awaiting_feedback'] = True
     
+    prompt_text = get_text(
+        language,
+        'feedback.prompt',
+        default="💡 *Send Your Feedback*\n\nType your message below and I'll forward it to the BridgeOS team.\n\nShare suggestions, report bugs, or tell us what you think!"
+    )
+    
     await update.message.reply_text(
-        "💡 *Send Your Feedback*\n\n"
-        "Type your message below and I'll forward it to the BridgeOS team.\n\n"
-        "Share suggestions, report bugs, or tell us what you think!",
+        prompt_text,
         parse_mode='Markdown'
     )
 
@@ -737,10 +1068,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         config = load_config()
         admin_id = config.get('admin_telegram_id')
         
+        # Get user for language
+        user = database.get_user(user_id)
+        language = user['language'] if user else 'English'
+        
         if not admin_id:
-            await update.message.reply_text(
-                "⚠️ Error: Admin not configured. Please contact support."
+            admin_error_text = get_text(
+                language,
+                'feedback_handling.admin_error',
+                default="⚠️ Error: Admin not configured. Please contact support."
             )
+            await update.message.reply_text(admin_error_text)
             return
         
         # Get user info for the feedback message
@@ -748,7 +1086,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         username = update.effective_user.username
         text = update.message.text
         
-        # Format feedback message
+        # Format feedback message (admin always gets English)
         feedback_msg = f"💬 *Feedback from {user_name}*\n"
         if username:
             feedback_msg += f"@{username} "
@@ -770,26 +1108,38 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 message=text
             )
             
+            success_text = get_text(
+                language,
+                'feedback_handling.success',
+                default="✅ *Feedback Sent!*\n\nThank you for sharing your thoughts with us. We read every message and truly appreciate your input!"
+            )
             await update.message.reply_text(
-                "✅ *Feedback Sent!*\n\n"
-                "Thank you for sharing your thoughts with us. "
-                "We read every message and truly appreciate your input!",
+                success_text,
                 parse_mode='Markdown'
             )
         except Exception as e:
             print(f"Error sending feedback: {e}")
-            await update.message.reply_text(
-                "⚠️ Sorry, there was an error sending your feedback. Please try again later."
+            error_text = get_text(
+                language,
+                'feedback_handling.error',
+                default="⚠️ Sorry, there was an error sending your feedback. Please try again later."
             )
+            await update.message.reply_text(error_text)
         
         return
     
     user = database.get_user(user_id)
     
     if not user:
-        await update.message.reply_text("Please use /start to register first.")
+        not_registered_text = get_text(
+            'English',
+            'handle_message.not_registered',
+            default="Please use /start to register first."
+        )
+        await update.message.reply_text(not_registered_text)
         return
     
+    language = user['language']
     text = update.message.text
     
     # Check if it's a task (** prefix at beginning)
@@ -814,23 +1164,39 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if usage_tracker.is_user_blocked(telegram_id):
                 # Generate subscribe button
                 checkout_url = subscription_manager.create_checkout_url(telegram_id)
+                
+                button_text = get_text(
+                    language,
+                    'handle_message.limit_reached.button',
+                    default="💳 Upgrade to Business License (${price}/month)",
+                    price=f"{monthly_price:.0f}"
+                )
+                
                 keyboard = InlineKeyboardMarkup([[
-                    InlineKeyboardButton(f"💳 Upgrade to Business License (${monthly_price:.0f}/month)", url=checkout_url)
+                    InlineKeyboardButton(button_text, url=checkout_url)
                 ]])
                 
+                # Build message parts
+                title = get_text(language, 'handle_message.limit_reached.title', default="⚠️ *Free Plan Limit Reached*\n\n")
+                message_text = get_text(
+                    language,
+                    'handle_message.limit_reached.message',
+                    default="Your business has used its allocation of {free_limit} translated messages.\nTo continue operations without interruption, please upgrade your account to the *Business License*.\n\n",
+                    free_limit=free_limit
+                )
+                benefits_header = get_text(language, 'handle_message.limit_reached.benefits_header', default="*BridgeOS Business License:*\n")
+                benefits = get_text(
+                    language,
+                    'handle_message.limit_reached.benefits',
+                    default="✅ Full Business Access (Unlimited usage)\n✅ Manager Dashboard\n✅ Priority Processing\n✅ Industry-Specific Translations\n✅ Multi-Language Support (12 languages)\n• *Price:* ${price}/month (Cancel anytime)\n\n",
+                    price=f"{monthly_price:.0f}"
+                )
+                cta = get_text(language, 'handle_message.limit_reached.cta', default="Tap below to upgrade:")
+                
+                full_message = title + message_text + benefits_header + benefits + cta
+                
                 await update.message.reply_text(
-                    f"⚠️ *Free Plan Limit Reached*\n\n"
-                    f"Your business has used its allocation of {free_limit} translated messages.\n"
-                    f"To continue operations without interruption, "
-                    f"please upgrade your account to the *Business License*.\n\n"
-                    f"*BridgeOS Business License:*\n"
-                    f"✅ Full Business Access (Unlimited usage)\n" 
-                    f"✅ Manager Dashboard\n"
-                    f"✅ Priority Processing\n"
-                    f"✅ Industry-Specific Translations\n"
-                    f"✅ Multi-Language Support (12 languages)\n"
-                    f"• *Price:* ${monthly_price:.0f}/month (Cancel anytime)\n\n"                    
-                    f"Tap below to upgrade:",
+                    full_message,
                     reply_markup=keyboard,
                     parse_mode='Markdown'
                 )
@@ -844,18 +1210,22 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user['role'] == 'manager':
         worker_id = user.get('worker')
         if not worker_id:
-            await update.message.reply_text(
-                "⚠️ You don't have a contact connected yet.\n"
-                "Share your invitation (use /mycode) with your contact."
+            no_worker_text = get_text(
+                language,
+                'handle_message.manager.no_worker',
+                default="⚠️ You don't have a contact connected yet.\nShare your invitation (use /mycode) with your contact."
             )
+            await update.message.reply_text(no_worker_text)
             return
         
         worker = database.get_user(worker_id)
         if not worker:
-            await update.message.reply_text(
-                "⚠️ Your contact's account no longer exists.\n"
-                "Use /reset to start over."
+            worker_not_found_text = get_text(
+                language,
+                'handle_message.manager.worker_not_found',
+                default="⚠️ Your contact's account no longer exists.\nUse /reset to start over."
             )
+            await update.message.reply_text(worker_not_found_text)
             return
         
         history = translation_msg_context.get_conversation_history(user_id, worker_id, max_history_messages)
@@ -889,9 +1259,19 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         
         manager_name = update.effective_user.first_name
+        
+        # Send to worker in worker's language
+        message_prefix = get_text(
+            worker['language'],  # Worker's language
+            'handle_message.manager.message_prefix',
+            default="🗣️ From {name}: {translated}",
+            name=manager_name,
+            translated=translated
+        )
+        
         await context.bot.send_message(
             chat_id=worker_id,
-            text=f"🗣️ From {manager_name}: {translated}"
+            text=message_prefix
         )
         
         # Increment message counter for manager (after successful send)
@@ -902,14 +1282,28 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if not allowed:
                 # Just hit the limit - show subscribe button
                 checkout_url = subscription_manager.create_checkout_url(telegram_id)
+                
+                last_message_button = get_text(
+                    language,
+                    'handle_message.manager.last_message_button',
+                    default="🏢 Upgrade to Business License (${price}/month)",
+                    price=f"{monthly_price:.0f}"
+                )
+                
                 keyboard = InlineKeyboardMarkup([[
-                    InlineKeyboardButton(f"🏢 Upgrade to Business License (${monthly_price:.0f}/month)", url=checkout_url)
+                    InlineKeyboardButton(last_message_button, url=checkout_url)
                 ]])
                 
+                last_message_text = get_text(
+                    language,
+                    'handle_message.manager.last_message',
+                    default="⚠️ *That was your last free message!*\n\nYou've used all {free_limit} free messages.\n\n💳 Subscribe for unlimited messages (${price}/month):",
+                    free_limit=free_limit,
+                    price=f"{monthly_price:.0f}"
+                )
+                
                 await update.message.reply_text(
-                    f"⚠️ *That was your last free message!*\n\n"
-                    f"You've used all {free_limit} free messages.\n\n"
-                    f"💳 Subscribe for unlimited messages (${monthly_price:.0f}/month):",
+                    last_message_text,
                     reply_markup=keyboard,
                     parse_mode='Markdown'
                 )
@@ -917,18 +1311,22 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif user['role'] == 'worker':
         manager_id = user.get('manager')
         if not manager_id:
-            await update.message.reply_text(
-                "⚠️ You're not connected to a contact.\n"
-                "Ask your contact for their invitation link."
+            no_manager_text = get_text(
+                language,
+                'handle_message.worker.no_manager',
+                default="⚠️ You're not connected to a contact.\nAsk your contact for their invitation link."
             )
+            await update.message.reply_text(no_manager_text)
             return
         
         manager = database.get_user(manager_id)
         if not manager:
-            await update.message.reply_text(
-                "⚠️ Your contact's account no longer exists.\n"
-                "Use /reset and wait for a new invitation."
+            manager_not_found_text = get_text(
+                language,
+                'handle_message.worker.manager_not_found',
+                default="⚠️ Your contact's account no longer exists.\nUse /reset and wait for a new invitation."
             )
+            await update.message.reply_text(manager_not_found_text)
             return
         
         history = translation_msg_context.get_conversation_history(user_id, manager_id, max_history_messages)
@@ -962,11 +1360,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         
         sender_name = update.effective_user.first_name
+        
+        # Send to manager in manager's language
+        message_prefix = get_text(
+            manager['language'],  # Manager's language
+            'handle_message.worker.message_prefix',
+            default="🗣️ From {name}: {translated}",
+            name=sender_name,
+            translated=translated
+        )
+        
         await context.bot.send_message(
             chat_id=manager_id,
-            text=f"🗣️ From {sender_name}: {translated}"
+            text=message_prefix
         )
-
 
 async def handle_task_creation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle task creation when manager sends ** prefix"""
@@ -974,21 +1381,27 @@ async def handle_task_creation(update: Update, context: ContextTypes.DEFAULT_TYP
     user = database.get_user(user_id)
     text = update.message.text
     
+    language = user['language']
+    
     # Only managers can create tasks
     if user['role'] != 'manager':
-        await update.message.reply_text(
-            "⚠️ Only managers can create tasks.\n"
-            "To send a regular message, don't use **"
+        not_manager_text = get_text(
+            language,
+            'handle_task_creation.not_manager',
+            default="⚠️ Only managers can create tasks.\nTo send a regular message, don't use **"
         )
+        await update.message.reply_text(not_manager_text)
         return
     
     # Check if manager has a worker
     worker_id = user.get('worker')
     if not worker_id:
-        await update.message.reply_text(
-            "⚠️ You don't have a worker connected yet.\n"
-            "Share your invitation (use /mycode) with your worker first."
+        no_worker_text = get_text(
+            language,
+            'handle_task_creation.no_worker',
+            default="⚠️ You don't have a worker connected yet.\nShare your invitation (use /mycode) with your worker first."
         )
+        await update.message.reply_text(no_worker_text)
         return
     
     # Extract task description (remove ** prefix)
@@ -996,19 +1409,23 @@ async def handle_task_creation(update: Update, context: ContextTypes.DEFAULT_TYP
     
     # Validate not empty
     if not task_description:
-        await update.message.reply_text(
-            "⚠️ Please provide a task description after **\n\n"
-            "Example: ** Check cow 115 for heat"
+        empty_description_text = get_text(
+            language,
+            'handle_task_creation.empty_description',
+            default="⚠️ Please provide a task description after **\n\nExample: ** Check cow 115 for heat"
         )
+        await update.message.reply_text(empty_description_text)
         return
     
     # Get worker data
     worker = database.get_user(worker_id)
     if not worker:
-        await update.message.reply_text(
-            "⚠️ Your worker's account no longer exists.\n"
-            "Use /reset to start over."
+        worker_not_found_text = get_text(
+            language,
+            'handle_task_creation.worker_not_found',
+            default="⚠️ Your worker's account no longer exists.\nUse /reset to start over."
         )
+        await update.message.reply_text(worker_not_found_text)
         return
     
     # Translate task to worker's language
@@ -1022,10 +1439,13 @@ async def handle_task_creation(update: Update, context: ContextTypes.DEFAULT_TYP
         )
     except Exception as e:
         print(f"Error translating task: {e}")
-        await update.message.reply_text(
-            f"⚠️ Error translating task: {str(e)}\n"
-            "Please try again."
+        translation_error_text = get_text(
+            language,
+            'handle_task_creation.translation_error',
+            default="⚠️ Error translating task: {error}\nPlease try again.",
+            error=str(e)
         )
+        await update.message.reply_text(translation_error_text)
         return
     
     # Save task to database
@@ -1038,40 +1458,73 @@ async def handle_task_creation(update: Update, context: ContextTypes.DEFAULT_TYP
         )
     except Exception as e:
         print(f"Error creating task: {e}")
-        await update.message.reply_text(
-            f"⚠️ Error creating task: {str(e)}\n"
-            "Please try again."
+        creation_error_text = get_text(
+            language,
+            'handle_task_creation.creation_error',
+            default="⚠️ Error creating task: {error}\nPlease try again.",
+            error=str(e)
         )
+        await update.message.reply_text(creation_error_text)
         return
     
     # Send to worker with checkbox button
+    mark_done_button_text = get_text(
+        worker['language'],  # Worker's language for button
+        'handle_task_creation.mark_done_button',
+        default="✅ Mark Done"
+    )
+    
     keyboard = InlineKeyboardMarkup([[
-        InlineKeyboardButton("✅ Mark Done", callback_data=f"task_done_{task_id}")
+        InlineKeyboardButton(mark_done_button_text, callback_data=f"task_done_{task_id}")
     ]])
     
     manager_name = update.effective_user.first_name or "Manager"
     
     try:
+        worker_task_text = get_text(
+            worker['language'],  # Worker's language for task message
+            'handle_task_creation.worker_task',
+            default="📋 *Task from {manager_name}:*\n{task}",
+            manager_name=manager_name,
+            task=translated_task
+        )
         await context.bot.send_message(
             chat_id=worker_id,
-            text=f"📋 *Task from {manager_name}:*\n{translated_task}",
+            text=worker_task_text,
             reply_markup=keyboard,
             parse_mode='Markdown'
         )
     except Exception as e:
         print(f"Error sending task to worker: {e}")
-        await update.message.reply_text(
-            f"⚠️ Error sending task to worker: {str(e)}"
+        send_error_text = get_text(
+            language,
+            'handle_task_creation.send_error',
+            default="⚠️ Error sending task to worker: {error}",
+            error=str(e)
         )
+        await update.message.reply_text(send_error_text)
         return
     
     # Confirm to manager with "View All Tasks" button
+    view_all_button_text = get_text(
+        language,
+        'handle_task_creation.view_all_button',
+        default="📋 View All Tasks"
+    )
+    
     keyboard = InlineKeyboardMarkup([[
-        InlineKeyboardButton("📋 View All Tasks", callback_data="view_tasks")
+        InlineKeyboardButton(view_all_button_text, callback_data="view_tasks")
     ]])
     
+    manager_confirmation_text = get_text(
+        language,
+        'handle_task_creation.manager_confirmation',
+        default="✅ *Task sent to worker:*\n\"{task}\"",
+        task=task_description
+    )
+    
     await update.message.reply_text(
-        f"✅ *Task sent to worker:*\n\"{task_description}\"",
+        manager_confirmation_text,
         reply_markup=keyboard,
         parse_mode='Markdown'
     )
@@ -1085,52 +1538,99 @@ async def task_completion_callback(update: Update, context: ContextTypes.DEFAULT
     try:
         task_id = int(query.data.split('_')[2])
     except (IndexError, ValueError):
-        await query.answer("⚠️ Invalid task ID")
+        user = database.get_user(user_id)
+        language = user['language'] if user else 'English'
+        invalid_id_text = get_text(
+            language,
+            'task_completion_callback.invalid_task_id',
+            default="⚠️ Invalid task ID"
+        )
+        await query.answer(invalid_id_text)
         return
     
     # Verify user is a worker
     user = database.get_user(user_id)
     if not user or user['role'] != 'worker':
-        await query.answer("⚠️ Only workers can complete tasks")
+        language = user['language'] if user else 'English'
+        not_worker_text = get_text(
+            language,
+            'task_completion_callback.not_worker',
+            default="⚠️ Only workers can complete tasks"
+        )
+        await query.answer(not_worker_text)
         return
+    
+    language = user['language']
     
     # Complete the task
     task = tasks.complete_task(task_id)
     
     if not task:
-        await query.answer("⚠️ Task not found or already completed")
+        not_found_text = get_text(
+            language,
+            'task_completion_callback.not_found',
+            default="⚠️ Task not found or already completed"
+        )
+        await query.answer(not_found_text)
         return
     
     # Verify this worker is assigned to this task
     if task['worker_id'] != user_id:
-        await query.answer("⚠️ This task is not assigned to you")
+        not_assigned_text = get_text(
+            language,
+            'task_completion_callback.not_assigned',
+            default="⚠️ This task is not assigned to you"
+        )
+        await query.answer(not_assigned_text)
         return
     
     # Update the message to show completion
     try:
+        task_completed_text = get_text(
+            language,
+            'task_completion_callback.task_completed',
+            default="📋 *Task:*\n{task}\n\n✅ *Completed!*",
+            task=task['description_translated']
+        )
         await query.edit_message_text(
-            text=f"📋 *Task:*\n{task['description_translated']}\n\n✅ *Completed!*",
+            text=task_completed_text,
             parse_mode='Markdown'
         )
     except Exception as e:
         print(f"Error updating message: {e}")
     
     # Notify worker
-    await query.answer("✅ Task marked as completed")
+    completion_confirmation = get_text(
+        language,
+        'task_completion_callback.completion_confirmation',
+        default="✅ Task marked as completed"
+    )
+    await query.answer(completion_confirmation)
     
     # Notify manager
     manager_id = task['manager_id']
-    worker_name = update.effective_user.first_name or "Worker"
-    completed_time = task['completed_at'].strftime('%H:%M') if task.get('completed_at') else 'now'
-    
-    try:
-        await context.bot.send_message(
-            chat_id=manager_id,
-            text=f"✅ *Task completed by {worker_name}:*\n\"{task['description']}\"\n\n🕐 Completed at: {completed_time}",
-            parse_mode='Markdown'
-        )
-    except Exception as e:
-        print(f"Error notifying manager: {e}")
+    manager = database.get_user(manager_id)
+    if manager:
+        worker_name = update.effective_user.first_name or "Worker"
+        completed_time = task['completed_at'].strftime('%H:%M') if task.get('completed_at') else 'now'
+        
+        try:
+            manager_notification = get_text(
+                manager['language'],  # Use manager's language
+                'task_completion_callback.manager_notification',
+                default="✅ *Task completed by {worker_name}:*\n\"{task}\"\n\n🕐 Completed at: {time}",
+                worker_name=worker_name,
+                task=task['description'],
+                time=completed_time
+            )
+            await context.bot.send_message(
+                chat_id=manager_id,
+                text=manager_notification,
+                parse_mode='Markdown'
+            )
+        except Exception as e:
+            print(f"Error notifying manager: {e}")
+
 # ============================================
 # MEDIA HANDLING
 # ============================================
@@ -1141,39 +1641,72 @@ async def handle_media(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = database.get_user(user_id)
     
     if not user:
-        await update.message.reply_text("Please use /start to register first.")
+        not_registered_text = get_text(
+            'English',
+            'handle_media.not_registered',
+            default="Please use /start to register first."
+        )
+        await update.message.reply_text(not_registered_text)
         return
+    
+    language = user['language']
     
     # Determine recipient based on role
     if user['role'] == 'manager':
         recipient_id = user.get('worker')
         if not recipient_id:
-            await update.message.reply_text(
-                "⚠️ You don't have a contact connected yet.\n"
-                "Share your invitation (use /mycode) with your contact."
+            no_worker_text = get_text(
+                language,
+                'handle_media.manager_no_worker',
+                default="⚠️ You don't have a contact connected yet.\nShare your invitation (use /mycode) with your contact."
             )
+            await update.message.reply_text(no_worker_text)
             return
         sender_name = update.effective_user.first_name
-        prefix = f"📎 From {sender_name}:"
+        # Get recipient's language for the prefix
+        recipient = database.get_user(recipient_id)
+        if recipient:
+            prefix = get_text(
+                recipient['language'],
+                'handle_media.media_prefix',
+                default="📎 From {sender_name}:",
+                sender_name=sender_name
+            )
+        else:
+            prefix = f"📎 From {sender_name}:"
     
     elif user['role'] == 'worker':
         recipient_id = user.get('manager')
         if not recipient_id:
-            await update.message.reply_text(
-                "⚠️ You're not connected to a contact.\n"
-                "Ask your contact for their invitation link."
+            no_manager_text = get_text(
+                language,
+                'handle_media.worker_no_manager',
+                default="⚠️ You're not connected to a contact.\nAsk your contact for their invitation link."
             )
+            await update.message.reply_text(no_manager_text)
             return
         sender_name = update.effective_user.first_name
-        prefix = f"📎 From {sender_name}:"
+        # Get recipient's language for the prefix
+        recipient = database.get_user(recipient_id)
+        if recipient:
+            prefix = get_text(
+                recipient['language'],
+                'handle_media.media_prefix',
+                default="📎 From {sender_name}:",
+                sender_name=sender_name
+            )
+        else:
+            prefix = f"📎 From {sender_name}:"
     
     # Check if recipient exists
     recipient = database.get_user(recipient_id)
     if not recipient:
-        await update.message.reply_text(
-            "⚠️ Your contact's account no longer exists.\n"
-            "Use /reset to start over."
+        contact_not_found_text = get_text(
+            language,
+            'handle_media.contact_not_found',
+            default="⚠️ Your contact's account no longer exists.\nUse /reset to start over."
         )
+        await update.message.reply_text(contact_not_found_text)
         return
     
     # Send prefix message
