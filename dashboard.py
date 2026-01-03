@@ -126,15 +126,15 @@ def handle_subscription_created(telegram_id: str, data: dict):
     }
     subscription_manager.save_subscription(telegram_id, subscription_data)
     print(
-        f"âœ… Subscription created for {telegram_id}: {subscription_data['lemon_subscription_id']}"
+        f"✅ Subscription created for {telegram_id}: {subscription_data['lemon_subscription_id']}"
     )
 
     # Send notification to user
     send_telegram_notification(
         telegram_id,
-        "âœ… *Subscription Active!*\n\n"
+        "✅ *Subscription Active!*\n\n"
         "You now have unlimited messages.\n"
-        "Thank you for subscribing to BridgeOS! ðŸŽ‰",
+        "Thank you for subscribing to BridgeOS! 🎉",
     )
 
 
@@ -486,7 +486,7 @@ DASHBOARD_HTML = """
                         <div>
                             <strong>Status:</strong>
                             {% if manager.blocked %}
-                                <span class="badge disconnected">ðŸš« Blocked</span>
+                                <span class="badge disconnected">🚫 Blocked</span>
                             {% else %}
                                 <span class="badge connected">✔ Active</span>
                             {% endif %}
@@ -494,7 +494,7 @@ DASHBOARD_HTML = """
                         <div>
                             <strong>Subscription:</strong>
                             {% if manager.subscription %}
-                                <span class="badge subscribed">ðŸ’³ {{ manager.subscription.status|title }}</span>
+                                <span class="badge subscribed">💳 {{ manager.subscription.status|title }}</span>
                             {% else %}
                                 <span class="badge disconnected">Free Tier</span>
                             {% endif %}
@@ -516,7 +516,7 @@ DASHBOARD_HTML = """
                         </form>
                         {% if manager.blocked %}
                         <form method="POST" action="/reset_usage/{{ manager.id }}" style="display:inline;">
-                            <button type="submit" class="btn">ðŸ”“ Reset Usage</button>
+                            <button type="submit" class="btn">🔄 Reset Usage</button>
                         </form>
                         {% endif %}
                     </div>

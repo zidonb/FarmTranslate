@@ -6,9 +6,9 @@
     "registration": {
         "gender_question": "מה המגדר שלך?\n(זה עוזר לתרגומים מדויקים)",
         "gender_options": {
-            "male": "זכר👨",
-            "female": "נקבה👩",
-            "prefer_not_to_say": "מעדיף לא לומר🤷"
+            "male": "זכר 👨",
+            "female": "נקבה 👩",
+            "prefer_not_to_say": "מעדיף לא לומר 🤷"
         },
         "invalid_code": "❌ קוד הזמנה לא תקין.\n\nבקש מאיש הקשר שלך קישור הזמנה חדש.",
         "worker_already_connected": "❌ לאיש קשר זה כבר יש עובד מחובר.\nבקש ממנו להשתמש ב-/reset תחילה.",

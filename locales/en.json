@@ -6,9 +6,9 @@
     "registration": {
         "gender_question": "What is your gender?\n(This helps with accurate translations)",
         "gender_options": {
-            "male": "👨Male",
-            "female": "👩Female",
-            "prefer_not_to_say": "🤷Prefer not to say"
+            "male": "👨 Male",
+            "female": "👩 Female",
+            "prefer_not_to_say": "🤷 Prefer not to say"
         },
         "invalid_code": "❌ Invalid invitation code.\n\nPlease ask your contact for a new invitation link.",
         "worker_already_connected": "❌ This contact already has a worker connected.\nAsk them to use /reset first.",
