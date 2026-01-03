@@ -25,6 +25,173 @@ BridgeOS is an AI-powered Operating System designed to manage foreign workforces
 
 ---
 
+## **Internationalization (i18n)**
+
+### **Overview:**
+BridgeOS UI messages (commands, buttons, errors, notifications) are fully internationalized, appearing in each user's selected language. Translation of user conversations remains separate and uses the LLM providers.
+
+### **Architecture:**
+- **Module**: `i18n.py` - Translation loader with caching
+- **Storage**: `/locales/` folder with JSON files per language
+- **Naming**: ISO 639-1 codes (`en.json`, `he.json`, `ar.json`, etc.)
+- **Fallback**: Triple fallback system (requested language → English → default value)
+
+### **Language Mapping:**
+`config.json` contains mapping from display names to ISO codes:
+```json
+"language_mapping": {
+  "English": "en",
+  "עברית": "he",
+  "العربية": "ar",
+  "ไทย": "th",
+  "Español": "es",
+  "Türkçe": "tr",
+  "Français": "fr",
+  "Deutsch": "de",
+  "Português": "pt",
+  "Русский": "ru",
+  "हिन्दी": "hi",
+  "Filipino": "tl"
+}
+```
+
+### **File Structure:**
+```
+/locales/
+├── en.json          # English (complete reference)
+├── he.json          # Hebrew (עברית)
+├── ar.json          # Arabic (العربية)
+├── th.json          # Thai (ไทย)
+├── es.json          # Spanish (Español)
+├── tr.json          # Turkish (Türkçe)
+├── fr.json          # French (Français)
+├── de.json          # German (Deutsch)
+├── pt.json          # Portuguese (Português)
+├── ru.json          # Russian (Русский)
+├── hi.json          # Hindi (हिन्दी)
+└── tl.json          # Filipino/Tagalog
+```
+
+### **JSON Structure:**
+```json
+{
+  "start": {
+    "welcome_back": "Welcome back! You're registered as {role}.",
+    "welcome_new": "Welcome to BridgeOS! 🌉\n\nSelect your language:"
+  },
+  "registration": {
+    "gender_question": "What is your gender?",
+    "gender_options": {
+      "male": "Male",
+      "female": "Female",
+      "prefer_not_to_say": "Prefer not to say"
+    },
+    "invalid_code": "❌ Invalid invitation code.",
+    "registration_complete": "✅ Registration complete!"
+  },
+  "help": {
+    "not_registered": "Please use /start to register first.",
+    "manager_commands": "📋 *Available Commands:*\n\n/help - Show this help message\n...",
+    "worker_commands": "..."
+  }
+}
+```
+
+### **Usage in Code:**
+```python
+from i18n import get_text
+
+# Get user's language
+language = user['language']
+
+# Get translated text with placeholders
+text = get_text(
+    language,
+    'registration.welcome_message',
+    default="Welcome {name}!",
+    name=user_name
+)
+```
+
+### **Key Features:**
+- **Lazy loading** - Files loaded on first use, cached in memory
+- **Dot notation** - Nested keys accessed via `'section.subsection.key'`
+- **Placeholders** - `{variable}` replaced with `**kwargs`
+- **Type safety** - Returns strings (never None or errors)
+- **Performance** - O(1) lookup after initial load
+
+### **Gender Button Mapping:**
+Registration stores gender in **English** internally (required by `translator.py`), but displays buttons in user's language:
+```python
+# In language_selected():
+male = get_text(language, 'registration.gender_options.male', default="Male")
+# Hebrew user sees: "זכר"
+
+# In gender_selected():
+gender_reverse_map = {
+    male: 'Male',        # "זכר" → "Male"
+    female: 'Female',    # "נקבה" → "Female"
+    prefer_not: 'Prefer not to say'
+}
+english_gender = gender_reverse_map.get(update.message.text)
+# Stores "Male" in database (translator.py expects English)
+```
+
+### **Critical Rules:**
+1. **User-facing messages** → Use `get_text()` with user's language
+2. **Recipient notifications** → Use recipient's language, not sender's
+3. **Internal values** → Store in English (e.g., gender for `translator.py`)
+4. **Admin messages** → Always English (dashboard, feedback forwarding)
+5. **Translated buttons** → Map back to English before saving to database
+
+### **Recipient Language Examples:**
+```python
+# Worker notification (uses manager's language)
+manager_notification = get_text(
+    manager['language'],  # NOT worker's language
+    'registration.manager_notification',
+    default="✅ {worker_name} connected!",
+    worker_name=worker_name
+)
+
+# Manager notification (uses manager's language)
+message_prefix = get_text(
+    worker['language'],  # NOT manager's language
+    'handle_message.message_prefix',
+    default="🗣️ From {name}: {text}",
+    name=manager_name,
+    text=translated
+)
+```
+
+### **Supported Languages:**
+All 12 languages have complete UI translations:
+- English (en)
+- Hebrew (עברית - he)
+- Arabic (العربية - ar)
+- Thai (ไทย - th)
+- Spanish (Español - es)
+- Turkish (Türkçe - tr)
+- French (Français - fr)
+- German (Deutsch - de)
+- Portuguese (Português - pt)
+- Russian (Русский - ru)
+- Hindi (हिन्दी - hi)
+- Filipino (tl)
+
+### **Separation from LLM Translation:**
+- **i18n** → Bot UI (commands, buttons, errors, notifications)
+- **translator.py** → User messages (conversations between manager/worker)
+- **No overlap** → UI translation is static lookup, conversation translation uses AI
+
+### **Maintenance:**
+- **Adding new language**: Create `/locales/XX.json` with all keys
+- **Adding new message**: Add to all JSON files (or use English as fallback)
+- **Updating message**: Edit JSON files only (no code changes)
+- **Testing**: Change user's language in database, test all flows
+
+---
+
 ## **Business Model**
 
 ### **Freemium + Subscription:**
@@ -228,6 +395,11 @@ bridgeos/
 ├── Procfile                        # Railway deployment (web + worker services)
 ├── runtime.txt                     # Python version (3.11.9)
 ├── .gitignore                      # Exclude secrets and data files
+├── i18n.py                         # i18n loader (lazy loading + caching)
+├── locales/                        # Translation files (JSON per language)
+│   ├── en.json                     # English translations
+│   ├── he.json                     # Hebrew translations
+│   └── ...                         # Other language files
 └── docs/                           # Documentation folder
     ├── BACKGROUND.md               # Project context for new sessions
     ├── structure.md                # This file ✅ UPDATED
