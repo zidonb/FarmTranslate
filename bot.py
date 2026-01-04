@@ -258,9 +258,6 @@ async def industry_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # ✅ NEW: Use reverse map to get English key
     industry_key = industry_reverse_map.get(industry_name, 'other')
-
-    #TEMPPPPP
-    print(f"✅ Industry selected - User tapped: '{industry_name}' → Mapped to key: '{industry_key}' → Description: '{industries[industry_key]['description']}'")
     
     # Generate code and register as manager
     code = generate_code()
