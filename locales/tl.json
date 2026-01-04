@@ -21,6 +21,16 @@
         "ready_to_start": "Handa nang magsimula! Gamitin ang /help anumang oras.",
         "cancelled": "Kinansela ang registration. Gamitin ang /start upang subukan muli."
     },
+    "industries": {
+        "dairy_farm": "🐄 Dairy Farm",
+        "elderly_care": "👴 Pag-aalaga sa Matatanda",
+        "hospitality": "🏨 Hospitality / Hotel",
+        "farm": "🌾 Bukid / Agrikultura",
+        "construction": "🏗️ Konstruksiyon",
+        "restaurant": "🍽️ Restawran",
+        "warehouse": "📦 Bodega",
+        "other": "💼 Pangkalahatang Lugar ng Trabaho"
+    },
     "help": {
         "not_registered": "Pakiusap na gumamit ng /start upang magrehistro muna.",
         "manager_commands": "📋 *Mga Available na Command:*\n\n/help - Ipakita ang mensaheng ito\n/tasks - Tingnan ang iyong listahan ng gawain\n/daily - Kunin ang mga pang-araw-araw na aksyon\n/subscription - Tingnan ang status ng subscription\n/reset - Burahin ang account at magsimula muli\n/mycode - Ipakita ang iyong connection code\n/refer - Irekomenda sa ibang mga manager\n/feedback - Magpadala ng feedback sa BridgeOS team\n\n💬 *Paano gamitin:*\nI-type lang ang iyong mensahe at awtomatikong isasalin at ipapadala sa iyong contact!",

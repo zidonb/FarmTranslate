@@ -21,6 +21,16 @@
         "ready_to_start": "Başlamaya hazır! İstediğiniz zaman /help yazabilirsiniz.",
         "cancelled": "Kayıt iptal edildi. Tekrar denemek için /start yazın."
     },
+    "industries": {
+        "dairy_farm": "🐄 Süt Çiftliği",
+        "elderly_care": "👴 Yaşlı Bakımı",
+        "hospitality": "🏨 Otelcilik / Oteller",
+        "farm": "🌾 Çiftlik / Tarım",
+        "construction": "🏗️ İnşaat",
+        "restaurant": "🍽️ Restoran",
+        "warehouse": "📦 Depo",
+        "other": "💼 Genel İşyeri"
+    },
     "help": {
         "not_registered": "Lütfen önce kayıt olmak için /start yazın.",
         "manager_commands": "📋 *Kullanılabilir Komutlar:*\n\n/help - Bu yardım mesajını göster\n/tasks - Görev listenizi görüntüleyin\n/daily - Günlük eylem öğelerini alın\n/subscription - Abonelik durumunu görüntüleyin\n/reset - Hesabı silin ve yeniden başlayın\n/mycode - Bağlantı kodunuzu gösterin\n/refer - BridgeOS'u diğer yöneticilere önerin\n/feedback - BridgeOS ekibine geri bildirim gönderin\n\n💬 *Nasıl kullanılır:*\nSadece mesajınızı yazın, otomatik olarak çevrilip iletişim kişinize gönderilecektir!",

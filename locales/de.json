@@ -21,6 +21,16 @@
         "ready_to_start": "Bereit zum Starten! Verwenden Sie jederzeit /help.",
         "cancelled": "Registrierung abgebrochen. Verwenden Sie /start, um es erneut zu versuchen."
     },
+    "industries": {
+        "dairy_farm": "🐄 Milchviehbetrieb",
+        "elderly_care": "👴 Altenpflege",
+        "hospitality": "🏨 Gastgewerbe / Hotels",
+        "farm": "🌾 Landwirtschaft",
+        "construction": "🏗️ Bauwesen",
+        "restaurant": "🍽️ Restaurant",
+        "warehouse": "📦 Lager",
+        "other": "💼 Allgemeiner Arbeitsplatz"
+    },
     "help": {
         "not_registered": "Bitte verwenden Sie zuerst /start zur Registrierung.",
         "manager_commands": "📋 *Verfügbare Befehle:*\n\n/help - Diese Hilfenachricht anzeigen\n/tasks - Ihre Aufgabenliste anzeigen\n/daily - Tägliche Aktionspunkte abrufen\n/subscription - Abonnementstatus anzeigen\n/reset - Konto löschen und neu starten\n/mycode - Ihren Verbindungscode anzeigen\n/refer - An andere Manager weiterempfehlen\n/feedback - Feedback an das BridgeOS-Team senden\n\n💬 *So verwenden Sie:*\nGeben Sie einfach Ihre Nachricht ein und sie wird automatisch übersetzt und an Ihren Kontakt gesendet!",

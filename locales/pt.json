@@ -21,6 +21,16 @@
         "ready_to_start": "Pronto para começar! Use /help a qualquer momento.",
         "cancelled": "Registro cancelado. Use /start para tentar novamente."
     },
+    "industries": {
+        "dairy_farm": "🐄 Fazenda de Laticínios",
+        "elderly_care": "👴 Cuidados de Idosos",
+        "hospitality": "🏨 Hospitalidade / Hotéis",
+        "farm": "🌾 Fazenda / Agricultura",
+        "construction": "🏗️ Construção",
+        "restaurant": "🍽️ Restaurante",
+        "warehouse": "📦 Armazém",
+        "other": "💼 Local de Trabalho Geral"
+    },
     "help": {
         "not_registered": "Por favor, use /start para se registrar primeiro.",
         "manager_commands": "📋 *Comandos Disponíveis:*\n\n/help - Mostrar esta mensagem de ajuda\n/tasks - Ver sua lista de tarefas\n/daily - Obter itens de ação diários\n/subscription - Ver status da assinatura\n/reset - Excluir conta e recomeçar\n/mycode - Mostrar seu código de conexão\n/refer - Recomendar para outros gerentes\n/feedback - Enviar feedback para a equipe BridgeOS\n\n💬 *Como usar:*\nBasta digitar sua mensagem e ela será automaticamente traduzida e enviada ao seu contato!",
