@@ -210,19 +210,25 @@ async def gender_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Ask for industry
     config = load_config()
     industries = config.get('industries', {})
-    
+
     industry_buttons = []
-    for key, info in industries.items():
-        industry_buttons.append(info['name'])
-    
+    for key in industries.keys():
+        # ✅ Get translated industry name based on user's language
+        translated_name = get_text(
+            language,
+            f'industries.{key}',
+            default=industries[key]['name']
+        )
+        industry_buttons.append(translated_name)
+
     keyboard = [industry_buttons[i:i+2] for i in range(0, len(industry_buttons), 2)]
-    
+
     industry_question_text = get_text(
         language,
         'registration.industry_question',
         default="What industry do you work in?\n\nThis helps provide accurate translations of technical terms and workplace-specific language."
     )
-    
+
     await update.message.reply_text(
         industry_question_text,
         reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
@@ -234,19 +240,27 @@ async def industry_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     language = context.user_data['language']
     gender = context.user_data['gender']
-    industry_name = update.message.text
+    industry_name = update.message.text  # User tapped button (e.g., "🐄 רפת")
     
     # Find industry key from name
     config = load_config()
     industries = config.get('industries', {})
-    industry_key = None
-    for key, info in industries.items():
-        if info['name'] == industry_name:
-            industry_key = key
-            break
     
-    if not industry_key:
-        industry_key = 'other'
+    # ✅ NEW: Build reverse mapping (translated name → English key)
+    industry_reverse_map = {}
+    for key in industries.keys():
+        translated_name = get_text(
+            language,
+            f'industries.{key}',
+            default=industries[key]['name']
+        )
+        industry_reverse_map[translated_name] = key
+    
+    # ✅ NEW: Use reverse map to get English key
+    industry_key = industry_reverse_map.get(industry_name, 'other')
+
+    #TEMPPPPP
+    print(f"✅ Industry selected - User tapped: '{industry_name}' → Mapped to key: '{industry_key}' → Description: '{industries[industry_key]['description']}'")
     
     # Generate code and register as manager
     code = generate_code()
