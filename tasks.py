@@ -3,46 +3,35 @@ import psycopg2
 from psycopg2.extras import Json
 from datetime import datetime, timezone
 from typing import List, Dict, Optional
-
-def get_db_connection():
-    """Get PostgreSQL connection from Railway DATABASE_URL"""
-    database_url = os.environ.get('DATABASE_URL')
-    if not database_url:
-        raise Exception("DATABASE_URL not found in environment variables")
-    return psycopg2.connect(database_url)
+from db_connection import get_db_cursor
 
 def init_tasks_table():
     """Create tasks table if it doesn't exist"""
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
-    # Create tasks table
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS tasks (
-            id SERIAL PRIMARY KEY,
-            manager_id TEXT NOT NULL,
-            worker_id TEXT NOT NULL,
-            description TEXT NOT NULL,
-            description_translated TEXT,
-            status TEXT DEFAULT 'pending',
-            created_at TIMESTAMP DEFAULT NOW(),
-            completed_at TIMESTAMP
-        )
-    """)
-    
-    # Create indexes for faster queries
-    cur.execute("""
-        CREATE INDEX IF NOT EXISTS idx_tasks_manager_status 
-        ON tasks(manager_id, status)
-    """)
-    cur.execute("""
-        CREATE INDEX IF NOT EXISTS idx_tasks_worker_status 
-        ON tasks(worker_id, status)
-    """)
-    
-    conn.commit()
-    cur.close()
-    conn.close()
+    with get_db_cursor() as cur:
+        # Create tasks table
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS tasks (
+                id SERIAL PRIMARY KEY,
+                manager_id TEXT NOT NULL,
+                worker_id TEXT NOT NULL,
+                description TEXT NOT NULL,
+                description_translated TEXT,
+                status TEXT DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT NOW(),
+                completed_at TIMESTAMP
+            )
+        """)
+        
+        # Create indexes for faster queries
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS idx_tasks_manager_status 
+            ON tasks(manager_id, status)
+        """)
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS idx_tasks_worker_status 
+            ON tasks(worker_id, status)
+        """)
+    # Auto-commits all 3 statements! ✅
     print("✅ Tasks table initialized")
 
 def create_task(manager_id: str, worker_id: str, description: str, description_translated: str) -> int:
@@ -58,20 +47,15 @@ def create_task(manager_id: str, worker_id: str, description: str, description_t
     Returns:
         int: Task ID (auto-incremented)
     """
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
-    cur.execute("""
-        INSERT INTO tasks (manager_id, worker_id, description, description_translated)
-        VALUES (%s, %s, %s, %s)
-        RETURNING id
-    """, (manager_id, worker_id, description, description_translated))
-    
-    task_id = cur.fetchone()[0]
-    
-    conn.commit()
-    cur.close()
-    conn.close()
+    with get_db_cursor() as cur:
+        cur.execute("""
+            INSERT INTO tasks (manager_id, worker_id, description, description_translated)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id
+        """, (manager_id, worker_id, description, description_translated))
+        
+        task_id = cur.fetchone()[0]
+    # Auto-commits! ✅
     
     print(f"✅ Task created: ID={task_id}, Manager={manager_id}, Worker={worker_id}")
     return task_id
@@ -94,21 +78,16 @@ def complete_task(task_id: int) -> Optional[Dict]:
             'completed_at': datetime
         }
     """
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
-    cur.execute("""
-        UPDATE tasks
-        SET status = 'completed', completed_at = NOW()
-        WHERE id = %s AND status = 'pending'
-        RETURNING id, manager_id, worker_id, description, description_translated, completed_at
-    """, (task_id,))
-    
-    result = cur.fetchone()
-    
-    conn.commit()
-    cur.close()
-    conn.close()
+    with get_db_cursor() as cur:
+        cur.execute("""
+            UPDATE tasks
+            SET status = 'completed', completed_at = NOW()
+            WHERE id = %s AND status = 'pending'
+            RETURNING id, manager_id, worker_id, description, description_translated, completed_at
+        """, (task_id,))
+        
+        result = cur.fetchone()
+    # Auto-commits! ✅
     
     if result:
         task_dict = {
@@ -148,9 +127,6 @@ def get_manager_tasks(manager_id: str, status: Optional[str] = None, limit_hours
             ...
         ]
     """
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
     query = """
         SELECT id, description, status, created_at, completed_at, worker_id
         FROM tasks
@@ -170,11 +146,9 @@ def get_manager_tasks(manager_id: str, status: Optional[str] = None, limit_hours
     
     query += " ORDER BY created_at DESC"
     
-    cur.execute(query, params)
-    rows = cur.fetchall()
-    
-    cur.close()
-    conn.close()
+    with get_db_cursor(commit=False) as cur:  # ✅ Read-only
+        cur.execute(query, params)
+        rows = cur.fetchall()
     
     tasks_list = []
     for row in rows:
@@ -212,9 +186,6 @@ def get_worker_tasks(worker_id: str, status: Optional[str] = None, limit_hours: 
             ...
         ]
     """
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
     query = """
         SELECT id, description_translated, status, created_at, completed_at, manager_id
         FROM tasks
@@ -234,11 +205,9 @@ def get_worker_tasks(worker_id: str, status: Optional[str] = None, limit_hours: 
     
     query += " ORDER BY created_at DESC"
     
-    cur.execute(query, params)
-    rows = cur.fetchall()
-    
-    cur.close()
-    conn.close()
+    with get_db_cursor(commit=False) as cur:  # ✅ Read-only
+        cur.execute(query, params)
+        rows = cur.fetchall()
     
     tasks_list = []
     for row in rows:
@@ -263,20 +232,15 @@ def get_task_by_id(task_id: int) -> Optional[Dict]:
     Returns:
         Task dict or None if not found
     """
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
-    cur.execute("""
-        SELECT id, manager_id, worker_id, description, description_translated, 
-               status, created_at, completed_at
-        FROM tasks
-        WHERE id = %s
-    """, (task_id,))
-    
-    row = cur.fetchone()
-    
-    cur.close()
-    conn.close()
+    with get_db_cursor(commit=False) as cur:  # ✅ Read-only
+        cur.execute("""
+            SELECT id, manager_id, worker_id, description, description_translated, 
+                   status, created_at, completed_at
+            FROM tasks
+            WHERE id = %s
+        """, (task_id,))
+        
+        row = cur.fetchone()
     
     if row:
         return {
@@ -301,15 +265,10 @@ def delete_task(task_id: int) -> bool:
     Returns:
         bool: True if deleted, False if not found
     """
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
-    cur.execute("DELETE FROM tasks WHERE id = %s", (task_id,))
-    deleted = cur.rowcount > 0
-    
-    conn.commit()
-    cur.close()
-    conn.close()
+    with get_db_cursor() as cur:
+        cur.execute("DELETE FROM tasks WHERE id = %s", (task_id,))
+        deleted = cur.rowcount > 0
+    # Auto-commits! ✅
     
     if deleted:
         print(f"🗑️ Task deleted: ID={task_id}")
@@ -326,22 +285,18 @@ def clear_tasks_for_conversation(manager_id: str, worker_id: str) -> int:
     Returns:
         int: Number of tasks deleted
     """
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
-    cur.execute("""
-        DELETE FROM tasks 
-        WHERE manager_id = %s AND worker_id = %s
-    """, (manager_id, worker_id))
-    
-    deleted_count = cur.rowcount
-    
-    conn.commit()
-    cur.close()
-    conn.close()
+    with get_db_cursor() as cur:
+        cur.execute("""
+            DELETE FROM tasks 
+            WHERE manager_id = %s AND worker_id = %s
+        """, (manager_id, worker_id))
+        
+        deleted_count = cur.rowcount
+    # Auto-commits! ✅
     
     print(f"🗑️ Cleared {deleted_count} tasks for manager={manager_id}, worker={worker_id}")
     return deleted_count
+
 
 def get_task_stats(manager_id: str) -> Dict:
     """
@@ -359,24 +314,18 @@ def get_task_stats(manager_id: str) -> Dict:
             'completed_today': int
         }
     """
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
-    # Get counts
-    cur.execute("""
-        SELECT 
-            COUNT(*) as total,
-            COUNT(*) FILTER (WHERE status = 'pending') as pending,
-            COUNT(*) FILTER (WHERE status = 'completed') as completed,
-            COUNT(*) FILTER (WHERE status = 'completed' AND completed_at > NOW() - INTERVAL '24 hours') as completed_today
-        FROM tasks
-        WHERE manager_id = %s
-    """, (manager_id,))
-    
-    row = cur.fetchone()
-    
-    cur.close()
-    conn.close()
+    with get_db_cursor(commit=False) as cur:  # ✅ Read-only
+        cur.execute("""
+            SELECT 
+                COUNT(*) as total,
+                COUNT(*) FILTER (WHERE status = 'pending') as pending,
+                COUNT(*) FILTER (WHERE status = 'completed') as completed,
+                COUNT(*) FILTER (WHERE status = 'completed' AND completed_at > NOW() - INTERVAL '24 hours') as completed_today
+            FROM tasks
+            WHERE manager_id = %s
+        """, (manager_id,))
+        
+        row = cur.fetchone()
     
     return {
         'total': row[0],

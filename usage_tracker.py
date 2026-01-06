@@ -4,30 +4,19 @@ from psycopg2.extras import Json
 from datetime import datetime
 from typing import Optional, Dict
 from config import load_config
+from db_connection import get_db_cursor
 
-def get_db_connection():
-    """Get PostgreSQL connection from Railway DATABASE_URL"""
-    database_url = os.environ.get('DATABASE_URL')
-    if not database_url:
-        raise Exception("DATABASE_URL not found in environment variables")
-    return psycopg2.connect(database_url)
 
 def init_db():
     """Create usage_tracking table if it doesn't exist"""
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
-    # Create usage_tracking table
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS usage_tracking (
-            telegram_user_id TEXT PRIMARY KEY,
-            data JSONB NOT NULL
-        )
-    """)
-    
-    conn.commit()
-    cur.close()
-    conn.close()
+    with get_db_cursor() as cur:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS usage_tracking (
+                telegram_user_id TEXT PRIMARY KEY,
+                data JSONB NOT NULL
+            )
+        """)
+    # Auto-commits! ✅
 
 def get_usage(telegram_user_id: str) -> Dict:
     """
@@ -35,14 +24,9 @@ def get_usage(telegram_user_id: str) -> Dict:
     Returns dict with messages_sent, blocked, first_seen, last_message
     """
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        
-        cur.execute("SELECT data FROM usage_tracking WHERE telegram_user_id = %s", (str(telegram_user_id),))
-        row = cur.fetchone()
-        
-        cur.close()
-        conn.close()
+        with get_db_cursor(commit=False) as cur:  # ✅ Read-only, no commit needed
+            cur.execute("SELECT data FROM usage_tracking WHERE telegram_user_id = %s", (str(telegram_user_id),))
+            row = cur.fetchone()
         
         if row:
             return row[0]
@@ -60,20 +44,14 @@ def get_usage(telegram_user_id: str) -> Dict:
 
 def save_usage(telegram_user_id: str, usage_data: Dict):
     """Save or update usage data for a Telegram user"""
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
-    # Upsert (insert or update)
-    cur.execute("""
-        INSERT INTO usage_tracking (telegram_user_id, data)
-        VALUES (%s, %s)
-        ON CONFLICT (telegram_user_id)
-        DO UPDATE SET data = EXCLUDED.data
-    """, (str(telegram_user_id), Json(usage_data)))
-    
-    conn.commit()
-    cur.close()
-    conn.close()
+    with get_db_cursor() as cur:
+        cur.execute("""
+            INSERT INTO usage_tracking (telegram_user_id, data)
+            VALUES (%s, %s)
+            ON CONFLICT (telegram_user_id)
+            DO UPDATE SET data = EXCLUDED.data
+        """, (str(telegram_user_id), Json(usage_data)))
+    # Auto-commits! ✅
 
 def is_user_blocked(telegram_user_id: str) -> bool:
     """Check if user has reached message limit and is blocked"""
@@ -145,17 +123,12 @@ def reset_user_usage(telegram_user_id: str):
 def get_all_usage() -> Dict:
     """Get usage data for all users (for dashboard)"""
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        
-        cur.execute("SELECT telegram_user_id, data FROM usage_tracking")
-        rows = cur.fetchall()
-        
-        cur.close()
-        conn.close()
-        
-        # Convert to dictionary
-        return {row[0]: row[1] for row in rows}
+        with get_db_cursor(commit=False) as cur:  # ✅ Read-only
+            cur.execute("SELECT telegram_user_id, data FROM usage_tracking")
+            rows = cur.fetchall()
+            
+            # Convert to dictionary
+            return {row[0]: row[1] for row in rows}
     except Exception as e:
         print(f"Error getting all usage: {e}")
         return {}

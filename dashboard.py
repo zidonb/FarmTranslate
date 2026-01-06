@@ -11,6 +11,7 @@ import secrets
 import hmac
 import hashlib
 import requests
+import db_connection
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
@@ -1482,6 +1483,13 @@ def clear_full_history_route(user_id):
 
 if __name__ == "__main__":
     import os
-
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    
+    # ✅ Initialize connection pool before starting Flask
+    db_connection.init_connection_pool(min_conn=5, max_conn=20)
+    
+    try:
+        port = int(os.environ.get("PORT", 5000))
+        app.run(host="0.0.0.0", port=port, debug=False)
+    finally:
+        # ✅ Clean shutdown: close all database connections
+        db_connection.close_all_connections()

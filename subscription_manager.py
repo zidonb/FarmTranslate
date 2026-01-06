@@ -4,29 +4,19 @@ from psycopg2.extras import Json
 from datetime import datetime
 from typing import Optional, Dict
 from config import load_config
+from db_connection import get_db_cursor
 
-def get_db_connection():
-    """Get PostgreSQL connection from Railway DATABASE_URL"""
-    database_url = os.environ.get('DATABASE_URL')
-    if not database_url:
-        raise Exception("DATABASE_URL not found in environment variables")
-    return psycopg2.connect(database_url)
 
 def init_subscriptions_table():
     """Create subscriptions table if it doesn't exist"""
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS subscriptions (
-            telegram_user_id TEXT PRIMARY KEY,
-            data JSONB NOT NULL
-        )
-    """)
-    
-    conn.commit()
-    cur.close()
-    conn.close()
+    with get_db_cursor() as cur:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS subscriptions (
+                telegram_user_id TEXT PRIMARY KEY,
+                data JSONB NOT NULL
+            )
+        """)
+    # Auto-commits! ✅
 
 def get_subscription(telegram_user_id: str) -> Optional[Dict]:
     """
@@ -34,36 +24,25 @@ def get_subscription(telegram_user_id: str) -> Optional[Dict]:
     Returns dict with status, lemon_subscription_id, renews_at, etc.
     """
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        
-        cur.execute("SELECT data FROM subscriptions WHERE telegram_user_id = %s", (str(telegram_user_id),))
-        row = cur.fetchone()
-        
-        cur.close()
-        conn.close()
-        
-        return row[0] if row else None
+        with get_db_cursor(commit=False) as cur:  # ✅ Read-only
+            cur.execute("SELECT data FROM subscriptions WHERE telegram_user_id = %s", (str(telegram_user_id),))
+            row = cur.fetchone()
+            
+            return row[0] if row else None
     except Exception as e:
         print(f"Error getting subscription for {telegram_user_id}: {e}")
         return None
 
 def save_subscription(telegram_user_id: str, subscription_data: Dict):
     """Save or update subscription data for a Telegram user"""
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
-    # Upsert (insert or update)
-    cur.execute("""
-        INSERT INTO subscriptions (telegram_user_id, data)
-        VALUES (%s, %s)
-        ON CONFLICT (telegram_user_id)
-        DO UPDATE SET data = EXCLUDED.data
-    """, (str(telegram_user_id), Json(subscription_data)))
-    
-    conn.commit()
-    cur.close()
-    conn.close()
+    with get_db_cursor() as cur:
+        cur.execute("""
+            INSERT INTO subscriptions (telegram_user_id, data)
+            VALUES (%s, %s)
+            ON CONFLICT (telegram_user_id)
+            DO UPDATE SET data = EXCLUDED.data
+        """, (str(telegram_user_id), Json(subscription_data)))
+    # Auto-commits! ✅
 
 def is_subscribed(telegram_user_id: str) -> bool:
     """
@@ -117,28 +96,18 @@ def get_customer_portal_url(telegram_user_id: str) -> Optional[str]:
 
 def delete_subscription(telegram_user_id: str):
     """Delete subscription data (for testing or admin actions)"""
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
-    cur.execute("DELETE FROM subscriptions WHERE telegram_user_id = %s", (str(telegram_user_id),))
-    
-    conn.commit()
-    cur.close()
-    conn.close()
+    with get_db_cursor() as cur:
+        cur.execute("DELETE FROM subscriptions WHERE telegram_user_id = %s", (str(telegram_user_id),))
+    # Auto-commits! ✅
 
 def get_all_subscriptions() -> Dict:
     """Get all subscriptions (for dashboard)"""
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        
-        cur.execute("SELECT telegram_user_id, data FROM subscriptions")
-        rows = cur.fetchall()
-        
-        cur.close()
-        conn.close()
-        
-        return {row[0]: row[1] for row in rows}
+        with get_db_cursor(commit=False) as cur:  # ✅ Read-only
+            cur.execute("SELECT telegram_user_id, data FROM subscriptions")
+            rows = cur.fetchall()
+            
+            return {row[0]: row[1] for row in rows}
     except Exception as e:
         print(f"Error getting all subscriptions: {e}")
         return {}

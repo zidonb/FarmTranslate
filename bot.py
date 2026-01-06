@@ -13,6 +13,7 @@ import tasks
 from datetime import datetime, timezone
 import json
 from i18n import get_text
+import db_connection 
 
 # Conversation states
 LANGUAGE, GENDER, INDUSTRY = range(3)
@@ -1735,6 +1736,9 @@ async def handle_media(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def main():
     """Start the bot"""
+    # ✅ Initialize connection pool FIRST (before anything else)
+    db_connection.init_connection_pool(min_conn=5, max_conn=20)
+    
     config = load_config()
     app = Application.builder().token(config['telegram_token']).build()
     
@@ -1774,7 +1778,12 @@ def main():
     ))
     
     print("🤖 BridgeOS bot is running...")
-    app.run_polling()
+    
+    try:
+        app.run_polling()
+    finally:
+        # ✅ Clean shutdown: close all database connections
+        db_connection.close_all_connections()
 
 if __name__ == '__main__':
     main()

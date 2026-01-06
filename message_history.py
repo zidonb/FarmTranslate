@@ -4,31 +4,19 @@ from psycopg2.extras import Json
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Optional
 from config import load_config
-
-def get_db_connection():
-    """Get PostgreSQL connection from Railway DATABASE_URL"""
-    database_url = os.environ.get('DATABASE_URL')
-    if not database_url:
-        raise Exception("DATABASE_URL not found in environment variables")
-    return psycopg2.connect(database_url)
+from db_connection import get_db_cursor
 
 def init_db():
     """Create message_history table if it doesn't exist"""
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
-    # Create message_history table
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS message_history (
-            conversation_key TEXT NOT NULL,
-            messages JSONB NOT NULL,
-            PRIMARY KEY (conversation_key)
-        )
-    """)
-    
-    conn.commit()
-    cur.close()
-    conn.close()
+    with get_db_cursor() as cur:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS message_history (
+                conversation_key TEXT NOT NULL,
+                messages JSONB NOT NULL,
+                PRIMARY KEY (conversation_key)
+            )
+        """)
+    # Auto-commits! ✅
 
 def get_conversation_key(user_id_1: str, user_id_2: str) -> str:
     """
@@ -50,40 +38,35 @@ def save_message(user_id_1: str, user_id_2: str, from_id: str, text: str, langua
         text: Message text
         language: Message language
     """
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
     key = get_conversation_key(user_id_1, user_id_2)
     
-    # Get existing messages
-    cur.execute("SELECT messages FROM message_history WHERE conversation_key = %s", (key,))
-    row = cur.fetchone()
-    
-    if row:
-        messages = row[0]
-    else:
-        messages = []
-    
-    # Add new message with timestamp
-    message = {
-        "from": str(from_id),
-        "text": text,
-        "lang": language,
-        "timestamp": datetime.now(timezone.utc).isoformat()
-    }
-    messages.append(message)
-    
-    # Upsert messages
-    cur.execute("""
-        INSERT INTO message_history (conversation_key, messages)
-        VALUES (%s, %s)
-        ON CONFLICT (conversation_key)
-        DO UPDATE SET messages = EXCLUDED.messages
-    """, (key, Json(messages)))
-    
-    conn.commit()
-    cur.close()
-    conn.close()
+    with get_db_cursor() as cur:
+        # Get existing messages
+        cur.execute("SELECT messages FROM message_history WHERE conversation_key = %s", (key,))
+        row = cur.fetchone()
+        
+        if row:
+            messages = row[0]
+        else:
+            messages = []
+        
+        # Add new message with timestamp
+        message = {
+            "from": str(from_id),
+            "text": text,
+            "lang": language,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        messages.append(message)
+        
+        # Upsert messages
+        cur.execute("""
+            INSERT INTO message_history (conversation_key, messages)
+            VALUES (%s, %s)
+            ON CONFLICT (conversation_key)
+            DO UPDATE SET messages = EXCLUDED.messages
+        """, (key, Json(messages)))
+    # Auto-commits! ✅
     
     # Cleanup old messages for this conversation
     cleanup_old_messages(user_id_1, user_id_2)
@@ -101,15 +84,11 @@ def get_messages(user_id_1: str, user_id_2: str, hours: Optional[int] = None) ->
         List of messages (sorted oldest to newest)
     """
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        
         key = get_conversation_key(user_id_1, user_id_2)
-        cur.execute("SELECT messages FROM message_history WHERE conversation_key = %s", (key,))
-        row = cur.fetchone()
         
-        cur.close()
-        conn.close()
+        with get_db_cursor(commit=False) as cur:  # ✅ Read-only
+            cur.execute("SELECT messages FROM message_history WHERE conversation_key = %s", (key,))
+            row = cur.fetchone()
         
         if not row:
             return []
@@ -138,57 +117,47 @@ def cleanup_old_messages(user_id_1: str, user_id_2: str):
         config = load_config()
         retention_days = config.get('message_retention_days', 30)
         
-        conn = get_db_connection()
-        cur = conn.cursor()
-        
         key = get_conversation_key(user_id_1, user_id_2)
         
-        # Get existing messages
-        cur.execute("SELECT messages FROM message_history WHERE conversation_key = %s", (key,))
-        row = cur.fetchone()
-        
-        if not row:
-            cur.close()
-            conn.close()
-            return
-        
-        messages = row[0]
-        
-        # Filter out messages older than retention period
-        cutoff = datetime.now(timezone.utc) - timedelta(days=retention_days)
-        filtered_messages = [
-            msg for msg in messages
-            if datetime.fromisoformat(msg['timestamp']) > cutoff
-        ]
-        
-        # Update if messages were deleted
-        if len(filtered_messages) < len(messages):
-            cur.execute("""
-                UPDATE message_history
-                SET messages = %s
-                WHERE conversation_key = %s
-            """, (Json(filtered_messages), key))
+        with get_db_cursor() as cur:
+            # Get existing messages
+            cur.execute("SELECT messages FROM message_history WHERE conversation_key = %s", (key,))
+            row = cur.fetchone()
             
-            deleted_count = len(messages) - len(filtered_messages)
-            print(f"Cleaned up {deleted_count} old messages for conversation {key}")
+            if not row:
+                return
+            
+            messages = row[0]
+            
+            # Filter out messages older than retention period
+            cutoff = datetime.now(timezone.utc) - timedelta(days=retention_days)
+            filtered_messages = [
+                msg for msg in messages
+                if datetime.fromisoformat(msg['timestamp']) > cutoff
+            ]
+            
+            # Update if messages were deleted
+            if len(filtered_messages) < len(messages):
+                cur.execute("""
+                    UPDATE message_history
+                    SET messages = %s
+                    WHERE conversation_key = %s
+                """, (Json(filtered_messages), key))
+                
+                deleted_count = len(messages) - len(filtered_messages)
+                print(f"Cleaned up {deleted_count} old messages for conversation {key}")
+        # Auto-commits! ✅
         
-        conn.commit()
-        cur.close()
-        conn.close()
     except Exception as e:
         print(f"Error cleaning up old messages: {e}")
 
 def clear_history(user_id_1: str, user_id_2: str):
     """Clear all message history between two users"""
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
     key = get_conversation_key(user_id_1, user_id_2)
-    cur.execute("DELETE FROM message_history WHERE conversation_key = %s", (key,))
     
-    conn.commit()
-    cur.close()
-    conn.close()
+    with get_db_cursor() as cur:
+        cur.execute("DELETE FROM message_history WHERE conversation_key = %s", (key,))
+    # Auto-commits! ✅
 
 def get_all_conversations() -> Dict:
     """
@@ -197,16 +166,11 @@ def get_all_conversations() -> Dict:
     Used by dashboard for monitoring
     """
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        
-        cur.execute("SELECT conversation_key, messages FROM message_history")
-        rows = cur.fetchall()
-        
-        cur.close()
-        conn.close()
-        
-        return {row[0]: row[1] for row in rows}
+        with get_db_cursor(commit=False) as cur:  # ✅ Read-only
+            cur.execute("SELECT conversation_key, messages FROM message_history")
+            rows = cur.fetchall()
+            
+            return {row[0]: row[1] for row in rows}
     except Exception as e:
         print(f"Error getting all conversations: {e}")
         return {}
