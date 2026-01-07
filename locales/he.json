@@ -169,5 +169,16 @@
         "worker_no_manager": "⚠️ אתה לא מחובר לאיש קשר.\nבקש מאיש הקשר שלך את קישור ההזמנה.",
         "contact_not_found": "⚠️ חשבון איש הקשר שלך כבר לא קיים.\nהשתמש ב-/reset כדי להתחיל מחדש.",
         "media_prefix": "📎 מ-{sender_name}:"
+    },
+    "menu": {
+        "not_registered": "אנא השתמש ב-/start כדי להירשם תחילה.",
+        "title": "📋 תפריט BridgeOS\n\nבחר אפשרות:",
+        "tasks": "📋 המשימות שלי",
+        "daily": "📊 סיכום יומי",
+        "mycode": "🔗 קוד ההזמנה שלי",
+        "subscription": "💳 מנוי",
+        "refer": "📤 המלצה",
+        "feedback": "💬 משוב",
+        "reset": "🗑️ איפוס חשבון"
     }
 }

@@ -373,10 +373,80 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     await update.message.reply_text(help_text, parse_mode='Markdown')
 
-async def mycode_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Show manager's code with share button"""
+async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show role-aware menu with localized buttons"""
     user_id = str(update.effective_user.id)
     user = database.get_user(user_id)
+    
+    if not user:
+        not_registered_text = get_text(
+            'English',
+            'menu.not_registered',
+            default="Please use /start to register first."
+        )
+        await update.message.reply_text(not_registered_text)
+        return
+    
+    language = user['language']
+    
+    # Build buttons based on role
+    if user['role'] == 'manager':
+        keyboard = [
+            [InlineKeyboardButton(get_text(language, 'menu.tasks', default='📋 My Tasks'), callback_data='menu_tasks')],
+            [InlineKeyboardButton(get_text(language, 'menu.daily', default='📊 Daily Action Items'), callback_data='menu_daily')],
+            [InlineKeyboardButton(get_text(language, 'menu.mycode', default='🔗 My Invitation Code'), callback_data='menu_mycode')],
+            [InlineKeyboardButton(get_text(language, 'menu.subscription', default='💳 Subscription'), callback_data='menu_subscription')],
+            [InlineKeyboardButton(get_text(language, 'menu.refer', default='📤 Refer BridgeOS'), callback_data='menu_refer')],
+            [InlineKeyboardButton(get_text(language, 'menu.feedback', default='💬 Send Feedback'), callback_data='menu_feedback')],
+            [InlineKeyboardButton(get_text(language, 'menu.reset', default='🗑️ Reset Account'), callback_data='menu_reset')]
+        ]
+    else:  # worker
+        keyboard = [
+            [InlineKeyboardButton(get_text(language, 'menu.tasks', default='📋 My Tasks'), callback_data='menu_tasks')],
+            [InlineKeyboardButton(get_text(language, 'menu.refer', default='📤 Refer BridgeOS'), callback_data='menu_refer')],
+            [InlineKeyboardButton(get_text(language, 'menu.feedback', default='💬 Send Feedback'), callback_data='menu_feedback')],
+            [InlineKeyboardButton(get_text(language, 'menu.reset', default='🗑️ Reset Account'), callback_data='menu_reset')]
+        ]
+    
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await update.message.reply_text(
+        get_text(language, 'menu.title', default='📋 BridgeOS Menu\n\nSelect an option:'),
+        reply_markup=reply_markup
+    )
+
+async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle menu button presses"""
+    query = update.callback_query
+    await query.answer()  # Acknowledge the button press
+    
+    # Route to appropriate command
+    if query.data == 'menu_tasks':
+        await tasks_command(update, context)
+    elif query.data == 'menu_daily':
+        await daily_command(update, context)
+    elif query.data == 'menu_mycode':
+        await mycode_command(update, context)
+    elif query.data == 'menu_subscription':
+        await subscription_command(update, context)
+    elif query.data == 'menu_refer':
+        await refer_command(update, context)
+    elif query.data == 'menu_feedback':
+        await feedback_command(update, context)
+    elif query.data == 'menu_reset':
+        await reset(update, context)
+
+async def mycode_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show manager's code with share button"""
+    # Handle both direct command AND callback from menu
+    if update.callback_query:
+        user_id = str(update.callback_query.from_user.id)
+        user = database.get_user(user_id)
+        send_message = update.callback_query.message.reply_text
+    else:
+        user_id = str(update.effective_user.id)
+        user = database.get_user(user_id)
+        send_message = update.message.reply_text
     
     if not user:
         not_registered_text = get_text(
@@ -384,7 +454,7 @@ async def mycode_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'mycode.not_registered',
             default="Please use /start to register first."
         )
-        await update.message.reply_text(not_registered_text)
+        await send_message(not_registered_text)
         return
     
     language = user['language']
@@ -395,7 +465,7 @@ async def mycode_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'mycode.not_manager',
             default="Only managers have connection codes."
         )
-        await update.message.reply_text(not_manager_text)
+        await send_message(not_manager_text)
         return
     
     code = user.get('code', 'No code found')
@@ -440,15 +510,22 @@ async def mycode_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         deep_link=deep_link
     )
     
-    await update.message.reply_text(
+    await send_message(
         status_text,
         reply_markup=keyboard
     )
 
 async def refer_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Let users share the bot with other managers/colleagues"""
-    user_id = str(update.effective_user.id)
-    user = database.get_user(user_id)
+    # Handle both direct command AND callback from menu
+    if update.callback_query:
+        user_id = str(update.callback_query.from_user.id)
+        user = database.get_user(user_id)
+        send_message = update.callback_query.message.reply_text
+    else:
+        user_id = str(update.effective_user.id)
+        user = database.get_user(user_id)
+        send_message = update.message.reply_text
     
     # Get user's language, fallback to English if not registered
     language = user['language'] if user else 'English'
@@ -481,15 +558,23 @@ async def refer_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         default="🌉 Love BridgeOS?\n\nHelp other managers break language barriers!\n\nRecommend BridgeOS to colleagues, friends, or anyone who manages teams speaking different languages.\n\n👉 Tap the button to share:"
     )
     
-    await update.message.reply_text(
+    await send_message(
         message_text,
         reply_markup=keyboard
     )
 
+
 async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Reset user account - delete all data and allow re-registration"""
-    user_id = str(update.effective_user.id)
-    user = database.get_user(user_id)
+    # Handle both direct command AND callback from menu
+    if update.callback_query:
+        user_id = str(update.callback_query.from_user.id)
+        user = database.get_user(user_id)
+        send_message = update.callback_query.message.reply_text
+    else:
+        user_id = str(update.effective_user.id)
+        user = database.get_user(user_id)
+        send_message = update.message.reply_text
     
     if not user:
         no_account_text = get_text(
@@ -497,7 +582,7 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'reset.no_account',
             default="You don't have an account to reset."
         )
-        await update.message.reply_text(no_account_text)
+        await send_message(no_account_text)
         return
     
     language = user['language']
@@ -536,7 +621,7 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 database.save_user(manager_id, manager)
                 
                 try:
-                    worker_name = update.effective_user.first_name
+                    worker_name = update.effective_user.first_name if not update.callback_query else update.callback_query.from_user.first_name
                     manager_notification_text = get_text(
                         manager['language'],  # Use manager's language
                         'reset.manager_notification',
@@ -563,12 +648,20 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
         default="✅ Your account has been reset!\n\nAll your data and connections have been deleted.\nUse /start to register again."
     )
     
-    await update.message.reply_text(success_text)
+    await send_message(success_text)
 
+    
 async def daily_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Generate AI-powered Action items of last 24 hours"""
-    user_id = str(update.effective_user.id)
-    user = database.get_user(user_id)
+    # Handle both direct command AND callback from menu
+    if update.callback_query:
+        user_id = str(update.callback_query.from_user.id)
+        user = database.get_user(user_id)
+        send_message = update.callback_query.message.reply_text
+    else:
+        user_id = str(update.effective_user.id)
+        user = database.get_user(user_id)
+        send_message = update.message.reply_text
     
     if not user:
         not_registered_text = get_text(
@@ -576,7 +669,7 @@ async def daily_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'daily.not_registered',
             default="Please use /start to register first."
         )
-        await update.message.reply_text(not_registered_text)
+        await send_message(not_registered_text)
         return
     
     language = user['language']
@@ -588,7 +681,7 @@ async def daily_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'daily.not_manager',
             default="Only managers can generate summaries.\n\nThis feature helps managers track action items and tasks."
         )
-        await update.message.reply_text(not_manager_text)
+        await send_message(not_manager_text)
         return
     
     # Check if manager has a worker
@@ -599,7 +692,7 @@ async def daily_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'daily.no_worker',
             default="You don't have a worker connected yet.\n\nConnect with a worker first to see conversation summaries."
         )
-        await update.message.reply_text(no_worker_text)
+        await send_message(no_worker_text)
         return
     
     # Send "generating" message
@@ -608,7 +701,7 @@ async def daily_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'daily.generating',
         default="⏳ Generating Daily Action Items (Last 24 Hours)...\n\nAnalyzing last 24 hours of conversation."
     )
-    generating_msg = await update.message.reply_text(generating_text)
+    generating_msg = await send_message(generating_text)
     
     try:
         # Get messages from last 24 hours
@@ -649,7 +742,7 @@ async def daily_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await generating_msg.delete()
         
         # Send daily action items
-        await update.message.reply_text(response, parse_mode='Markdown')
+        await send_message(response, parse_mode='Markdown')
         
     except Exception as e:
         # Delete "generating" message
@@ -662,12 +755,19 @@ async def daily_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             default="❌ Error generating daily action items: {error}\n\nPlease try again later or contact support.",
             error=str(e)
         )
-        await update.message.reply_text(error_text)
+        await send_message(error_text)
 
 async def subscription_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show subscription status and management"""
-    user_id = str(update.effective_user.id)
-    user = database.get_user(user_id)
+    # Handle both direct command AND callback from menu
+    if update.callback_query:
+        user_id = str(update.callback_query.from_user.id)
+        user = database.get_user(user_id)
+        send_message = update.callback_query.message.reply_text
+    else:
+        user_id = str(update.effective_user.id)
+        user = database.get_user(user_id)
+        send_message = update.message.reply_text
     
     if not user:
         not_registered_text = get_text(
@@ -675,7 +775,7 @@ async def subscription_command(update: Update, context: ContextTypes.DEFAULT_TYP
             'subscription.not_registered',
             default="Please use /start to register first."
         )
-        await update.message.reply_text(not_registered_text)
+        await send_message(not_registered_text)
         return
     
     language = user['language']
@@ -686,7 +786,7 @@ async def subscription_command(update: Update, context: ContextTypes.DEFAULT_TYP
             'subscription.worker_unlimited',
             default="Workers have unlimited messages! 🎉\n\nOnly managers need subscriptions."
         )
-        await update.message.reply_text(
+        await send_message(
             worker_unlimited_text,
             parse_mode='Markdown'
         )
@@ -737,7 +837,7 @@ async def subscription_command(update: Update, context: ContextTypes.DEFAULT_TYP
         
         message = title + status + usage_text + benefits_header + benefits
         
-        await update.message.reply_text(
+        await send_message(
             message,
             reply_markup=keyboard,
             parse_mode='Markdown'
@@ -805,15 +905,21 @@ async def subscription_command(update: Update, context: ContextTypes.DEFAULT_TYP
             keyboard = InlineKeyboardMarkup([[
                 InlineKeyboardButton(manage_button_text, url=portal_url)
             ]])
-            await update.message.reply_text(message, reply_markup=keyboard, parse_mode='Markdown')
+            await send_message(message, reply_markup=keyboard, parse_mode='Markdown')
         else:
-            await update.message.reply_text(message, parse_mode='Markdown')
-
+            await send_message(message, parse_mode='Markdown')
 
 async def tasks_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show task list for manager or worker"""
-    user_id = str(update.effective_user.id)
-    user = database.get_user(user_id)
+    # Handle both direct command AND callback from menu
+    if update.callback_query:
+        user_id = str(update.callback_query.from_user.id)
+        user = database.get_user(user_id)
+        send_message = update.callback_query.message.reply_text
+    else:
+        user_id = str(update.effective_user.id)
+        user = database.get_user(user_id)
+        send_message = update.message.reply_text
     
     if not user:
         not_registered_text = get_text(
@@ -821,7 +927,7 @@ async def tasks_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'tasks.not_registered',
             default="Please use /start to register first."
         )
-        await update.message.reply_text(not_registered_text)
+        await send_message(not_registered_text)
         return
     
     language = user['language']
@@ -838,7 +944,7 @@ async def tasks_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 'tasks.manager.no_tasks',
                 default="No tasks yet.\n\nCreate a task by sending a message starting with **\nExample: ** Check cow 115 for heat"
             )
-            await update.message.reply_text(
+            await send_message(
                 title + no_tasks,
                 parse_mode='Markdown'
             )
@@ -889,7 +995,7 @@ async def tasks_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
                 response += completed_item
         
-        await update.message.reply_text(response, parse_mode='Markdown')
+        await send_message(response, parse_mode='Markdown')
     
     elif user['role'] == 'worker':
         # Get worker's tasks
@@ -903,7 +1009,7 @@ async def tasks_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 'tasks.worker.no_tasks',
                 default="No tasks assigned yet.\n\nYour manager will send you tasks when needed."
             )
-            await update.message.reply_text(
+            await send_message(
                 title + no_tasks,
                 parse_mode='Markdown'
             )
@@ -957,7 +1063,7 @@ async def tasks_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
                 response += completed_item
         
-        await update.message.reply_text(response, parse_mode='Markdown')
+        await send_message(response, parse_mode='Markdown')
         
 async def view_tasks_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle 'View All Tasks' button click from task creation confirmation"""
@@ -1043,8 +1149,15 @@ async def view_tasks_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 async def feedback_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /feedback command - collect user feedback"""
-    user_id = str(update.effective_user.id)
-    user = database.get_user(user_id)
+    # Handle both direct command AND callback from menu
+    if update.callback_query:
+        user_id = str(update.callback_query.from_user.id)
+        user = database.get_user(user_id)
+        send_message = update.callback_query.message.reply_text
+    else:
+        user_id = str(update.effective_user.id)
+        user = database.get_user(user_id)
+        send_message = update.message.reply_text
     
     # Get user's language, fallback to English if not registered
     language = user['language'] if user else 'English'
@@ -1058,7 +1171,7 @@ async def feedback_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         default="💡 *Send Your Feedback*\n\nType your message below and I'll forward it to the BridgeOS team.\n\nShare suggestions, report bugs, or tell us what you think!"
     )
     
-    await update.message.reply_text(
+    await send_message(
         prompt_text,
         parse_mode='Markdown'
     )
@@ -1758,6 +1871,8 @@ def main():
     
     app.add_handler(conv_handler)
     app.add_handler(CommandHandler('help', help_command))
+    app.add_handler(CommandHandler('menu', menu_command))
+    app.add_handler(CallbackQueryHandler(menu_callback_handler, pattern='^menu_'))
     app.add_handler(CommandHandler('tasks', tasks_command))
     app.add_handler(CommandHandler('daily', daily_command))
     app.add_handler(CommandHandler('reset', reset))
