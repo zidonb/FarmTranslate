@@ -169,5 +169,16 @@
         "worker_no_manager": "⚠️ No estás conectado a un contacto.\nPide a tu contacto su enlace de invitación.",
         "contact_not_found": "⚠️ La cuenta de tu contacto ya no existe.\nUsa /reset para empezar de nuevo.",
         "media_prefix": "📎 De {sender_name}:"
+    },
+    "menu": {
+        "not_registered": "Por favor usa /start para registrarte primero.",
+        "title": "📋 Menú de BridgeOS\n\nSelecciona una opción:",
+        "tasks": "📋 Mis Tareas",
+        "daily": "📊 Acciones Diarias",
+        "mycode": "🔗 Mi Código de Invitación",
+        "subscription": "💳 Suscripción",
+        "refer": "📤 Recomendar BridgeOS",
+        "feedback": "💬 Enviar Comentarios",
+        "reset": "🗑️ Restablecer Cuenta"
     }
 }

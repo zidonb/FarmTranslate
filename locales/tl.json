@@ -169,5 +169,16 @@
         "worker_no_manager": "⚠️ Hindi ka pa nakakonekta sa isang contact.\nHingin sa iyong contact ang kanilang invitation link.",
         "contact_not_found": "⚠️ Wala na ang account ng iyong contact.\nGamitin ang /reset upang magsimula muli.",
         "media_prefix": "📎 Mula kay {sender_name}:"
+    },
+    "menu": {
+        "not_registered": "Mangyaring gumamit ng /start para magrehistro muna.",
+        "title": "📋 BridgeOS Menu\n\nPumili ng opsyon:",
+        "tasks": "📋 Aking Mga Gawain",
+        "daily": "📊 Arawang Mga Aksyon",
+        "mycode": "🔗 Aking Imbitasyon Code",
+        "subscription": "💳 Subscription",
+        "refer": "📤 Irekomenda ang BridgeOS",
+        "feedback": "💬 Magpadala ng Feedback",
+        "reset": "🗑️ I-reset ang Account"
     }
 }

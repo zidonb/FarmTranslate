@@ -169,5 +169,16 @@
         "worker_no_manager": "⚠️ Bir iletişim kişisine bağlı değilsiniz.\nİletişim kişinizden davet bağlantısını isteyin.",
         "contact_not_found": "⚠️ İletişim kişinizin hesabı artık mevcut değil.\nYeniden başlamak için /reset kullanın.",
         "media_prefix": "📎 {sender_name} kişisinden:"
+    },
+    "menu": {
+        "not_registered": "Lütfen önce kayıt olmak için /start komutunu kullanın.",
+        "title": "📋 BridgeOS Menüsü\n\nBir seçenek seçin:",
+        "tasks": "📋 Görevlerim",
+        "daily": "📊 Günlük Eylem Öğeleri",
+        "mycode": "🔗 Davet Kodum",
+        "subscription": "💳 Abonelik",
+        "refer": "📤 BridgeOS'u Öner",
+        "feedback": "💬 Geri Bildirim Gönder",
+        "reset": "🗑️ Hesabı Sıfırla"
     }
 }
