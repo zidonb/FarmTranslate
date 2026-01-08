@@ -36,7 +36,7 @@
   "admin_telegram_id": "6425887398",
   "translation_context_size": 3,
   "message_retention_days": 30,
-  "free_message_limit": 8,
+  "free_message_limit": 100,
   "enforce_limits": true,
   "testing_mode": true,
   "test_user_ids": [
