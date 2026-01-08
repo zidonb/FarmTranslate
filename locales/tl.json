@@ -90,7 +90,7 @@
         "not_registered": "Pakiusap na gumamit ng /start upang magrehistro muna.",
         "manager": {
             "title": "📋 *Ang Iyong Mga Gawain*\n\n",
-            "no_tasks": "Walang mga gawain pa.\n\nGumawa ng gawain sa pamamagitan ng pagpapadala ng mensahe na nagsisimula sa **\nHalimbawa: ** Tingnan ang baka 115 kung nagbubuntis",
+            "no_tasks": "Wala pang mga gawain.\n\nLikha ng gawain sa pamamagitan ng pagpapadala ng mensahe na nagsisimula sa \\*\\*\nHalimbawa: \\*\\* Suriin ang baka 115",
             "pending_header": "⏳ *NAKABINBIN ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
             "task_item": "• {description}\n  _Nilikha: Ngayon sa {time}_\n\n",
             "completed_header": "\n✅ *NATAPOS NGAYONG ARAW ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",

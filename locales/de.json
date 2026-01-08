@@ -90,7 +90,7 @@
         "not_registered": "Bitte verwenden Sie zuerst /start zur Registrierung.",
         "manager": {
             "title": "📋 *Ihre Aufgaben*\n\n",
-            "no_tasks": "Noch keine Aufgaben.\n\nErstellen Sie eine Aufgabe, indem Sie eine Nachricht senden, die mit ** beginnt\nBeispiel: ** Kuh 115 auf Brunst prüfen",
+            "no_tasks": "Noch keine Aufgaben.\n\nErstellen Sie eine Aufgabe, indem Sie eine Nachricht senden, die mit \\*\\* beginnt\nBeispiel: \\*\\* Kuh 115 überprüfen",
             "pending_header": "⏳ *AUSSTEHEND ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
             "task_item": "• {description}\n  _Erstellt: Heute um {time}_\n\n",
             "completed_header": "\n✅ *HEUTE ERLEDIGT ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",

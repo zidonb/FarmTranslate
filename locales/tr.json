@@ -90,7 +90,7 @@
         "not_registered": "Lütfen önce kayıt olmak için /start yazın.",
         "manager": {
             "title": "📋 *Görevleriniz*\n\n",
-            "no_tasks": "Henüz görev yok.\n\n** ile başlayan bir mesaj göndererek görev oluşturun\nÖrnek: ** İnek 115'i kızgınlık için kontrol et",
+            "no_tasks": "Henüz görev yok.\n\n\\*\\* ile başlayan bir mesaj göndererek görev oluşturun\nÖrnek: \\*\\* 115 numaralı ineği kontrol et",
             "pending_header": "⏳ *BEKLEMEDE ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
             "task_item": "• {description}\n  _Oluşturuldu: Bugün saat {time}_\n\n",
             "completed_header": "\n✅ *BUGÜN TAMAMLANANLAR ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",

@@ -90,7 +90,7 @@
         "not_registered": "Veuillez utiliser /start pour vous inscrire d'abord.",
         "manager": {
             "title": "📋 *Vos tâches*\n\n",
-            "no_tasks": "Aucune tâche pour le moment.\n\nCréez une tâche en envoyant un message commençant par **\nExemple : ** Vérifier la vache 115 pour la chaleur",
+            "no_tasks": "Pas encore de tâches.\n\nCréez une tâche en envoyant un message commençant par \\*\\*\nExemple: \\*\\* Vérifier la vache 115",
             "pending_header": "⏳ *EN ATTENTE ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
             "task_item": "• {description}\n  _Créée : Aujourd'hui à {time}_\n\n",
             "completed_header": "\n✅ *TERMINÉES AUJOURD'HUI ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
