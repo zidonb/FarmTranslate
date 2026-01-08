@@ -90,7 +90,7 @@
         "not_registered": "Please use /start to register first.",
         "manager": {
             "title": "📋 *Your Tasks*\n\n",
-            "no_tasks": "No tasks yet.\n\nCreate a task by sending a message starting with **\nExample: ** Check cow 115 for heat",
+            "no_tasks": "No tasks yet.\n\nCreate a task by sending a message starting with \\*\\*\nExample: \\*\\* Check cow 115 for heat",
             "pending_header": "⏳ *PENDING ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
             "task_item": "• {description}\n  _Created: Today at {time}_\n\n",
             "completed_header": "\n✅ *COMPLETED TODAY ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
