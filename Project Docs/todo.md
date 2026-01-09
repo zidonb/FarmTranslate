@@ -1,30 +1,32 @@
 # FarmTranslate - TODO
 
 
+# Todo
 - **gemini-flash**
 - HTML, bot name can be changed
-- killing features: Voice to text, Recuring task
-- Locations and sectors to start
 - Performance and scaling
 - Add bot to registered manager and workers group
-- כמה בוטים למספר משתמשים
-- Menu look and feel
+- Multi-worker support by using 5 bots
 - cahce daily, save daily
-- reset/cancel and so on - lemon squeezy events and check its working
+-lemon squeezy events - check its working
 - check feedback table and task table in dashboard. 
 - save conversation of all time
-- Multi-worker support
 - Feedback & Testing
+- change language
+
+# Killing features
+**Hands-Free Voice Translation**: Workers record voice notes in their native accent which are instantly transcribed and translated to text for the manager. This enables seamless communication for staff with dirty hands or gloves without interrupting their workflow.
+
+**Automated Micro-SOPs**: Schedule recurring safety drills and standard operating procedures that workers must acknowledge daily. This automates compliance checks and ensures critical protocols are never forgotten.
+
+**Guard Keep Liability Logging**: Automatically create a permanent, searchable audit trail of all translated instructions and worker confirmations. This protects the business by proving that safety procedures were clearly communicated and understood.
+
+**Recuring Task**: (e.g. Weekly Insight Report) A concise AI summary delivered every week that highlights completed tasks, recurring issues, and productivity trends. This gives managers high-level visibility into operations without having to read back through chat logs.
+
+**Integrations**
 
 
-Hands-Free Voice Translation: Workers record voice notes in their native accent which are instantly transcribed and translated to text for the manager. This enables seamless communication for staff with dirty hands or gloves without interrupting their workflow.
-
-Automated Micro-SOPs: Schedule recurring safety drills and standard operating procedures that workers must acknowledge daily. This automates compliance checks and ensures critical protocols are never forgotten.
-
-Guard Keep Liability Logging: Automatically create a permanent, searchable audit trail of all translated instructions and worker confirmations. This protects the business by proving that safety procedures were clearly communicated and understood.
-
-Weekly Insight Report: A concise AI summary delivered every week that highlights completed tasks, recurring issues, and productivity trends. This gives managers high-level visibility into operations without having to read back through chat logs.
-
+# Locations and sectors to start
 UAE / Construction / Indian
 UAE / Construction / Pakistani
 UAE / Construction / Bangladeshi

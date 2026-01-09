@@ -44,11 +44,11 @@ def send_telegram_notification(chat_id, text):
         )
 
         if response.status_code == 200:
-            print(f"âœ… Notification sent to {chat_id}")
+            print(f"✅ Notification sent to {chat_id}")
         else:
-            print(f"âš ï¸ Failed to send notification: {response.text}")
+            print(f"⚠️ Failed to send notification: {response.text}")
     except Exception as e:
-        print(f"âŒ Error sending notification: {e}")
+        print(f"❌ Error sending notification: {e}")
 
 
 @app.route("/webhook/lemonsqueezy", methods=["POST"])
@@ -130,6 +130,11 @@ def handle_subscription_created(telegram_id: str, data: dict):
         f"✅ Subscription created for {telegram_id}: {subscription_data['lemon_subscription_id']}"
     )
 
+    # Unblock user and reset usage counter
+    usage_tracker.unblock_user(telegram_id)
+    usage_tracker.reset_user_usage(telegram_id)
+    print(f"✅ User {telegram_id} unblocked and usage reset")
+
     # Send notification to user
     send_telegram_notification(
         telegram_id,
@@ -155,7 +160,7 @@ def handle_subscription_updated(telegram_id: str, data: dict):
         if not subscription.get("cancelled_at"):
             subscription["cancelled_at"] = datetime.utcnow().isoformat()
     subscription_manager.save_subscription(telegram_id, subscription)
-    print(f"âœ… Subscription updated for {telegram_id}")
+    print(f"✅ Subscription updated for {telegram_id}")
 
 
 def handle_subscription_cancelled(telegram_id: str, data: dict):
@@ -170,7 +175,7 @@ def handle_subscription_cancelled(telegram_id: str, data: dict):
     subscription["ends_at"] = attrs.get("ends_at")
     subscription_manager.save_subscription(telegram_id, subscription)
     print(
-        f"âš ï¸ Subscription cancelled for {telegram_id}, access until: {attrs.get('ends_at')}"
+        f"⚠️ Subscription cancelled for {telegram_id}, access until: {attrs.get('ends_at')}"
     )
 
     # Send notification to user
@@ -181,7 +186,7 @@ def handle_subscription_cancelled(telegram_id: str, data: dict):
     )
     send_telegram_notification(
         telegram_id,
-        f"âš ï¸ *Subscription Cancelled*\n\n"
+        f"⚠️ *Subscription Cancelled*\n\n"
         f"You'll keep access until {ends_at_display}.\n"
         f"You can resubscribe anytime.",
     )
@@ -197,14 +202,17 @@ def handle_subscription_resumed(telegram_id: str, data: dict):
     subscription["cancelled_at"] = None
     subscription["ends_at"] = None
     subscription_manager.save_subscription(telegram_id, subscription)
-    print(f"âœ… Subscription resumed for {telegram_id}")
+    print(f"✅ Subscription resumed for {telegram_id}")
+    # Unblock user
+    usage_tracker.unblock_user(telegram_id)
+    print(f"✅ User {telegram_id} unblocked")
 
     # Send notification to user
     send_telegram_notification(
         telegram_id,
-        "âœ… *Subscription Resumed!*\n\n"
+        "✅ *Subscription Resumed!*\n\n"
         "Your subscription is active again.\n"
-        "Welcome back! ðŸŽ‰",
+        "Welcome back! 🎉",
     )
 
 
@@ -216,12 +224,21 @@ def handle_subscription_expired(telegram_id: str, data: dict):
         return
     subscription["status"] = "expired"
     subscription_manager.save_subscription(telegram_id, subscription)
-    print(f"âŒ Subscription expired for {telegram_id}")
+    print(f"❌ Subscription expired for {telegram_id}")
+
+    # Block user if they previously hit the free limit
+    usage = usage_tracker.get_usage(telegram_id)
+    config = load_config()
+    free_limit = config.get('free_message_limit', 50)
+
+    if usage.get('messages_sent', 0) >= free_limit:
+        usage_tracker.block_user(telegram_id)
+        print(f"🚫 User {telegram_id} blocked (exceeded free limit)")
 
     # Send notification to user
     send_telegram_notification(
         telegram_id,
-        "âŒ *Subscription Expired*\n\n"
+        "❌ *Subscription Expired*\n\n"
         "Your subscription has ended.\n"
         "You're back on the free tier (50 messages).\n\n"
         "Subscribe again to continue unlimited messaging.",
@@ -252,19 +269,19 @@ def handle_subscription_unpaused(telegram_id: str, data: dict):
 
 def handle_subscription_payment_success(telegram_id: str, data: dict):
     """Handle subscription_payment_success event"""
-    print(f"âœ… Payment successful for {telegram_id}")
+    print(f"✅ Payment successful for {telegram_id}")
 
 
 def handle_subscription_payment_failed(telegram_id: str, data: dict):
     """Handle subscription_payment_failed event"""
-    print(f"âš ï¸ Payment failed for {telegram_id}")
+    print(f"⚠️ Payment failed for {telegram_id}")
 
     # Send notification to user
     subscription = subscription_manager.get_subscription(telegram_id)
     portal_url = subscription.get("customer_portal_url") if subscription else None
 
     message = (
-        "âš ï¸ *Payment Failed*\n\n"
+        "⚠️ *Payment Failed*\n\n"
         "Your last payment didn't go through.\n"
         "We'll retry automatically in 3 days.\n\n"
     )
@@ -281,7 +298,10 @@ def handle_subscription_payment_recovered(telegram_id: str, data: dict):
     if subscription and subscription["status"] == "paused":
         subscription["status"] = "active"
         subscription_manager.save_subscription(telegram_id, subscription)
-    print(f"âœ… Payment recovered for {telegram_id}")
+    print(f"✅ Payment recovered for {telegram_id}")
+    # Unblock user
+    usage_tracker.unblock_user(telegram_id)
+    print(f"✅ User {telegram_id} unblocked")
 
 
 # ============================================
@@ -563,9 +583,9 @@ DASHBOARD_HTML = """
                             {% if sub.status == 'active' %}
                                 <span class="badge subscribed">✔ Active</span>
                             {% elif sub.status == 'cancelled' %}
-                                <span class="badge disconnected">âš ï¸ Cancelled</span>
+                                <span class="badge disconnected">⚠️ Cancelled</span>
                             {% elif sub.status == 'expired' %}
-                                <span class="badge disconnected">âŒ Expired</span>
+                                <span class="badge disconnected">❌ Expired</span>
                             {% elif sub.status == 'paused' %}
                                 <span class="badge disconnected">â¸ï¸ Paused</span>
                             {% endif %}
@@ -787,12 +807,18 @@ def dashboard():
         if user_data.get("role") == "manager":
             usage = usage_tracker.get_usage(user_id)
             user_data["messages_sent"] = usage.get("messages_sent", 0)
-            user_data["blocked"] = usage.get("blocked", False)
-            user_data["message_limit"] = message_limit
 
             # Get subscription status
             subscription = subscription_manager.get_subscription(user_id)
             user_data["subscription"] = subscription
+
+            # Only show blocked if NOT subscribed
+            if subscription and subscription.get('status') in ['active', 'cancelled']:
+                user_data["blocked"] = False  # Subscribed = never blocked
+            else:
+                user_data["blocked"] = usage.get("blocked", False)  # Check usage tracker
+
+            user_data["message_limit"] = message_limit
 
             managers.append(user_data)
         elif user_data.get("role") == "worker":
@@ -1382,13 +1408,19 @@ def manager_detail(user_id):
 
     # Get usage stats
     usage = usage_tracker.get_usage(user_id)
-    manager["messages_sent"] = usage.get("messages_sent", 0)
-    manager["blocked"] = usage.get("blocked", False)
-    manager["message_limit"] = message_limit
+    user_data["messages_sent"] = usage.get("messages_sent", 0)
 
-    # Get subscription
+    # Get subscription status
     subscription = subscription_manager.get_subscription(user_id)
-    manager["subscription"] = subscription
+    user_data["subscription"] = subscription
+
+    # Only show blocked if NOT subscribed
+    if subscription and subscription.get('status') in ['active', 'cancelled']:
+        user_data["blocked"] = False  # Subscribed = never blocked
+    else:
+        user_data["blocked"] = usage.get("blocked", False)  # Check usage tracker
+
+    user_data["message_limit"] = message_limit
 
     # Get worker data (if connected)
     worker = None
