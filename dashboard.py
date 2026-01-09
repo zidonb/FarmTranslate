@@ -1391,36 +1391,34 @@ MANAGER_DETAIL_HTML = """
 # Route for Manager Detail Page
 @app.route("/manager/<user_id>")
 def manager_detail(user_id):
-    """Show detailed view of a specific manager"""
-    if not session.get("authenticated"):
-        return redirect("/login")
-
-    # Get manager data
+    # ...
     manager = database.get_user(user_id)
-    if not manager or manager.get("role") != "manager":
-        return redirect("/")
-
     manager["id"] = user_id
-
+    
     # Get config
     config = load_config()
     message_limit = config.get("free_message_limit", 50)
-
+    
     # Get usage stats
     usage = usage_tracker.get_usage(user_id)
-    user_data["messages_sent"] = usage.get("messages_sent", 0)
-
+    manager["messages_sent"] = usage.get("messages_sent", 0)  # ✅ FIXED
+    
     # Get subscription status
     subscription = subscription_manager.get_subscription(user_id)
-    user_data["subscription"] = subscription
-
+    manager["subscription"] = subscription  # ✅ FIXED
+    
     # Only show blocked if NOT subscribed
     if subscription and subscription.get('status') in ['active', 'cancelled']:
-        user_data["blocked"] = False  # Subscribed = never blocked
+        manager["blocked"] = False  # ✅ FIXED - Subscribed = never blocked
     else:
-        user_data["blocked"] = usage.get("blocked", False)  # Check usage tracker
+        manager["blocked"] = usage.get("blocked", False)  # ✅ FIXED - Check usage tracker
+    
+    manager["message_limit"] = message_limit  # ✅ FIXED
+    
+    # Get worker data (if connected)
+    worker = None
+    worker_id = manager.get("worker")
 
-    user_data["message_limit"] = message_limit
 
     # Get worker data (if connected)
     worker = None
