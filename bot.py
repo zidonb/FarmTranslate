@@ -168,6 +168,34 @@ async def gender_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return ConversationHandler.END
         
+        # ✅ BUG FIX: Check if this worker is switching from another manager
+        existing_worker = database.get_user(user_id)
+        if existing_worker and existing_worker.get('manager'):
+            old_manager_id = existing_worker['manager']
+            if old_manager_id != manager_id:  # Switching to a different manager
+                # Clean up old manager's stale reference
+                old_manager = database.get_user(old_manager_id)
+                if old_manager and old_manager.get('worker') == user_id:
+                    old_manager['worker'] = None
+                    database.save_user(old_manager_id, old_manager)
+                    print(f"✅ Cleaned up old manager {old_manager_id} reference to worker {user_id}")
+                    
+                    # Notify old manager that worker disconnected
+                    try:
+                        worker_name = update.effective_user.first_name or "Your worker"
+                        manager_notification_text = get_text(
+                            old_manager['language'],
+                            'registration.worker_switched',
+                            default="⚠️ {worker_name} has connected to a different manager.\n\nYou can now invite a new worker using /mycode",
+                            worker_name=worker_name
+                        )
+                        await context.bot.send_message(
+                            chat_id=old_manager_id,
+                            text=manager_notification_text
+                        )
+                    except Exception as e:
+                        print(f"Could not notify old manager: {e}")
+        
         # Save worker
         worker_data = {
             'language': language,
