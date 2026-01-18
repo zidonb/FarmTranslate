@@ -41,12 +41,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Check if user already registered
     if user:
         welcome_text = get_text(
-            user['language'],
-            'start.welcome_back',
-            default="Welcome back! You're registered as {role}.\nYour language: {language}\n\nUse /help to see available commands.",
-            role=user['role'],
-            language=user['language']
-        )
+        user['language'],
+        'start.welcome_back',
+        default="Welcome back! You're registered as {role}.\n\nUse /help to see available commands.",
+        role=user['role']
+    )
         await update.message.reply_text(welcome_text)
         return ConversationHandler.END
     
