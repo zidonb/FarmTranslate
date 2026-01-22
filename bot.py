@@ -35,6 +35,7 @@ def generate_code():
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /start command with optional deep-link parameter"""
+    print(f"📥 /start command received from user {update.effective_user.id}")
     user_id = str(update.effective_user.id)
     user = database.get_user(user_id)
     
