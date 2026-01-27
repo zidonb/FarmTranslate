@@ -1,3 +1,4 @@
+import os
 import random
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, ConversationHandler, CallbackQueryHandler
@@ -202,12 +203,21 @@ async def gender_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'language': language,
             'gender': gender,  # English gender (e.g., "Male")
             'role': 'worker',
-            'manager': manager_id
+            'manager': manager_id,
+            'bot_id': os.environ.get('BOT_ID', 'bot1')
         }
         database.save_user(user_id, worker_data)
         
-        # Update manager's worker
-        manager['worker'] = user_id
+        # Update manager's workers array
+        if 'workers' not in manager:
+            manager['workers'] = []  # Initialize if old data format
+
+        manager['workers'].append({
+            'worker_id': user_id,
+            'bot_id': os.environ.get('BOT_ID', 'bot1'),
+            'status': 'active',
+            'registered_at': datetime.now(timezone.utc).isoformat()
+        })
         database.save_user(manager_id, manager)
         
         connection_success_text = get_text(
@@ -296,7 +306,7 @@ async def industry_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'role': 'manager',
         'industry': industry_key,
         'code': code,
-        'worker': None
+        'workers': []
     }
     database.save_user(user_id, user_data)
     
@@ -497,7 +507,8 @@ async def mycode_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     
     code = user.get('code', 'No code found')
-    has_worker = user.get('worker') is not None
+    workers = user.get('workers', [])
+    has_workers = len(workers) > 0
     
     # Create deep-link for invitation
     bot_username = "FarmTranslateBot"  # Your bot username
@@ -522,18 +533,23 @@ async def mycode_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ])
     
     # Get status text
-    worker_status = get_text(
-        language,
-        'mycode.worker_status_yes' if has_worker else 'mycode.worker_status_no',
-        default='Yes ✅' if has_worker else 'No ❌'
-    )
-    
+    # Build workers list
+    workers_list = ""
+    if has_workers:
+        for idx, worker_data in enumerate(workers, 1):
+            bot_id = worker_data.get('bot_id', 'unknown')
+            worker_id = worker_data.get('worker_id', 'unknown')
+            status = worker_data.get('status', 'unknown')
+            workers_list += f"\n{idx}. Bot {bot_id}: Worker {worker_id} ({status})"
+    else:
+        workers_list = "\nNo workers connected yet"
+
     # Send status and invitation
     status_text = get_text(
         language,
         'mycode.status',
-        default="👥 Worker connected: {status}\n\n📋 Your invitation code: {code}\n🔗 Invitation link:\n{deep_link}\n\n👉 Tap the button below to share with your contact:",
-        status=worker_status,
+        default="👥 Your Workers:{workers_list}\n\n📋 Your invitation code: {code}\n🔗 Invitation link:\n{deep_link}\n\n👉 Tap the button below to share with your contact:",
+        workers_list=workers_list,
         code=code,
         deep_link=deep_link
     )
@@ -616,16 +632,20 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
     language = user['language']
     
     if user['role'] == 'manager':
-        worker_id = user.get('worker')
-        if worker_id:
-            worker = database.get_user(worker_id)
-            if worker:
-                translation_msg_context.clear_conversation(user_id, worker_id)
-                
-                all_users = database.get_all_users()
-                if worker_id in all_users:
-                    del all_users[worker_id]
-                    database.save_data(all_users)
+        workers = user.get('workers', [])
+        
+        # Delete all workers and clear conversations
+        for worker_data in workers:
+            worker_id = worker_data.get('worker_id')
+            if worker_id:
+                worker = database.get_user(worker_id)
+                if worker:
+                    translation_msg_context.clear_conversation(user_id, worker_id)
+                    
+                    all_users = database.get_all_users()
+                    if worker_id in all_users:
+                        del all_users[worker_id]
+                        database.save_data(all_users)
                 
                 try:
                     worker_notification_text = get_text(
@@ -645,7 +665,9 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if manager_id:
             manager = database.get_user(manager_id)
             if manager:
-                manager['worker'] = None
+                # Remove this worker from manager's workers array
+                workers = manager.get('workers', [])
+                manager['workers'] = [w for w in workers if w.get('worker_id') != user_id]
                 database.save_user(manager_id, manager)
                 
                 try:
@@ -712,9 +734,9 @@ async def daily_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await send_message(not_manager_text)
         return
     
-    # Check if manager has a worker
-    worker_id = user.get('worker')
-    if not worker_id:
+    # Check if manager has any workers
+    workers = user.get('workers', [])
+    if not workers:
         no_worker_text = get_text(
             language,
             'daily.no_worker',
@@ -732,13 +754,37 @@ async def daily_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     generating_msg = await send_message(generating_text)
     
     try:
-        # Get messages from last 24 hours
-        messages = message_history.get_messages(
-            user_id_1=user_id,
-            user_id_2=worker_id,
-            hours=24
-        )
+        # Get messages from last 24 hours - ALL WORKERS with names
+        all_messages = []
+        worker_info = {}  # Map worker_id to worker name
         
+        for worker_data in workers:
+            worker_id = worker_data.get('worker_id')
+            bot_id = worker_data.get('bot_id', 'unknown')
+            
+            if worker_id:
+                # Get worker's Telegram info for their name
+                try:
+                    worker_user = await context.bot.get_chat(worker_id)
+                    worker_name = worker_user.first_name or f"Bot {bot_id}"
+                except Exception:
+                    worker_name = f"Bot {bot_id}"  # Fallback if can't fetch
+                
+                messages = message_history.get_messages(
+                    user_id_1=user_id,
+                    user_id_2=worker_id,
+                    hours=24
+                )
+                
+                # Tag each message with worker name
+                for msg in messages:
+                    msg['worker_name'] = worker_name
+                
+                all_messages.extend(messages)
+                worker_info[worker_id] = worker_name
+        
+        messages = all_messages
+            
         # Get industry context
         industry_key = user.get('industry', 'other')
         
@@ -981,7 +1027,7 @@ async def tasks_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Format response
         response = get_text(language, 'tasks.manager.title', default="📋 *Your Tasks*\n\n")
         
-        # Pending tasks
+        # Pending tasks - grouped by worker
         if pending_tasks:
             pending_header = get_text(
                 language,
@@ -991,18 +1037,37 @@ async def tasks_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             response += pending_header
             
+            # Group tasks by worker
+            from collections import defaultdict
+            tasks_by_worker = defaultdict(list)
+            
             for task in pending_tasks:
-                created_time = task['created_at'].strftime('%H:%M') if task.get('created_at') else 'Unknown'
-                task_item = get_text(
-                    language,
-                    'tasks.manager.task_item',
-                    default="• {description}\n  _Created: Today at {time}_\n\n",
-                    description=task['description'],
-                    time=created_time
-                )
-                response += task_item
+                worker_id = task.get('worker_id')
+                tasks_by_worker[worker_id].append(task)
+            
+            # Display each worker's tasks
+            for worker_id, worker_tasks in tasks_by_worker.items():
+                # Get worker name from Telegram
+                try:
+                    worker_user = await context.bot.get_chat(worker_id)
+                    worker_name = worker_user.first_name or f"Worker {worker_id}"
+                except Exception:
+                    worker_name = f"Worker {worker_id}"
+                
+                response += f"\n👤 *{worker_name}:*\n"
+                
+                for task in worker_tasks:
+                    created_time = task['created_at'].strftime('%H:%M') if task.get('created_at') else 'Unknown'
+                    task_item = get_text(
+                        language,
+                        'tasks.manager.task_item',
+                        default="• {description}\n  _Created: Today at {time}_\n\n",
+                        description=task['description'],
+                        time=created_time
+                    )
+                    response += task_item
         
-        # Completed tasks (today only)
+        # Completed tasks (today only) - grouped by worker
         if completed_tasks:
             completed_header = get_text(
                 language,
@@ -1012,16 +1077,34 @@ async def tasks_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             response += completed_header
             
+            # Group tasks by worker
+            completed_by_worker = defaultdict(list)
+            
             for task in completed_tasks:
-                completed_time = task['completed_at'].strftime('%H:%M') if task.get('completed_at') else 'Unknown'
-                completed_item = get_text(
-                    language,
-                    'tasks.manager.completed_item',
-                    default="• {description}\n  _Completed at {time}_\n\n",
-                    description=task['description'],
-                    time=completed_time
-                )
-                response += completed_item
+                worker_id = task.get('worker_id')
+                completed_by_worker[worker_id].append(task)
+            
+            # Display each worker's completed tasks
+            for worker_id, worker_tasks in completed_by_worker.items():
+                # Get worker name from Telegram
+                try:
+                    worker_user = await context.bot.get_chat(worker_id)
+                    worker_name = worker_user.first_name or f"Worker {worker_id}"
+                except Exception:
+                    worker_name = f"Worker {worker_id}"
+                
+                response += f"\n👤 *{worker_name}:*\n"
+                
+                for task in worker_tasks:
+                    completed_time = task['completed_at'].strftime('%H:%M') if task.get('completed_at') else 'Unknown'
+                    completed_item = get_text(
+                        language,
+                        'tasks.manager.completed_item',
+                        default="• {description}\n  _Completed at {time}_\n\n",
+                        description=task['description'],
+                        time=completed_time
+                    )
+                    response += completed_item
         
         await send_message(response, parse_mode='Markdown')
     
@@ -1361,8 +1444,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     max_history_messages = translation_context_size * 2
     
     if user['role'] == 'manager':
-        worker_id = user.get('worker')
-        if not worker_id:
+        # Find worker connected to THIS bot
+        bot_id = os.environ.get('BOT_ID', 'bot1')
+        workers = user.get('workers', [])
+        
+        # Find worker on this bot
+        worker_on_this_bot = next((w for w in workers if w.get('bot_id') == bot_id), None)
+        
+        if not worker_on_this_bot:
             no_worker_text = get_text(
                 language,
                 'handle_message.manager.no_worker',
@@ -1371,6 +1460,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(no_worker_text)
             return
         
+        worker_id = worker_on_this_bot.get('worker_id')    
         worker = database.get_user(worker_id)
         if not worker:
             worker_not_found_text = get_text(
@@ -1806,8 +1896,13 @@ async def handle_media(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Determine recipient based on role
     if user['role'] == 'manager':
-        recipient_id = user.get('worker')
-        if not recipient_id:
+        # Find worker connected to THIS bot
+        bot_id = os.environ.get('BOT_ID', 'bot1')
+        workers = user.get('workers', [])
+        
+        worker_on_this_bot = next((w for w in workers if w.get('bot_id') == bot_id), None)
+        
+        if not worker_on_this_bot:
             no_worker_text = get_text(
                 language,
                 'handle_media.manager_no_worker',
@@ -1815,6 +1910,8 @@ async def handle_media(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             await update.message.reply_text(no_worker_text)
             return
+        
+        recipient_id = worker_on_this_bot.get('worker_id')
         sender_name = update.effective_user.first_name
         # Get recipient's language for the prefix
         recipient = database.get_user(recipient_id)

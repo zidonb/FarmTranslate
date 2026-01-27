@@ -188,22 +188,32 @@ def generate_daily_actionitems(messages: list, industry: str = None, manager_lan
     # Default to English if not specified
     output_language = manager_language or 'English'
     
-    # Format messages for prompt
-    conversation_text = ""
+    # Group messages by worker
+    from collections import defaultdict
+    messages_by_worker = defaultdict(list)
+
     for msg in messages:
-        timestamp = msg.get('timestamp', '')
-        if timestamp:
-            # Format timestamp nicely
-            try:
-                from datetime import datetime
-                dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
-                time_str = dt.strftime('%H:%M')
-            except:
-                time_str = timestamp[:16] if len(timestamp) >= 16 else timestamp
-        else:
-            time_str = "Unknown time"
+        worker_name = msg.get('worker_name', 'Unknown Worker')
+        messages_by_worker[worker_name].append(msg)
+
+    # Format messages for prompt - grouped by worker
+    conversation_text = ""
+    for worker_name, worker_messages in messages_by_worker.items():
+        conversation_text += f"\n=== {worker_name.upper()} ===\n"
         
-        conversation_text += f"[{time_str}] {msg['text']} ({msg['lang']})\n"
+        for msg in worker_messages:
+            timestamp = msg.get('timestamp', '')
+            if timestamp:
+                try:
+                    from datetime import datetime
+                    dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                    time_str = dt.strftime('%H:%M')
+                except:
+                    time_str = timestamp[:16] if len(timestamp) >= 16 else timestamp
+            else:
+                time_str = "Unknown time"
+            
+            conversation_text += f"[{time_str}] {msg['text']} ({msg['lang']})\n"
     
     # Build prompt - VERY SPECIFIC to avoid summarization
     prompt = f"""You are extracting ACTION ITEMS from a {industry_name} workplace conversation.
@@ -239,10 +249,20 @@ EXCLUDE:
 - Completed tasks (if marked as done)
 
 OUTPUT FORMAT (in {output_language}):
-If action items exist:
+If action items exist, group them by worker name:
+
+🤖 [WORKER NAME]:
 Action Items:
 - [specific task with details]
-- [specific task with details]
+
+Safety Issues:
+- [specific safety concern]
+
+Equipment:
+- [specific equipment problem]
+
+🤖 [NEXT WORKER NAME]:
+...
 
 Safety Issues:
 - [specific safety concern]
