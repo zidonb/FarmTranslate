@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 import json
 from i18n import get_text
 import db_connection 
+from collections import defaultdict
 
 # Conversation states
 LANGUAGE, GENDER, INDUSTRY = range(3)
@@ -156,13 +157,19 @@ async def gender_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return ConversationHandler.END
         
-        # Check if manager already has a worker
+        # Check if manager already has a worker on THIS bot
         manager = database.get_user(manager_id)
-        if manager.get('worker'):
+        bot_id = os.environ.get('BOT_ID', 'bot1')
+        workers = manager.get('workers', [])
+
+        # Check if this bot already has a worker for this manager
+        worker_on_this_bot = next((w for w in workers if w.get('bot_id') == bot_id), None)
+
+        if worker_on_this_bot:
             already_connected_text = get_text(
                 language,
                 'registration.worker_already_connected',
-                default="❌ This contact already has a worker connected.\nAsk them to use /reset first."
+                default="❌ This contact already has a worker connected on this bot.\nAsk them to use /reset first."
             )
             await update.message.reply_text(
                 already_connected_text,
@@ -1805,7 +1812,9 @@ async def handle_task_creation(update: Update, context: ContextTypes.DEFAULT_TYP
         )
         await update.message.reply_text(no_worker_text)
         return
-    
+
+    worker_id = worker_on_this_bot.get('worker_id')  # ✅ ADD THIS LINE
+
     # Extract task description (remove ** prefix)
     task_description = text[2:].strip()
     

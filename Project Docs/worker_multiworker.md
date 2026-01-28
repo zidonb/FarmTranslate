@@ -1,4 +1,4 @@
-## **Multi-Worker Implementation Summary**
+## **Updated Multi-Worker Implementation Summary**
 
 ### **What Changed:**
 
@@ -22,8 +22,10 @@
 - Bot 1, Bot 2, Bot 3, Bot 4, Bot 5 (separate Railway services)
 - Same codebase (`bot.py`)
 - Different environment variables per bot:
-  - `TELEGRAM_TOKEN` (unique per bot)
-  - `BOT_ID` ('bot1', 'bot2', etc.)
+  - `TELEGRAM_TOKEN` (unique per bot) - service-scoped
+  - `BOT_ID` ('bot1', 'bot2', etc.) - service-scoped
+- Shared environment variables (project-scoped):
+  - `TELEGRAM_TOKEN_BOT1` through `TELEGRAM_TOKEN_BOT5` (for cross-bot messaging in `/addworker`)
 - Shared PostgreSQL database
 - Each bot chat = 1 worker = separate Telegram contact for manager
 
@@ -31,6 +33,11 @@
 - Each bot reads `BOT_ID` from environment
 - Routes messages to/from worker connected to THAT bot only
 - Manager in Bot 2 chat → talks to Bot 2's worker only
+
+**Cross-Bot Messaging:**
+- `/addworker` command can send messages from any bot
+- Uses shared `TELEGRAM_TOKEN_BOT1-5` variables to instantiate other bot clients
+- Example: Bot 1 runs `/addworker` → Creates Bot 2 client → Sends greeting from Bot 2
 
 ---
 
@@ -40,6 +47,7 @@
 - Manager: Initialize `workers: []` array instead of `worker: None`
 - Worker: Add `bot_id` field when registering
 - Append worker to manager's `workers` array (not replace single field)
+- Check if worker already exists on THIS bot before connecting
 
 **2. Message Routing (`handle_message()`):**
 - Find worker where `bot_id == current_bot_id`
@@ -55,18 +63,23 @@
 - `/tasks`: Groups tasks by worker name (fetched from Telegram)
 - `/daily`: Aggregates messages from ALL workers, groups action items by worker name
 - `/reset`: Loops through all workers in array, cleans up each
+- `/addworker`: NEW - Finds free bot, sends proactive greeting with invite link
 
-**5. Media Forwarding (`handle_media()`):**
+**5. Menu System:**
+- Added `/addworker` button to manager's menu
+- Callback handler routes to `addworker_command()`
+
+**6. Media Forwarding (`handle_media()`):**
 - Find worker on current bot before forwarding
 
-**6. Translation Action Items (`translator.py`):**
+**7. Translation Action Items (`translator.py`):**
 - Groups messages by worker_name before generating action items
 - Output format includes worker names as headers
 
-**7. Migration Script (`migrate_to_multiworker.py`):**
+**8. Migration Script (`migrate_to_multiworker.py`):**
 - Converts existing `worker: 'id'` → `workers: [{worker_id: 'id', bot_id: 'bot1', ...}]`
 - Adds `bot_id: 'bot1'` to existing workers (assumes bot1)
-- Run once after deployment
+- Run once after deployment ✅ COMPLETED
 
 ---
 
@@ -75,12 +88,15 @@
 **Manager Flow:**
 1. Registers on Bot 1 → Gets invite code
 2. Worker 1 uses code → Connects via Bot 1
-3. Manager opens Bot 2 → Gets new invite code
-4. Worker 2 uses code → Connects via Bot 2
-5. Manager's Telegram chat list shows:
-   - "BridgeOS Bot 1" (rename to "John")
-   - "BridgeOS Bot 2" (rename to "Maria")
-6. Each chat = separate worker (native Telegram contact experience)
+3. Manager types `/addworker` (in any bot)
+4. Bot assigns Bot 2 → Sends link to Bot 2
+5. Bot 2 proactively sends greeting + share button to manager
+6. Manager opens Bot 2 → Sees invite waiting
+7. Manager shares invite → Worker 2 connects via Bot 2
+8. Manager's Telegram chat list shows:
+   - "FarmTranslateBot" (rename to "John")
+   - "BridgeOS_2bot" (rename to "Maria")
+9. Each chat = separate worker (native Telegram contact experience)
 
 **Message Routing:**
 - Manager in Bot 1 chat → Messages go to Worker 1 only
@@ -94,14 +110,45 @@
 
 ---
 
+### **Railway Configuration:**
+
+**Service-Scoped Variables (per bot):**
+```
+worker-bot1:
+  TELEGRAM_TOKEN = bot1_token
+  BOT_ID = bot1
+
+worker-bot2:
+  TELEGRAM_TOKEN = bot2_token
+  BOT_ID = bot2
+  
+(etc. for bot3, bot4, bot5)
+```
+
+**Project-Scoped Shared Variables:**
+```
+TELEGRAM_TOKEN_BOT1 = bot1_token
+TELEGRAM_TOKEN_BOT2 = bot2_token
+TELEGRAM_TOKEN_BOT3 = bot3_token
+TELEGRAM_TOKEN_BOT4 = bot4_token
+TELEGRAM_TOKEN_BOT5 = bot5_token
+```
+
+**Why Both?**
+- Service-scoped: Each bot starts with its own token
+- Shared: `/addworker` can send messages AS other bots (proactive greeting)
+
+---
+
 ### **Still TODO:**
 
 1. **Dashboard updates** - Show `workers` array in manager detail page
-2. **Subscription logic** - Pricing for multiple workers
-3. **`/addworker` command** - Formal way to add workers (find free bot, generate invite)
-4. **Help text updates** - Explain multi-bot usage
-5. **I18N** - For new code
-6. **Add /removeworker command** todays manager's /reset, removes all workers
+2. **Subscription logic** - Pricing for multiple workers (business decision)
+3. **Help text updates** - Explain multi-bot usage
+4. **I18N** - Translation strings for `/addworker` command
+5. **`/removeworker` command** - Let manager remove specific worker (alternative to worker's `/reset`)
+6. **Error handling** - What if Bot 2 doesn't have token configured?
+7. **Bot 4 & 5 creation** - Currently only 3 bots deployed
 
 ---
 
@@ -109,4 +156,21 @@
 - `users` table: JSONB column stores manager/worker data
 - `tasks` table: Already has `worker_id` column (multi-worker ready)
 - `message_history` table: Uses `conversation_key` (manager_worker pairs)
+- `conversations` table: Uses `conversation_key` (translation context)
 - No schema changes needed - just data structure within JSONB
+
+---
+
+### **Key Design Decisions:**
+
+**✅ Multiple Bots (Chosen):**
+- Natural UX: Each bot = separate contact in Telegram
+- Zero cognitive load: Manager just opens different chats
+- Native Telegram experience (rename bots to worker names)
+- Covers 80% of use cases (1-5 workers)
+
+**❌ Single Bot with `/switch` (Rejected):**
+- Confusing UX: One chat for multiple people
+- Manager must remember to switch before messaging
+- Error-prone: Might send to wrong worker
+- Violates mental model of "one chat = one person"
