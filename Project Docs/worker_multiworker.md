@@ -97,10 +97,10 @@
 ### **Still TODO:**
 
 1. **Dashboard updates** - Show `workers` array in manager detail page
-2. **Worker switching bug fix** - Clean up old manager when worker switches
-3. **Subscription logic** - Pricing for multiple workers
-4. **`/addworker` command** - Formal way to add workers (find free bot, generate invite)
-5. **Help text updates** - Explain multi-bot usage
+2. **Subscription logic** - Pricing for multiple workers
+3. **`/addworker` command** - Formal way to add workers (find free bot, generate invite)
+4. **Help text updates** - Explain multi-bot usage
+5. **I18N** - For new code
 
 ---
 

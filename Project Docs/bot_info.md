@@ -5,6 +5,10 @@ Use this token to access the HTTP API:
 7998389934:AAHfiK9Dks-euuZIgLLekGykp8XOX7fYb1s
 **Bot 3:**
 8525316044:AAFlr9z4FsrvZseJRyyUI9BQfP7yrXhEYcc
+**Bot 4:**
+8335212087:AAGHRP1AlRZWv26WWqIYNQKv3Jy01WtW798
+**Bot 5:**
+8480698480:AAGUUgs9ZPC72RBGq9O4Vc3swNnXdVQVtc8
 
 For a description of the Bot API, see this page: https://core.telegram.org/bots/api
 

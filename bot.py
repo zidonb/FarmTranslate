@@ -432,6 +432,7 @@ async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard = [
             [InlineKeyboardButton(get_text(language, 'menu.tasks', default='📋 My Tasks'), callback_data='menu_tasks')],
             [InlineKeyboardButton(get_text(language, 'menu.daily', default='📊 Daily Action Items'), callback_data='menu_daily')],
+            [InlineKeyboardButton(get_text(language, 'menu.addworker', default='➕ Add Worker'), callback_data='menu_addworker')],
             [InlineKeyboardButton(get_text(language, 'menu.mycode', default='🔗 My Invitation Code'), callback_data='menu_mycode')],
             [InlineKeyboardButton(get_text(language, 'menu.subscription', default='💳 Subscription'), callback_data='menu_subscription')],
             [InlineKeyboardButton(get_text(language, 'menu.refer', default='📤 Refer BridgeOS'), callback_data='menu_refer')],
@@ -463,6 +464,8 @@ async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TY
         await tasks_command(update, context)
     elif query.data == 'menu_daily':
         await daily_command(update, context)
+    elif query.data == 'menu_addworker':  # ← ADD THIS
+        await addworker_command(update, context)
     elif query.data == 'menu_mycode':
         await mycode_command(update, context)
     elif query.data == 'menu_subscription':
@@ -1287,6 +1290,101 @@ async def feedback_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode='Markdown'
     )
 
+
+async def addworker_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Add a new worker - find free bot and generate invite"""
+    user_id = str(update.effective_user.id)
+    user = database.get_user(user_id)
+    
+    if not user:
+        not_registered_text = get_text(
+            'English',
+            'addworker.not_registered',
+            default="Please use /start to register first."
+        )
+        await update.message.reply_text(not_registered_text)
+        return
+    
+    language = user['language']
+    
+    # Only managers can add workers
+    if user['role'] != 'manager':
+        not_manager_text = get_text(
+            language,
+            'addworker.not_manager',
+            default="⚠️ Only managers can add workers.\n\nWorkers are added by their managers."
+        )
+        await update.message.reply_text(not_manager_text)
+        return
+    
+    # Check worker limit
+    config = load_config()
+    max_workers = 5  # Hardcoded for now, could be config-based
+    current_workers = user.get('workers', [])
+    
+    if len(current_workers) >= max_workers:
+        limit_reached_text = get_text(
+            language,
+            'addworker.limit_reached',
+            default="⚠️ *Worker Limit Reached*\n\nYou already have {count} workers (maximum allowed).\n\nTo add another worker, please contact support for enterprise options.",
+            count=len(current_workers)
+        )
+        await update.message.reply_text(
+            limit_reached_text,
+            parse_mode='Markdown'
+        )
+        return
+    
+    # Find which bots this manager already uses
+    available_bot_ids = ['bot1', 'bot2', 'bot3', 'bot4', 'bot5']
+    used_bot_ids = [w.get('bot_id') for w in current_workers]
+    free_bot_ids = [b for b in available_bot_ids if b not in used_bot_ids]
+    
+    if not free_bot_ids:
+        all_bots_used_text = get_text(
+            language,
+            'addworker.all_bots_used',
+            default="⚠️ All bot slots are in use.\n\nYou have workers on all 5 bots. This shouldn't happen - please contact support."
+        )
+        await update.message.reply_text(all_bots_used_text)
+        return
+    
+    # Get the next free bot
+    next_bot_id = free_bot_ids[0]
+    
+    # Get manager's existing code (reuse it)
+    code = user.get('code', 'No code found')
+    
+    # Create bot username mapping
+    bot_usernames = {
+        'bot1': 'FarmTranslateBot',      # Your actual bot username
+        'bot2': 'BridgeOS_2bot',     
+        'bot3': 'BridgeOS_3bot', 
+        'bot4': 'BridgeOS_4bot', 
+        'bot5': 'BridgeOS_5bot', 
+    }
+    
+    bot_username = bot_usernames.get(next_bot_id, 'FarmTranslateBot')
+    
+    # Create deep-links
+    bot_chat_link = f"https://t.me/{bot_username}"
+    invite_link = f"https://t.me/{bot_username}?start=invite_{code}"
+    
+    # Send instructions to manager
+    success_text = get_text(
+        language,
+        'addworker.success',
+        default="✅ *Worker Slot Assigned on {bot_id}*\n\n📱 *To add your new worker:*\n\n1️⃣ Open this bot:\n{bot_link}\n\n2️⃣ Share this invite with your worker:\n{invite_link}\n\n👉 Your worker will register themselves (choose language & gender).\n\n💡 *Tip:* Rename the bot in Telegram to your worker's name (tap bot → Edit → Change name)",
+        bot_id=next_bot_id.upper(),
+        bot_link=bot_chat_link,
+        invite_link=invite_link
+    )
+    
+    await update.message.reply_text(
+        success_text,
+        parse_mode='Markdown'
+    )
+
 # ============================================
 # MESSAGE HANDLING
 # ============================================
@@ -1636,9 +1734,13 @@ async def handle_task_creation(update: Update, context: ContextTypes.DEFAULT_TYP
         await update.message.reply_text(not_manager_text)
         return
     
-    # Check if manager has a worker
-    worker_id = user.get('worker')
-    if not worker_id:
+    # Find worker connected to THIS bot
+    bot_id = os.environ.get('BOT_ID', 'bot1')
+    workers = user.get('workers', [])
+
+    worker_on_this_bot = next((w for w in workers if w.get('bot_id') == bot_id), None)
+
+    if not worker_on_this_bot:
         no_worker_text = get_text(
             language,
             'handle_task_creation.no_worker',
@@ -2005,6 +2107,7 @@ def main():
     app.add_handler(CommandHandler('feedback', feedback_command))
     app.add_handler(CommandHandler('mycode', mycode_command))
     app.add_handler(CommandHandler('refer', refer_command))
+    app.add_handler(CommandHandler('addworker', addworker_command))
     # Add callback handlers for tasks
     app.add_handler(CallbackQueryHandler(task_completion_callback, pattern='^task_done_'))
     app.add_handler(CallbackQueryHandler(view_tasks_callback, pattern='^view_tasks$'))
