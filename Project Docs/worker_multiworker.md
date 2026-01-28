@@ -101,6 +101,7 @@
 3. **`/addworker` command** - Formal way to add workers (find free bot, generate invite)
 4. **Help text updates** - Explain multi-bot usage
 5. **I18N** - For new code
+6. **Add /removeworker command** todays manager's /reset, removes all workers
 
 ---
 

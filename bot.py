@@ -1292,9 +1292,16 @@ async def feedback_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def addworker_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Add a new worker - find free bot and generate invite"""
-    user_id = str(update.effective_user.id)
-    user = database.get_user(user_id)
+    """Add a new worker - find free bot and send proactive invite"""
+    # Handle both direct command AND callback from menu
+    if update.callback_query:
+        user_id = str(update.callback_query.from_user.id)
+        user = database.get_user(user_id)
+        send_message = update.callback_query.message.reply_text
+    else:
+        user_id = str(update.effective_user.id)
+        user = database.get_user(user_id)
+        send_message = update.message.reply_text
     
     if not user:
         not_registered_text = get_text(
@@ -1302,7 +1309,7 @@ async def addworker_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'addworker.not_registered',
             default="Please use /start to register first."
         )
-        await update.message.reply_text(not_registered_text)
+        await send_message(not_registered_text)
         return
     
     language = user['language']
@@ -1314,12 +1321,11 @@ async def addworker_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'addworker.not_manager',
             default="⚠️ Only managers can add workers.\n\nWorkers are added by their managers."
         )
-        await update.message.reply_text(not_manager_text)
+        await send_message(not_manager_text)
         return
     
     # Check worker limit
-    config = load_config()
-    max_workers = 5  # Hardcoded for now, could be config-based
+    max_workers = 5
     current_workers = user.get('workers', [])
     
     if len(current_workers) >= max_workers:
@@ -1329,7 +1335,7 @@ async def addworker_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             default="⚠️ *Worker Limit Reached*\n\nYou already have {count} workers (maximum allowed).\n\nTo add another worker, please contact support for enterprise options.",
             count=len(current_workers)
         )
-        await update.message.reply_text(
+        await send_message(
             limit_reached_text,
             parse_mode='Markdown'
         )
@@ -1346,41 +1352,92 @@ async def addworker_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'addworker.all_bots_used',
             default="⚠️ All bot slots are in use.\n\nYou have workers on all 5 bots. This shouldn't happen - please contact support."
         )
-        await update.message.reply_text(all_bots_used_text)
+        await send_message(all_bots_used_text)
         return
     
     # Get the next free bot
     next_bot_id = free_bot_ids[0]
     
-    # Get manager's existing code (reuse it)
+    # Get manager's code
     code = user.get('code', 'No code found')
     
-    # Create bot username mapping
+    # Bot username mapping
     bot_usernames = {
-        'bot1': 'FarmTranslateBot',      # Your actual bot username
-        'bot2': 'BridgeOS_2bot',     
-        'bot3': 'BridgeOS_3bot', 
-        'bot4': 'BridgeOS_4bot', 
-        'bot5': 'BridgeOS_5bot', 
+        'bot1': 'FarmTranslateBot',
+        'bot2': 'BridgeOS_2bot',
+        'bot3': 'BridgeOS_3bot',
+        'bot4': 'BridgeOS_4bot',
+        'bot5': 'BridgeOS_5bot'
     }
     
     bot_username = bot_usernames.get(next_bot_id, 'FarmTranslateBot')
     
-    # Create deep-links
+    # Create links
     bot_chat_link = f"https://t.me/{bot_username}"
     invite_link = f"https://t.me/{bot_username}?start=invite_{code}"
     
-    # Send instructions to manager
+    # Get bot token for the next bot (to send proactive message)
+    bot_tokens = {
+    'bot1': os.environ.get('TELEGRAM_TOKEN_BOT1'),  # ✅ Always read from shared variables
+    'bot2': os.environ.get('TELEGRAM_TOKEN_BOT2'),
+    'bot3': os.environ.get('TELEGRAM_TOKEN_BOT3'),
+    'bot4': os.environ.get('TELEGRAM_TOKEN_BOT4'),
+    'bot5': os.environ.get('TELEGRAM_TOKEN_BOT5')
+}
+    
+    next_bot_token = bot_tokens.get(next_bot_id)
+    
+    # Send proactive message from the next bot
+    if next_bot_token:
+        try:
+            from telegram import Bot
+            next_bot = Bot(token=next_bot_token)
+            
+            # Create share button
+            share_text = get_text(
+                language,
+                'addworker.share_invitation_text',
+                default="🌉 Join BridgeOS!\nChat with me in your language:\n{invite_link}",
+                invite_link=invite_link
+            )
+            
+            share_button_text = get_text(
+                language,
+                'addworker.share_button',
+                default="🚀 Share Invitation"
+            )
+            
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton(share_button_text, switch_inline_query=share_text)]
+            ])
+            
+            # Greeting message
+            greeting_text = get_text(
+                language,
+                'addworker.bot_greeting',
+                default="👋 *Ready to add a worker!*\n\n📋 Share this invitation with your worker:\n\n👉 Tap the button below to share:"
+            )
+            
+            await next_bot.send_message(
+                chat_id=user_id,
+                text=greeting_text,
+                reply_markup=keyboard,
+                parse_mode='Markdown'
+            )
+            
+        except Exception as e:
+            print(f"Error sending proactive message from {next_bot_id}: {e}")
+    
+    # Send instructions in current bot
     success_text = get_text(
         language,
         'addworker.success',
-        default="✅ *Worker Slot Assigned on {bot_id}*\n\n📱 *To add your new worker:*\n\n1️⃣ Open this bot:\n{bot_link}\n\n2️⃣ Share this invite with your worker:\n{invite_link}\n\n👉 Your worker will register themselves (choose language & gender).\n\n💡 *Tip:* Rename the bot in Telegram to your worker's name (tap bot → Edit → Change name)",
-        bot_id=next_bot_id.upper(),
-        bot_link=bot_chat_link,
-        invite_link=invite_link
+        default="✅ *Worker Slot Assigned on {bot_name}*\n\n📱 Open this bot to add your worker:\n{bot_link}\n\n💡 The invitation is waiting for you there!",
+        bot_name=next_bot_id.upper(),
+        bot_link=bot_chat_link
     )
     
-    await update.message.reply_text(
+    await send_message(
         success_text,
         parse_mode='Markdown'
     )
