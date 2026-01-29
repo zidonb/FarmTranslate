@@ -19,7 +19,8 @@
         "share_invitation_button": "🚀 Envoyer l'invitation maintenant",
         "registration_complete": "✅ Inscription terminée !\n\n📋 Votre code d'invitation : {code}\n🔗 Lien d'invitation :\n{deep_link}\n\n👉 Appuyez sur le bouton ci-dessous pour partager avec votre contact :",
         "ready_to_start": "Prêt à commencer ! Utilisez /help à tout moment.",
-        "cancelled": "Inscription annulée. Utilisez /start pour réessayer."
+        "cancelled": "Inscription annulée. Utilisez /start pour réessayer.",
+        "worker_switched": "⚠️ {worker_name} s'est connecté à un autre gestionnaire.\n\nVous pouvez maintenant inviter un nouveau travailleur en utilisant /mycode"
     },
     "industries": {
         "dairy_farm": "🐄 Ferme Laitière",
@@ -180,5 +181,17 @@
         "refer": "📤 Recommander BridgeOS",
         "feedback": "💬 Envoyer des Commentaires",
         "reset": "🗑️ Réinitialiser le Compte"
+    },
+    "addworker": {
+        "not_registered": "Veuillez utiliser /start pour vous inscrire d'abord.",
+        "not_manager": "⚠️ Seuls les gestionnaires peuvent ajouter des travailleurs.\n\nLes travailleurs sont ajoutés par leurs gestionnaires.",
+        "pending_invitation": "⚠️ Vous avez une invitation en attente sur {bot_name}.\n\nVeuillez d'abord compléter cette invitation avant d'ajouter un autre travailleur.\n\n📱 Ouvrez {bot_name}:\n{bot_link}",
+        "no_worker_on_current_bot": "⚠️ Veuillez d'abord connecter un travailleur à ce bot.\n\nUtilisez /mycode pour partager votre invitation avec votre premier travailleur.",
+        "limit_reached": "⚠️ *Limite de travailleurs atteinte*\n\nVous avez déjà {count} travailleurs (maximum autorisé).\n\nPour ajouter un autre travailleur, veuillez contacter le support pour les options d'entreprise.",
+        "all_bots_used": "⚠️ Tous les emplacements de bot sont utilisés.\n\nVous avez des travailleurs sur les 5 bots. Cela ne devrait pas arriver - veuillez contacter le support.",
+        "share_invitation_text": "🌉 Rejoignez BridgeOS!\nDiscutez avec moi dans votre langue:\n{invite_link}",
+        "share_button": "🚀 Partager l'invitation",
+        "bot_greeting": "👋 *Prêt à ajouter un travailleur!*\n\n📋 Partagez cette invitation avec votre travailleur:\n\n👉 Appuyez sur le bouton ci-dessous pour partager:",
+        "success": "✅ *Emplacement de travailleur attribué sur {bot_name}*\n\n📱 Ouvrez ce bot pour ajouter votre travailleur:\n{bot_link}\n\n💡 L'invitation vous attend là-bas!"
     }
 }

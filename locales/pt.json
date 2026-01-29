@@ -19,7 +19,8 @@
         "share_invitation_button": "🚀 Enviar Convite Agora",
         "registration_complete": "✅ Registro completo!\n\n📋 Seu código de convite: {code}\n🔗 Link de convite:\n{deep_link}\n\n👉 Toque no botão abaixo para compartilhar com seu contato:",
         "ready_to_start": "Pronto para começar! Use /help a qualquer momento.",
-        "cancelled": "Registro cancelado. Use /start para tentar novamente."
+        "cancelled": "Registro cancelado. Use /start para tentar novamente.",
+        "worker_switched": "⚠️ {worker_name} se conectou a um gerente diferente.\n\nAgora você pode convidar um novo trabalhador usando /mycode"
     },
     "industries": {
         "dairy_farm": "🐄 Fazenda de Laticínios",
@@ -180,5 +181,17 @@
         "refer": "📤 Recomendar BridgeOS",
         "feedback": "💬 Enviar Feedback",
         "reset": "🗑️ Redefinir Conta"
+    },
+    "addworker": {
+        "not_registered": "Por favor, use /start para se registrar primeiro.",
+        "not_manager": "⚠️ Apenas gerentes podem adicionar trabalhadores.\n\nOs trabalhadores são adicionados por seus gerentes.",
+        "pending_invitation": "⚠️ Você tem um convite pendente em {bot_name}.\n\nPor favor, complete esse convite primeiro antes de adicionar outro trabalhador.\n\n📱 Abra {bot_name}:\n{bot_link}",
+        "no_worker_on_current_bot": "⚠️ Por favor, conecte um trabalhador a este bot primeiro.\n\nUse /mycode para compartilhar seu convite com seu primeiro trabalhador.",
+        "limit_reached": "⚠️ *Limite de trabalhadores atingido*\n\nVocê já tem {count} trabalhadores (máximo permitido).\n\nPara adicionar outro trabalhador, entre em contato com o suporte para opções empresariais.",
+        "all_bots_used": "⚠️ Todos os espaços de bot estão em uso.\n\nVocê tem trabalhadores em todos os 5 bots. Isso não deveria acontecer - por favor, entre em contato com o suporte.",
+        "share_invitation_text": "🌉 Junte-se ao BridgeOS!\nConverse comigo no seu idioma:\n{invite_link}",
+        "share_button": "🚀 Compartilhar Convite",
+        "bot_greeting": "👋 *Pronto para adicionar um trabalhador!*\n\n📋 Compartilhe este convite com seu trabalhador:\n\n👉 Toque no botão abaixo para compartilhar:",
+        "success": "✅ *Espaço de trabalhador atribuído em {bot_name}*\n\n📱 Abra este bot para adicionar seu trabalhador:\n{bot_link}\n\n💡 O convite está esperando por você lá!"
     }
 }

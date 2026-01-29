@@ -19,7 +19,8 @@
         "share_invitation_button": "🚀 Enviar Invitación Ahora",
         "registration_complete": "✅ ¡Registro completo!\n\n📋 Tu código de invitación: {code}\n🔗 Enlace de invitación:\n{deep_link}\n\n👉 Toca el botón de abajo para compartir con tu contacto:",
         "ready_to_start": "¡Listo para empezar! Usa /help en cualquier momento.",
-        "cancelled": "Registro cancelado. Usa /start para intentar de nuevo."
+        "cancelled": "Registro cancelado. Usa /start para intentar de nuevo.",
+        "worker_switched": "⚠️ {worker_name} se ha conectado a un gerente diferente.\n\nAhora puedes invitar a un nuevo trabajador usando /mycode"
     },
     "industries": {
         "dairy_farm": "🐄 Granja Lechera",
@@ -180,5 +181,17 @@
         "refer": "📤 Recomendar BridgeOS",
         "feedback": "💬 Enviar Comentarios",
         "reset": "🗑️ Restablecer Cuenta"
+    },
+    "addworker": {
+        "not_registered": "Por favor usa /start para registrarte primero.",
+        "not_manager": "⚠️ Solo los gerentes pueden agregar trabajadores.\n\nLos trabajadores son agregados por sus gerentes.",
+        "pending_invitation": "⚠️ Tienes una invitación pendiente en {bot_name}.\n\nPor favor completa esa invitación antes de agregar otro trabajador.\n\n📱 Abre {bot_name}:\n{bot_link}",
+        "no_worker_on_current_bot": "⚠️ Por favor conecta un trabajador a este bot primero.\n\nUsa /mycode para compartir tu invitación con tu primer trabajador.",
+        "limit_reached": "⚠️ *Límite de trabajadores alcanzado*\n\nYa tienes {count} trabajadores (máximo permitido).\n\nPara agregar otro trabajador, contacta al soporte para opciones empresariales.",
+        "all_bots_used": "⚠️ Todos los espacios de bot están en uso.\n\nTienes trabajadores en los 5 bots. Esto no debería suceder - por favor contacta al soporte.",
+        "share_invitation_text": "🌉 ¡Únete a BridgeOS!\nChatea conmigo en tu idioma:\n{invite_link}",
+        "share_button": "🚀 Compartir Invitación",
+        "bot_greeting": "👋 *¡Listo para agregar un trabajador!*\n\n📋 Comparte esta invitación con tu trabajador:\n\n👉 Toca el botón de abajo para compartir:",
+        "success": "✅ *Espacio de trabajador asignado en {bot_name}*\n\n📱 Abre este bot para agregar tu trabajador:\n{bot_link}\n\n💡 ¡La invitación te está esperando allí!"
     }
 }

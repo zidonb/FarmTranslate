@@ -19,7 +19,8 @@
         "share_invitation_button": "🚀 Einladung jetzt senden",
         "registration_complete": "✅ Registrierung abgeschlossen!\n\n📋 Ihr Einladungscode: {code}\n🔗 Einladungslink:\n{deep_link}\n\n👉 Tippen Sie auf die Schaltfläche unten, um sie mit Ihrem Kontakt zu teilen:",
         "ready_to_start": "Bereit zum Starten! Verwenden Sie jederzeit /help.",
-        "cancelled": "Registrierung abgebrochen. Verwenden Sie /start, um es erneut zu versuchen."
+        "cancelled": "Registrierung abgebrochen. Verwenden Sie /start, um es erneut zu versuchen.",
+        "worker_switched": "⚠️ {worker_name} hat sich mit einem anderen Manager verbunden.\n\nSie können jetzt einen neuen Mitarbeiter mit /mycode einladen"
     },
     "industries": {
         "dairy_farm": "🐄 Milchviehbetrieb",
@@ -180,5 +181,17 @@
         "refer": "📤 BridgeOS empfehlen",
         "feedback": "💬 Feedback senden",
         "reset": "🗑️ Konto zurücksetzen"
+    },
+    "addworker": {
+        "not_registered": "Bitte verwenden Sie zuerst /start, um sich zu registrieren.",
+        "not_manager": "⚠️ Nur Manager können Mitarbeiter hinzufügen.\n\nMitarbeiter werden von ihren Managern hinzugefügt.",
+        "pending_invitation": "⚠️ Sie haben eine ausstehende Einladung auf {bot_name}.\n\nBitte schließen Sie diese Einladung zuerst ab, bevor Sie einen weiteren Mitarbeiter hinzufügen.\n\n📱 Öffnen Sie {bot_name}:\n{bot_link}",
+        "no_worker_on_current_bot": "⚠️ Bitte verbinden Sie zuerst einen Mitarbeiter mit diesem Bot.\n\nVerwenden Sie /mycode, um Ihre Einladung mit Ihrem ersten Mitarbeiter zu teilen.",
+        "limit_reached": "⚠️ *Mitarbeiterlimit erreicht*\n\nSie haben bereits {count} Mitarbeiter (maximal erlaubt).\n\nUm einen weiteren Mitarbeiter hinzuzufügen, wenden Sie sich bitte an den Support für Unternehmensoptionen.",
+        "all_bots_used": "⚠️ Alle Bot-Slots sind belegt.\n\nSie haben Mitarbeiter auf allen 5 Bots. Dies sollte nicht passieren - bitte kontaktieren Sie den Support.",
+        "share_invitation_text": "🌉 Tritt BridgeOS bei!\nChatte mit mir in deiner Sprache:\n{invite_link}",
+        "share_button": "🚀 Einladung teilen",
+        "bot_greeting": "👋 *Bereit, einen Mitarbeiter hinzuzufügen!*\n\n📋 Teilen Sie diese Einladung mit Ihrem Mitarbeiter:\n\n👉 Tippen Sie auf die Schaltfläche unten zum Teilen:",
+        "success": "✅ *Mitarbeiterplatz auf {bot_name} zugewiesen*\n\n📱 Öffnen Sie diesen Bot, um Ihren Mitarbeiter hinzuzufügen:\n{bot_link}\n\n💡 Die Einladung wartet dort auf Sie!"
     }
 }

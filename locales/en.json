@@ -19,7 +19,8 @@
         "share_invitation_button": "🚀 Send Invitation Now",
         "registration_complete": "✅ Registration complete!\n\n📋 Your invitation code: {code}\n🔗 Invitation link:\n{deep_link}\n\n👉 Tap the button below to share with your contact:",
         "ready_to_start": "Ready to start! Use /help anytime.",
-        "cancelled": "Registration cancelled. Use /start to try again."
+        "cancelled": "Registration cancelled. Use /start to try again.",
+        "worker_switched": "⚠️ {worker_name} has connected to a different manager.\n\nYou can now invite a new worker using /mycode"
     },
     "industries": {
         "dairy_farm": "🐄 Dairy Farm",
@@ -180,6 +181,17 @@
         "refer": "📤 Refer BridgeOS",
         "feedback": "💬 Send Feedback",
         "reset": "🗑️ Reset Account"
+    },
+    "addworker": {
+        "not_registered": "Please use /start to register first.",
+        "not_manager": "⚠️ Only managers can add workers.\n\nWorkers are added by their managers.",
+        "pending_invitation": "⚠️ You have a pending invitation on {bot_name}.\n\nPlease complete that invitation first before adding another worker.\n\n📱 Open {bot_name}:\n{bot_link}",
+        "no_worker_on_current_bot": "⚠️ Please connect a worker to this bot first.\n\nUse /mycode to share your invitation with your first worker.",
+        "limit_reached": "⚠️ *Worker Limit Reached*\n\nYou already have {count} workers (maximum allowed).\n\nTo add another worker, please contact support for enterprise options.",
+        "all_bots_used": "⚠️ All bot slots are in use.\n\nYou have workers on all 5 bots. This shouldn't happen - please contact support.",
+        "share_invitation_text": "🌉 Join BridgeOS!\nChat with me in your language:\n{invite_link}",
+        "share_button": "🚀 Share Invitation",
+        "bot_greeting": "👋 *Ready to add a worker!*\n\n📋 Share this invitation with your worker:\n\n👉 Tap the button below to share:",
+        "success": "✅ *Worker Slot Assigned on {bot_name}*\n\n📱 Open this bot to add your worker:\n{bot_link}\n\n💡 The invitation is waiting for you there!"
     }
-    
 }

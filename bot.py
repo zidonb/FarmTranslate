@@ -1076,13 +1076,14 @@ async def tasks_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 response += f"\n👤 *{worker_name}:*\n"
                 
                 for task in worker_tasks:
-                    created_time = task['created_at'].strftime('%H:%M') if task.get('created_at') else 'Unknown'
+                    time = task['created_at'].strftime('%H:%M') if task.get('created_at') else 'Unknown'
+
                     task_item = get_text(
                         language,
                         'tasks.manager.task_item',
                         default="• {description}\n  _Created: Today at {time}_\n\n",
                         description=task['description'],
-                        time=created_time
+                        time=time
                     )
                     response += task_item
         
@@ -1245,13 +1246,13 @@ async def view_tasks_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
         response += pending_header
         
         for task in pending_tasks:
-            created_time = task['created_at'].strftime('%H:%M') if task.get('created_at') else 'Unknown'
+            time = task['created_at'].strftime('%H:%M') if task.get('created_at') else 'Unknown'
             task_item = get_text(
                 language,
                 'tasks.manager.task_item',
-                default="• {description}\n  _Created: Today at {created_time}_\n\n",
+                default="• {description}\n  _Created: Today at {time}_\n\n",  # ✅ Correct placeholder
                 description=task['description'],
-                created_time=created_time
+                time=time  # ✅ Matches placeholder
             )
             response += task_item
     
@@ -1265,13 +1266,13 @@ async def view_tasks_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
         response += completed_header
         
         for task in completed_tasks:
-            completed_time = task['completed_at'].strftime('%H:%M') if task.get('completed_at') else 'Unknown'
+            time = task['completed_at'].strftime('%H:%M') if task.get('completed_at') else 'Unknown'
             completed_item = get_text(
                 language,
                 'tasks.manager.completed_item',
-                default="• {description}\n  _Completed at {completed_time}_\n\n",
+                default="• {description}\n  _Completed at {time}_\n\n",
                 description=task['description'],
-                completed_time=completed_time
+                time=time  # ✅ Matches placeholder
             )
             response += completed_item
     
@@ -2144,7 +2145,12 @@ async def handle_media(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 sender_name=sender_name
             )
         else:
-            prefix = f"📎 From {sender_name}:"
+            prefix = get_text(
+                'English',  # Fallback to English instead of hardcoded string
+                'handle_media.media_prefix',
+                default="📎 From {sender_name}:",
+                sender_name=sender_name
+    )
     
     elif user['role'] == 'worker':
         recipient_id = user.get('manager')
@@ -2167,7 +2173,12 @@ async def handle_media(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 sender_name=sender_name
             )
         else:
-            prefix = f"📎 From {sender_name}:"
+            prefix = get_text(
+                'English',  # Fallback to English instead of hardcoded string
+                'handle_media.media_prefix',
+                default="📎 From {sender_name}:",
+                sender_name=sender_name
+    )
     
     # Check if recipient exists
     recipient = database.get_user(recipient_id)

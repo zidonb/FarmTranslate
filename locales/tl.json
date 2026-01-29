@@ -19,7 +19,8 @@
         "share_invitation_button": "🚀 Ipadala ang Imbitasyon Ngayon",
         "registration_complete": "✅ Tapos na ang registration!\n\n📋 Ang iyong invitation code: {code}\n🔗 Invitation link:\n{deep_link}\n\n👉 I-tap ang button sa ibaba upang ibahagi sa iyong contact:",
         "ready_to_start": "Handa nang magsimula! Gamitin ang /help anumang oras.",
-        "cancelled": "Kinansela ang registration. Gamitin ang /start upang subukan muli."
+        "cancelled": "Kinansela ang registration. Gamitin ang /start upang subukan muli.",
+        "worker_switched": "⚠️ {worker_name} ay kumonekta sa ibang manager.\n\nMaaari ka nang mag-imbita ng bagong manggagawa gamit ang /mycode"
     },
     "industries": {
         "dairy_farm": "🐄 Dairy Farm",
@@ -180,5 +181,17 @@
         "refer": "📤 Irekomenda ang BridgeOS",
         "feedback": "💬 Magpadala ng Feedback",
         "reset": "🗑️ I-reset ang Account"
+    },
+    "addworker": {
+        "not_registered": "Mangyaring gamitin ang /start para magrehistro muna.",
+        "not_manager": "⚠️ Mga manager lamang ang maaaring magdagdag ng mga manggagawa.\n\nAng mga manggagawa ay idinadagdag ng kanilang mga manager.",
+        "pending_invitation": "⚠️ Mayroon kang nakabinbing imbitasyon sa {bot_name}.\n\nPakikumpletuhin muna ang imbitasyong iyon bago magdagdag ng isa pang manggagawa.\n\n📱 Buksan ang {bot_name}:\n{bot_link}",
+        "no_worker_on_current_bot": "⚠️ Mangyaring ikonekta muna ang isang manggagawa sa bot na ito.\n\nGamitin ang /mycode upang ibahagi ang iyong imbitasyon sa iyong unang manggagawa.",
+        "limit_reached": "⚠️ *Naabot na ang Limitasyon ng Manggagawa*\n\nMayroon ka nang {count} manggagawa (pinakamataas na pinapayagan).\n\nUpang magdagdag ng isa pang manggagawa, mangyaring makipag-ugnayan sa suporta para sa mga opsyon ng negosyo.",
+        "all_bots_used": "⚠️ Lahat ng bot slot ay ginagamit.\n\nMayroon kang mga manggagawa sa lahat ng 5 bot. Hindi dapat mangyari ito - mangyaring makipag-ugnayan sa suporta.",
+        "share_invitation_text": "🌉 Sumali sa BridgeOS!\nMakipag-chat sa akin sa iyong wika:\n{invite_link}",
+        "share_button": "🚀 Ibahagi ang Imbitasyon",
+        "bot_greeting": "👋 *Handa nang magdagdag ng manggagawa!*\n\n📋 Ibahagi ang imbitasyong ito sa iyong manggagawa:\n\n👉 I-tap ang button sa ibaba upang ibahagi:",
+        "success": "✅ *Nakatalaga ang Slot ng Manggagawa sa {bot_name}*\n\n📱 Buksan ang bot na ito upang idagdag ang iyong manggagawa:\n{bot_link}\n\n💡 Ang imbitasyon ay naghihintay sa iyo doon!"
     }
 }
