@@ -225,6 +225,14 @@ async def gender_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'status': 'active',
             'registered_at': datetime.now(timezone.utc).isoformat()
         })
+
+        # ✅ NEW: Remove this bot from pending_bots (invitation fulfilled)
+        bot_id = os.environ.get('BOT_ID', 'bot1')
+        pending = manager.get('pending_bots', [])
+        if bot_id in pending:
+            pending.remove(bot_id)
+            manager['pending_bots'] = pending
+
         database.save_user(manager_id, manager)
         
         connection_success_text = get_text(
@@ -313,7 +321,8 @@ async def industry_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'role': 'manager',
         'industry': industry_key,
         'code': code,
-        'workers': []
+        'workers': [],
+        'pending_bots': []
     }
     database.save_user(user_id, user_data)
     
@@ -1331,10 +1340,48 @@ async def addworker_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await send_message(not_manager_text)
         return
     
+    # ✅ NEW: Check if manager has pending invitation
+    pending_bots = user.get('pending_bots', [])
+    if pending_bots:
+        pending_bot_id = pending_bots[0]  # Get first pending bot
+        
+        # Map bot_id to username
+        bot_usernames = {
+            'bot1': 'FarmTranslateBot',
+            'bot2': 'BridgeOS_2bot',
+            'bot3': 'BridgeOS_3bot',
+            'bot4': 'BridgeOS_4bot',
+            'bot5': 'BridgeOS_5bot'
+        }
+        pending_bot_username = bot_usernames.get(pending_bot_id, 'FarmTranslateBot')
+        pending_bot_link = f"https://t.me/{pending_bot_username}"
+        
+        pending_invitation_text = get_text(
+            language,
+            'addworker.pending_invitation',
+            default="⚠️ You have a pending invitation on {bot_name}.\n\nPlease complete that invitation first before adding another worker.\n\n📱 Open {bot_name}:\n{bot_link}",
+            bot_name=pending_bot_id.upper(),
+            bot_link=pending_bot_link
+        )
+        await send_message(pending_invitation_text)
+        return
+    
+    # ✅ NEW: Check if current bot has a worker
+    current_bot_id = os.environ.get('BOT_ID', 'bot1')
+    current_workers = user.get('workers', [])
+    worker_on_current_bot = next((w for w in current_workers if w.get('bot_id') == current_bot_id), None)
+    
+    if not worker_on_current_bot:
+        no_worker_on_current_bot_text = get_text(
+            language,
+            'addworker.no_worker_on_current_bot',
+            default="⚠️ Please connect a worker to this bot first.\n\nUse /mycode to share your invitation with your first worker."
+        )
+        await send_message(no_worker_on_current_bot_text)
+        return
+    
     # Check worker limit
     max_workers = 5
-    current_workers = user.get('workers', [])
-    
     if len(current_workers) >= max_workers:
         limit_reached_text = get_text(
             language,
@@ -1365,6 +1412,12 @@ async def addworker_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Get the next free bot
     next_bot_id = free_bot_ids[0]
     
+    # ✅ NEW: Add bot to pending_bots
+    if 'pending_bots' not in user:
+        user['pending_bots'] = []
+    user['pending_bots'].append(next_bot_id)
+    database.save_user(user_id, user)
+    
     # Get manager's code
     code = user.get('code', 'No code found')
     
@@ -1385,12 +1438,12 @@ async def addworker_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Get bot token for the next bot (to send proactive message)
     bot_tokens = {
-    'bot1': os.environ.get('TELEGRAM_TOKEN_BOT1'),  # ✅ Always read from shared variables
-    'bot2': os.environ.get('TELEGRAM_TOKEN_BOT2'),
-    'bot3': os.environ.get('TELEGRAM_TOKEN_BOT3'),
-    'bot4': os.environ.get('TELEGRAM_TOKEN_BOT4'),
-    'bot5': os.environ.get('TELEGRAM_TOKEN_BOT5')
-}
+        'bot1': os.environ.get('TELEGRAM_TOKEN_BOT1'),
+        'bot2': os.environ.get('TELEGRAM_TOKEN_BOT2'),
+        'bot3': os.environ.get('TELEGRAM_TOKEN_BOT3'),
+        'bot4': os.environ.get('TELEGRAM_TOKEN_BOT4'),
+        'bot5': os.environ.get('TELEGRAM_TOKEN_BOT5')
+    }
     
     next_bot_token = bot_tokens.get(next_bot_id)
     
