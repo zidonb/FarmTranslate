@@ -14,6 +14,16 @@
 - save conversation of all time
 - Feedback & Testing
 - change language
+- Add worker:
+2. **Dashboard updates** - Show `workers` array and `pending_bots` in manager detail page
+3. **Subscription logic** - **Pricing** for multiple workers (business decision) (Tier)
+4. **Help text updates** - Explain multi-bot usage in `/help` command
+5. **`/removeworker` command** - Let manager remove specific worker (alternative to worker's `/reset`)
+6. **Error handling** - What if Bot 2 doesn't have token configured? (graceful degradation)
+7. **Bot 4 & 5 creation** - Currently only 3 bots deployed
+8. **Testing** - Test full flow: register → add worker → pending check → connect → add another
+
+
 
 # Killing features
 **Hands-Free Voice Translation**: Workers record voice notes in their native accent which are instantly transcribed and translated to text for the manager. This enables seamless communication for staff with dirty hands or gloves without interrupting their workflow.

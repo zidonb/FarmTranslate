@@ -188,6 +188,7 @@ TELEGRAM_TOKEN_BOT5 = bot5_token
 6. **Error handling** - What if Bot 2 doesn't have token configured? (graceful degradation)
 7. **Bot 4 & 5 creation** - Currently only 3 bots deployed
 8. **Testing** - Test full flow: register → add worker → pending check → connect → add another
+9. **Pricing for additional worker** Tier
 
 ---
 

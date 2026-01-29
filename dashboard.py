@@ -253,7 +253,7 @@ def handle_subscription_paused(telegram_id: str, data: dict):
         return
     subscription["status"] = "paused"
     subscription_manager.save_subscription(telegram_id, subscription)
-    print(f"â¸ï¸ Subscription paused for {telegram_id}")
+    print(f"⏸️ Subscription paused for {telegram_id}")
 
 
 def handle_subscription_unpaused(telegram_id: str, data: dict):
@@ -264,7 +264,7 @@ def handle_subscription_unpaused(telegram_id: str, data: dict):
         return
     subscription["status"] = "active"
     subscription_manager.save_subscription(telegram_id, subscription)
-    print(f"â–¶ï¸ Subscription unpaused for {telegram_id}")
+    print(f"▶️ Subscription unpaused for {telegram_id}")
 
 
 def handle_subscription_payment_success(telegram_id: str, data: dict):
@@ -406,6 +406,7 @@ DASHBOARD_HTML = """
         .badge.connected { background: #48bb78; color: white; }
         .badge.disconnected { background: #f56565; color: white; }
         .badge.subscribed { background: #4299e1; color: white; }
+        .badge.pending { background: #ed8936; color: white; }
         .conversation {
             background: #f9f9f9;
             padding: 15px;
@@ -459,6 +460,16 @@ DASHBOARD_HTML = """
             font-size: 14px;
         }
         .logout:hover { background: rgba(255,255,255,0.3); }
+        .workers-list {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+        .worker-item {
+            padding: 5px 0;
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
@@ -509,7 +520,7 @@ DASHBOARD_HTML = """
                             {% if manager.blocked %}
                                 <span class="badge disconnected">🚫 Blocked</span>
                             {% else %}
-                                <span class="badge connected">✔ Active</span>
+                                <span class="badge connected">✓ Active</span>
                             {% endif %}
                         </div>
                         <div>
@@ -520,15 +531,34 @@ DASHBOARD_HTML = """
                                 <span class="badge disconnected">Free Tier</span>
                             {% endif %}
                         </div>
-                        <div>
-                            <strong>Worker:</strong> 
-                            {% if manager.worker %}
-                                <span class="badge connected">✔ Connected ({{ manager.worker }})</span>
-                            {% else %}
-                                <span class="badge disconnected">✗ No Worker</span>
-                            {% endif %}
-                        </div>
                     </div>
+                    
+                    <!-- ✅ NEW: Multi-Worker Display -->
+                    <div style="margin-top: 15px;">
+                        <strong>Workers ({{ manager.worker_count }} connected{% if manager.pending_count > 0 %}, {{ manager.pending_count }} pending{% endif %}):</strong>
+                        {% if manager.workers_display %}
+                            <div class="workers-list">
+                                {% for worker_info in manager.workers_display %}
+                                <div class="worker-item">
+                                    • Bot {{ worker_info.bot_id|upper }}: Worker {{ worker_info.worker_id }} 
+                                    <span class="badge connected">{{ worker_info.status|title }}</span>
+                                </div>
+                                {% endfor %}
+                                {% if manager.pending_bots %}
+                                    {% for bot_id in manager.pending_bots %}
+                                    <div class="worker-item">
+                                        • Bot {{ bot_id|upper }}: <span class="badge pending">⏳ Pending Invitation</span>
+                                    </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="workers-list">
+                                <div class="worker-item" style="color: #999;">No workers connected yet</div>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
                     <div class="actions">
                         <a href="/manager/{{ manager.id }}" class="btn">👁️ View Details</a>
                         <form method="POST" action="/delete_user/{{ manager.id }}" style="display:inline;" 
@@ -558,6 +588,7 @@ DASHBOARD_HTML = """
                         <div><strong>Language:</strong> {{ worker.language }}</div>
                         <div><strong>Gender:</strong> {{ worker.gender }}</div>
                         <div><strong>Manager:</strong> {{ worker.manager }}</div>
+                        <div><strong>Bot ID:</strong> {{ worker.bot_id }}</div>
                     </div>
                     <div class="actions">
                         <form method="POST" action="/delete_user/{{ worker.id }}" style="display:inline;"
@@ -581,13 +612,13 @@ DASHBOARD_HTML = """
                     <div class="user-info">
                         <div><strong>Status:</strong> 
                             {% if sub.status == 'active' %}
-                                <span class="badge subscribed">✔ Active</span>
+                                <span class="badge subscribed">✓ Active</span>
                             {% elif sub.status == 'cancelled' %}
                                 <span class="badge disconnected">⚠️ Cancelled</span>
                             {% elif sub.status == 'expired' %}
                                 <span class="badge disconnected">❌ Expired</span>
                             {% elif sub.status == 'paused' %}
-                                <span class="badge disconnected">â¸ï¸ Paused</span>
+                                <span class="badge disconnected">⏸️ Paused</span>
                             {% endif %}
                         </div>
                         <div><strong>Plan:</strong> {{ sub.plan|title }}</div>
@@ -820,6 +851,15 @@ def dashboard():
 
             user_data["message_limit"] = message_limit
 
+            # ✅ NEW: Multi-worker display
+            workers_array = user_data.get('workers', [])
+            pending_bots = user_data.get('pending_bots', [])
+            
+            user_data["worker_count"] = len(workers_array)
+            user_data["pending_count"] = len(pending_bots)
+            user_data["workers_display"] = workers_array
+            user_data["pending_bots"] = pending_bots
+
             managers.append(user_data)
         elif user_data.get("role") == "worker":
             workers.append(user_data)
@@ -890,10 +930,13 @@ def dashboard():
     # Get feedback
     feedback_list = feedback.get_all_feedback(limit=50)
 
+    # ✅ NEW: Calculate active connections (total connected workers across all managers)
+    total_connected_workers = sum(len(m.get('workers', [])) for m in managers)
+
     stats = {
         "total_managers": len(managers),
         "total_workers": len(workers),
-        "active_connections": sum(1 for m in managers if m.get("worker")),
+        "active_connections": total_connected_workers,
         "total_messages": sum(len(msgs) for msgs in all_conversations.values()),
         "total_subscriptions": active_subscriptions,
     }
@@ -904,7 +947,7 @@ def dashboard():
         workers=workers,
         conversations_list=conversations_list,
         subscriptions_list=subscriptions_list,
-        feedback_list=feedback_list,  # ← ADD THIS LINE
+        feedback_list=feedback_list,
         stats=stats,
         now=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     )
@@ -920,20 +963,25 @@ def delete_user(user_id):
         return redirect("/")
 
     if user.get("role") == "manager":
-        worker_id = user.get("worker")
-        if worker_id:
-            translation_msg_context.clear_conversation(user_id, worker_id)
-            all_users = database.get_all_users()
-            if worker_id in all_users:
-                del all_users[worker_id]
-                database.save_data(all_users)
+        # ✅ UPDATED: Delete all workers in array
+        workers_array = user.get("workers", [])
+        for worker_data in workers_array:
+            worker_id = worker_data.get('worker_id')
+            if worker_id:
+                translation_msg_context.clear_conversation(user_id, worker_id)
+                all_users = database.get_all_users()
+                if worker_id in all_users:
+                    del all_users[worker_id]
+                    database.save_data(all_users)
 
     elif user.get("role") == "worker":
         manager_id = user.get("manager")
         if manager_id:
             manager = database.get_user(manager_id)
             if manager:
-                manager["worker"] = None
+                # ✅ UPDATED: Remove from workers array
+                workers_array = manager.get('workers', [])
+                manager['workers'] = [w for w in workers_array if w.get('worker_id') != user_id]
                 database.save_user(manager_id, manager)
             translation_msg_context.clear_conversation(user_id, manager_id)
 
@@ -1087,6 +1135,7 @@ MANAGER_DETAIL_HTML = """
         .badge.connected { background: #48bb78; color: white; }
         .badge.disconnected { background: #f56565; color: white; }
         .badge.subscribed { background: #4299e1; color: white; }
+        .badge.pending { background: #ed8936; color: white; }
         .message {
             padding: 12px;
             margin: 8px 0;
@@ -1176,6 +1225,45 @@ MANAGER_DETAIL_HTML = """
             color: #666;
             margin-bottom: 15px;
         }
+        .workers-list {
+            margin: 15px 0;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+        .worker-item {
+            padding: 8px 0;
+            font-size: 14px;
+            border-bottom: 1px solid #ddd;
+        }
+        .worker-item:last-child {
+            border-bottom: none;
+        }
+        .worker-selector {
+            margin: 20px 0;
+        }
+        .worker-tab {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-right: 10px;
+            background: #e2e8f0;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .worker-tab:hover {
+            background: #cbd5e0;
+        }
+        .worker-tab.active {
+            background: #667eea;
+            color: white;
+        }
+        .worker-section {
+            display: none;
+        }
+        .worker-section.active {
+            display: block;
+        }
     </style>
     <script>
         function toggleCollapsible(id) {
@@ -1190,6 +1278,38 @@ MANAGER_DETAIL_HTML = """
             // For now, we'll reload the page with a query parameter
             window.location.href = '/manager/{{ manager.id }}?hours=' + hours;
         }
+        
+        function showWorkerSection(workerId) {
+            // Hide all worker sections
+            document.querySelectorAll('.worker-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.worker-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected worker section
+            const section = document.getElementById('worker-' + workerId);
+            if (section) {
+                section.classList.add('active');
+            }
+            
+            // Mark selected tab as active
+            const tab = document.getElementById('tab-' + workerId);
+            if (tab) {
+                tab.classList.add('active');
+            }
+        }
+        
+        // Show first worker by default on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            const firstTab = document.querySelector('.worker-tab');
+            if (firstTab) {
+                firstTab.click();
+            }
+        });
     </script>
 </head>
 <body>
@@ -1237,25 +1357,15 @@ MANAGER_DETAIL_HTML = """
             <h2>🔗 Connection & Subscription</h2>
             <div class="info-grid">
                 <div class="info-item">
-                    <label>Worker Status</label>
+                    <label>Workers Status</label>
                     <value>
-                        {% if worker %}
-                            <span class="badge connected">✅ Connected</span>
+                        {% if workers_list %}
+                            {{ workers_list|length }} Connected
                         {% else %}
-                            <span class="badge disconnected">❌ No Worker</span>
+                            <span class="badge disconnected">❌ No Workers</span>
                         {% endif %}
                     </value>
                 </div>
-                {% if worker %}
-                <div class="info-item">
-                    <label>Worker ID</label>
-                    <value>{{ worker.id }}</value>
-                </div>
-                <div class="info-item">
-                    <label>Worker Language</label>
-                    <value>{{ worker.language }}</value>
-                </div>
-                {% endif %}
                 <div class="info-item">
                     <label>Messages Sent</label>
                     <value>
@@ -1286,6 +1396,34 @@ MANAGER_DETAIL_HTML = """
                 </div>
                 {% endif %}
             </div>
+            
+            <!-- ✅ NEW: Workers List -->
+            {% if workers_list or pending_bots %}
+            <div style="margin-top: 20px;">
+                <label style="font-size: 14px; color: #666; text-transform: uppercase; margin-bottom: 10px; display: block;">
+                    Workers ({{ workers_list|length }} connected{% if pending_bots %}, {{ pending_bots|length }} pending{% endif %})
+                </label>
+                <div class="workers-list">
+                    {% for worker in workers_list %}
+                    <div class="worker-item">
+                        <strong>Bot {{ worker.bot_id|upper }}:</strong> 
+                        Worker {{ worker.worker_id }} 
+                        <span class="badge connected">{{ worker.status|title }}</span>
+                        <br>
+                        <small style="color: #666;">Language: {{ worker.language }}, Gender: {{ worker.gender }}</small>
+                    </div>
+                    {% endfor %}
+                    
+                    {% for bot_id in pending_bots %}
+                    <div class="worker-item">
+                        <strong>Bot {{ bot_id|upper }}:</strong> 
+                        <span class="badge pending">⏳ Pending Invitation</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
             {% if manager.subscription and manager.subscription.customer_portal_url %}
             <div style="margin-top: 15px;">
                 <a href="{{ manager.subscription.customer_portal_url }}" target="_blank" class="btn">🔗 Customer Portal</a>
@@ -1293,33 +1431,54 @@ MANAGER_DETAIL_HTML = """
             {% endif %}
         </div>
 
-        <!-- Section 3: Translation Context (Last 6 Messages) -->
+        <!-- Section 3: Translation Context (Per Worker) -->
         <div class="section">
-            <h2>💬 Translation Context (Last 6 Messages)</h2>
+            <h2>💬 Translation Context (Last 6 Messages Per Worker)</h2>
             <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
                 These are the messages the bot uses for contextual translation.
             </p>
-            {% if translation_context %}
-                {% for msg in translation_context %}
-                <div class="message {{ 'from-manager' if msg.is_manager else 'from-worker' }}">
-                    <div class="message-meta">
-                        <strong>{{ msg.from_role }}</strong> • {{ msg.time }} • {{ msg.lang }}
+            
+            {% if workers_list %}
+                <!-- Worker Tabs -->
+                <div class="worker-selector">
+                    {% for worker in workers_list %}
+                    <div class="worker-tab" id="tab-{{ worker.worker_id }}" onclick="showWorkerSection('{{ worker.worker_id }}')">
+                        Bot {{ worker.bot_id|upper }} - Worker {{ worker.worker_id }}
                     </div>
-                    <div class="message-text">{{ msg.text }}</div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Worker Sections -->
+                {% for worker in workers_list %}
+                <div class="worker-section" id="worker-{{ worker.worker_id }}">
+                    {% if worker.translation_context %}
+                        {% for msg in worker.translation_context %}
+                        <div class="message {{ 'from-manager' if msg.is_manager else 'from-worker' }}">
+                            <div class="message-meta">
+                                <strong>{{ msg.from_role }}</strong> • {{ msg.time }} • {{ msg.lang }}
+                            </div>
+                            <div class="message-text">{{ msg.text }}</div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <p>No translation context available yet for this worker.</p>
+                        </div>
+                    {% endif %}
                 </div>
                 {% endfor %}
             {% else %}
                 <div class="empty-state">
-                    <p>No translation context available yet.</p>
-                    <p style="font-size: 12px; margin-top: 10px;">Messages will appear here once the manager and worker start chatting.</p>
+                    <p>No workers connected yet.</p>
+                    <p style="font-size: 12px; margin-top: 10px;">Messages will appear here once the manager connects workers.</p>
                 </div>
             {% endif %}
         </div>
 
-        <!-- Section 4: Full Message History -->
+        <!-- Section 4: Full Message History (Per Worker) -->
         <div class="section">
             <div class="collapsible-header" onclick="toggleCollapsible('full-history')">
-                <h2>📜 Full Message History ({{ message_count }} messages)</h2>
+                <h2>📜 Full Message History ({{ total_message_count }} messages total)</h2>
                 <span class="toggle-icon" id="full-history-icon">▼</span>
             </div>
             <div id="full-history" class="collapsible-content">
@@ -1327,22 +1486,34 @@ MANAGER_DETAIL_HTML = """
                     Complete conversation history (last 30 days).
                 </p>
                 
-                <!-- Filter buttons (placeholder for future) -->
-                <div class="filter-buttons">
-                    <button class="filter-btn active" onclick="filterMessages('all')">All Messages</button>
-                    <button class="filter-btn" onclick="filterMessages(24)">Last 24 Hours</button>
-                    <button class="filter-btn" onclick="filterMessages(168)">Last 7 Days</button>
-                    <button class="filter-btn" onclick="filterMessages(720)">Last 30 Days</button>
-                </div>
-
-                {% if full_history %}
-                    <div class="message-count">Showing {{ full_history|length }} messages</div>
-                    {% for msg in full_history %}
-                    <div class="message {{ 'from-manager' if msg.is_manager else 'from-worker' }}">
-                        <div class="message-meta">
-                            <strong>{{ msg.from_role }}</strong> • {{ msg.timestamp }} • {{ msg.lang }}
+                {% if workers_list %}
+                    <!-- Worker Tabs -->
+                    <div class="worker-selector">
+                        {% for worker in workers_list %}
+                        <div class="worker-tab" onclick="showWorkerSection('history-{{ worker.worker_id }}')">
+                            Bot {{ worker.bot_id|upper }} ({{ worker.message_count }} msgs)
                         </div>
-                        <div class="message-text">{{ msg.text }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Worker History Sections -->
+                    {% for worker in workers_list %}
+                    <div class="worker-section" id="history-{{ worker.worker_id }}">
+                        {% if worker.full_history %}
+                            <div class="message-count">Showing {{ worker.full_history|length }} messages</div>
+                            {% for msg in worker.full_history %}
+                            <div class="message {{ 'from-manager' if msg.is_manager else 'from-worker' }}">
+                                <div class="message-meta">
+                                    <strong>{{ msg.from_role }}</strong> • {{ msg.timestamp }} • {{ msg.lang }}
+                                </div>
+                                <div class="message-text">{{ msg.text }}</div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state">
+                                <p>No message history available yet for this worker.</p>
+                            </div>
+                        {% endif %}
                     </div>
                     {% endfor %}
                 {% else %}
@@ -1367,15 +1538,19 @@ MANAGER_DETAIL_HTML = """
             </form>
             {% endif %}
             
-            <form method="POST" action="/clear_translation_context/{{ manager.id }}" style="display:inline;"
-                  onsubmit="return confirm('Clear translation context (last 6 messages)?');">
-                <button type="submit" class="btn secondary">🧹 Clear Translation Context</button>
-            </form>
-            
-            <form method="POST" action="/clear_full_history/{{ manager.id }}" style="display:inline;"
-                  onsubmit="return confirm('Clear full message history (30 days)?');">
-                <button type="submit" class="btn secondary">🗑️ Clear Full History</button>
-            </form>
+            {% if workers_list %}
+                {% for worker in workers_list %}
+                <form method="POST" action="/clear_translation_context/{{ manager.id }}/{{ worker.worker_id }}" style="display:inline;"
+                      onsubmit="return confirm('Clear translation context for Bot {{ worker.bot_id|upper }}?');">
+                    <button type="submit" class="btn secondary">🧹 Clear Context (Bot {{ worker.bot_id|upper }})</button>
+                </form>
+                
+                <form method="POST" action="/clear_full_history/{{ manager.id }}/{{ worker.worker_id }}" style="display:inline;"
+                      onsubmit="return confirm('Clear full history for Bot {{ worker.bot_id|upper }}?');">
+                    <button type="submit" class="btn secondary">🗑️ Clear History (Bot {{ worker.bot_id|upper }})</button>
+                </form>
+                {% endfor %}
+            {% endif %}
             
             <form method="POST" action="/delete_user/{{ manager.id }}" style="display:inline;" 
                   onsubmit="return confirm('Delete this manager and ALL their data? This cannot be undone!');">
@@ -1391,8 +1566,13 @@ MANAGER_DETAIL_HTML = """
 # Route for Manager Detail Page
 @app.route("/manager/<user_id>")
 def manager_detail(user_id):
-    # ...
+    if not session.get("authenticated"):
+        return redirect("/login")
+    
     manager = database.get_user(user_id)
+    if not manager or manager.get('role') != 'manager':
+        return redirect("/")
+    
     manager["id"] = user_id
     
     # Get config
@@ -1401,113 +1581,100 @@ def manager_detail(user_id):
     
     # Get usage stats
     usage = usage_tracker.get_usage(user_id)
-    manager["messages_sent"] = usage.get("messages_sent", 0)  # ✅ FIXED
+    manager["messages_sent"] = usage.get("messages_sent", 0)
     
     # Get subscription status
     subscription = subscription_manager.get_subscription(user_id)
-    manager["subscription"] = subscription  # ✅ FIXED
+    manager["subscription"] = subscription
     
     # Only show blocked if NOT subscribed
     if subscription and subscription.get('status') in ['active', 'cancelled']:
-        manager["blocked"] = False  # ✅ FIXED - Subscribed = never blocked
+        manager["blocked"] = False
     else:
-        manager["blocked"] = usage.get("blocked", False)  # ✅ FIXED - Check usage tracker
+        manager["blocked"] = usage.get("blocked", False)
     
-    manager["message_limit"] = message_limit  # ✅ FIXED
+    manager["message_limit"] = message_limit
     
-    # Get worker data (if connected)
-    worker = None
-    worker_id = manager.get("worker")
-
-
-    # Get worker data (if connected)
-    worker = None
-    worker_id = manager.get("worker")
-    if worker_id:
-        worker = database.get_user(worker_id)
-        if worker:
-            worker["id"] = worker_id
-
-    # Get translation context (last 6 messages)
-    translation_context = []
-    if worker_id:
-        context_messages = translation_msg_context.get_conversation_history(
-            user_id, worker_id, max_messages=6
-        )
-        for msg in context_messages:
-            is_manager = msg["from"] == user_id
-            translation_context.append(
-                {
-                    "time": datetime.fromisoformat(msg["timestamp"]).strftime(
-                        "%Y-%m-%d %H:%M"
-                    ),
-                    "text": msg["text"],
-                    "lang": msg["lang"],
-                    "is_manager": is_manager,
-                    "from_role": "Manager" if is_manager else "Worker",
-                }
-            )
-
-    # Get full message history (last 30 days)
-    full_history = []
-    message_count = 0
-    if worker_id:
-        history_messages = message_history.get_messages(user_id, worker_id)
-        message_count = len(history_messages)
-
-        # Format messages for display
-        for msg in history_messages:
-            is_manager = msg["from"] == user_id
-            full_history.append(
-                {
-                    "timestamp": datetime.fromisoformat(msg["timestamp"]).strftime(
-                        "%Y-%m-%d %H:%M:%S"
-                    ),
-                    "text": msg["text"],
-                    "lang": msg["lang"],
-                    "is_manager": is_manager,
-                    "from_role": "Manager" if is_manager else "Worker",
-                }
-            )
-
+    # ✅ NEW: Get all workers data
+    workers_array = manager.get('workers', [])
+    pending_bots = manager.get('pending_bots', [])
+    
+    workers_list = []
+    total_message_count = 0
+    
+    for worker_data in workers_array:
+        worker_id = worker_data.get('worker_id')
+        bot_id = worker_data.get('bot_id')
+        
+        if worker_id:
+            worker = database.get_user(worker_id)
+            if worker:
+                worker["worker_id"] = worker_id
+                worker["bot_id"] = bot_id
+                worker["status"] = worker_data.get('status', 'active')
+                
+                # Get translation context (last 6 messages)
+                context_messages = translation_msg_context.get_conversation_history(
+                    user_id, worker_id, max_messages=6
+                )
+                translation_context = []
+                for msg in context_messages:
+                    is_manager = msg["from"] == user_id
+                    translation_context.append({
+                        "time": datetime.fromisoformat(msg["timestamp"]).strftime("%Y-%m-%d %H:%M"),
+                        "text": msg["text"],
+                        "lang": msg["lang"],
+                        "is_manager": is_manager,
+                        "from_role": "Manager" if is_manager else "Worker",
+                    })
+                worker["translation_context"] = translation_context
+                
+                # Get full message history (last 30 days)
+                history_messages = message_history.get_messages(user_id, worker_id)
+                worker["message_count"] = len(history_messages)
+                total_message_count += len(history_messages)
+                
+                full_history = []
+                for msg in history_messages:
+                    is_manager = msg["from"] == user_id
+                    full_history.append({
+                        "timestamp": datetime.fromisoformat(msg["timestamp"]).strftime("%Y-%m-%d %H:%M:%S"),
+                        "text": msg["text"],
+                        "lang": msg["lang"],
+                        "is_manager": is_manager,
+                        "from_role": "Manager" if is_manager else "Worker",
+                    })
+                worker["full_history"] = full_history
+                
+                workers_list.append(worker)
+    
     return render_template_string(
         MANAGER_DETAIL_HTML,
         manager=manager,
-        worker=worker,
-        translation_context=translation_context,
-        full_history=full_history,
-        message_count=message_count,
+        workers_list=workers_list,
+        pending_bots=pending_bots,
+        total_message_count=total_message_count
     )
 
 
 # Additional admin action routes
-@app.route("/clear_translation_context/<user_id>", methods=["POST"])
-def clear_translation_context_route(user_id):
-    """Clear translation context for a manager"""
+@app.route("/clear_translation_context/<user_id>/<worker_id>", methods=["POST"])
+def clear_translation_context_route(user_id, worker_id):
+    """Clear translation context for a specific manager-worker pair"""
     if not session.get("authenticated"):
         return redirect("/login")
 
-    manager = database.get_user(user_id)
-    if manager and manager.get("role") == "manager":
-        worker_id = manager.get("worker")
-        if worker_id:
-            translation_msg_context.clear_conversation(user_id, worker_id)
-
+    translation_msg_context.clear_conversation(user_id, worker_id)
     return redirect(f"/manager/{user_id}")
 
 
-@app.route("/clear_full_history/<user_id>", methods=["POST"])
-def clear_full_history_route(user_id):
-    """Clear full message history for a manager"""
+@app.route("/clear_full_history/<user_id>/<worker_id>", methods=["POST"])
+def clear_full_history_route(user_id, worker_id):
+    """Clear full message history for a specific manager-worker pair"""
     if not session.get("authenticated"):
         return redirect("/login")
 
-    manager = database.get_user(user_id)
-    if manager and manager.get("role") == "manager":
-        worker_id = manager.get("worker")
-        if worker_id:
-            message_history.clear_history(user_id, worker_id)
-
+    message_history.clear_history(user_id, worker_id)
     return redirect(f"/manager/{user_id}")
 
 
