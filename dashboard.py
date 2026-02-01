@@ -12,12 +12,15 @@ import hmac
 import hashlib
 import requests
 import db_connection
+import os
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 
 # Simple password protection
-DASHBOARD_PASSWORD = "zb280072A"  # Change this!
+DASHBOARD_PASSWORD = os.environ.get('DASHBOARD_PASSWORD')
+if not DASHBOARD_PASSWORD:
+    raise Exception("DASHBOARD_PASSWORD environment variable not set. Please set it in Railway dashboard.")
 
 # ============================================
 # LEMON SQUEEZY WEBHOOK HANDLER

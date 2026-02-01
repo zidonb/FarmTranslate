@@ -178,10 +178,6 @@ TELEGRAM_TOKEN_BOT5 = bot5_token
 
 ### **Still TODO:**
 
-1. **I18N** - Translation strings for `/addworker` error messages:
-   - `addworker.pending_invitation`
-   - `addworker.no_worker_on_current_bot`
-2. **Dashboard updates** - Show `workers` array and `pending_bots` in manager detail page
 3. **Subscription logic** - Pricing for multiple workers (business decision)
 4. **Help text updates** - Explain multi-bot usage in `/help` command
 5. **`/removeworker` command** - Let manager remove specific worker (alternative to worker's `/reset`)
