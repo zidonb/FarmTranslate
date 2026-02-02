@@ -5,6 +5,7 @@ from psycopg2.extras import Json
 from datetime import datetime
 from typing import List, Dict, Optional
 from db_connection import get_db_cursor
+from datetime import datetime, timezone
 
 def init_db():
     """Create conversations table if it doesn't exist"""
@@ -93,7 +94,7 @@ def add_to_conversation(user_id_1: str, user_id_2: str, from_id: str, text: str,
             "from": str(from_id),
             "text": text,
             "lang": language,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         messages.append(message)
         

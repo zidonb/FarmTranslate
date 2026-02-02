@@ -86,8 +86,8 @@ def init_connection_pool(min_conn: int = 5, max_conn: int = 20) -> None:
         )
     
     try:
-        # Create the connection pool
-        _connection_pool = pool.SimpleConnectionPool(
+        # Create the connection pool (thread-safe for Flask)
+        _connection_pool = pool.ThreadedConnectionPool(
             minconn=min_conn,
             maxconn=max_conn,
             dsn=database_url

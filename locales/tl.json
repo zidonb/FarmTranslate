@@ -1,7 +1,9 @@
 {
     "start": {
-        "welcome_back": "Maligayang pagbabalik! Ikaw ay nakarehistrong {role}.\nIyong wika: {language}\n\nGamitin ang /help upang makita ang mga available na command.",
-        "welcome_new": "Maligayang pagdating sa BridgeOS! 🌉\n\nPumili ng iyong wika:"
+        "welcome_back": "Maligayang pagbabalik! Nakarehistro ka bilang {role}.\n\nGamitin ang /help upang makita ang mga available na command.",
+        "welcome_new": "Maligayang pagdating sa BridgeOS! 🌉\n\n👇 Pindutin ang isang button sa ibaba upang piliin ang iyong wika:",
+        "already_manager_clicked_invite": "Nakarehistro ka na bilang manager.\n\nGamitin muna ang /reset kung gusto mong sumali bilang manggagawa ng iba.",
+        "already_worker_clicked_invite": "Nakarehistro ka na bilang manggagawa.\n\nGamitin muna ang /reset kung gusto mong kumonekta sa ibang manager."
     },
     "registration": {
         "gender_question": "Ano ang iyong kasarian?\n(Tumutulong ito para sa tumpak na pagsasalin)",
@@ -10,6 +12,9 @@
             "female": "👩 Babae",
             "prefer_not_to_say": "🤷 Ayaw sabihin"
         },
+        "invalid_language": "⚠️ Mangyaring gamitin ang mga button sa ibaba upang pumili ng wika.\n\n💡 Tip: Kung hindi mo nakikita ang mga button, pindutin ang icon ng keyboard (⌨️) sa ibaba ng iyong screen.",
+        "invalid_gender": "⚠️ Mangyaring gamitin ang mga button sa ibaba upang piliin ang iyong kasarian.\n\n💡 Tip: Kung hindi mo nakikita ang mga button, pindutin ang icon ng keyboard (⌨️) sa ibaba ng iyong screen.",
+        "invalid_industry": "⚠️ Mangyaring gamitin ang mga button sa ibaba upang pumili ng industriya.\n\n💡 Tip: Kung hindi mo nakikita ang mga button, pindutin ang icon ng keyboard (⌨️) sa ibaba ng iyong screen.",
         "invalid_code": "❌ Hindi wastong invitation code.\n\nPakiusap na hingin sa iyong contact ang bagong invitation link.",
         "worker_already_connected": "❌ May nakakonektang worker na ang contact na ito.\nHingin sa kanila na gumamit ng /reset muna.",
         "connection_success": "✅ Nakakonekta na sa iyong contact! Maaari ka nang magsimulang mag-chat.\n\nGamitin ang /help upang makita ang mga available na command.",
@@ -184,14 +189,24 @@
     },
     "addworker": {
         "not_registered": "Mangyaring gamitin ang /start para magrehistro muna.",
-        "not_manager": "⚠️ Mga manager lamang ang maaaring magdagdag ng mga manggagawa.\n\nAng mga manggagawa ay idinadagdag ng kanilang mga manager.",
-        "pending_invitation": "⚠️ Mayroon kang nakabinbing imbitasyon sa {bot_name}.\n\nPakikumpletuhin muna ang imbitasyong iyon bago magdagdag ng isa pang manggagawa.\n\n📱 Buksan ang {bot_name}:\n{bot_link}",
-        "no_worker_on_current_bot": "⚠️ Mangyaring ikonekta muna ang isang manggagawa sa bot na ito.\n\nGamitin ang /mycode upang ibahagi ang iyong imbitasyon sa iyong unang manggagawa.",
-        "limit_reached": "⚠️ *Naabot na ang Limitasyon ng Manggagawa*\n\nMayroon ka nang {count} manggagawa (pinakamataas na pinapayagan).\n\nUpang magdagdag ng isa pang manggagawa, mangyaring makipag-ugnayan sa suporta para sa mga opsyon ng negosyo.",
-        "all_bots_used": "⚠️ Lahat ng bot slot ay ginagamit.\n\nMayroon kang mga manggagawa sa lahat ng 5 bot. Hindi dapat mangyari ito - mangyaring makipag-ugnayan sa suporta.",
+        "not_manager": "⚠️ Ang mga manager lamang ang maaaring magdagdag ng mga manggagawa.\n\nAng mga manggagawa ay idinaragdag ng kanilang mga manager.",
+        "pending_invitation": "⏳ Mayroon kang nakabinbing imbitasyon sa {bot_name}.\n\nPakikumpletuhin muna ang imbitasyong iyon bago magdagdag ng isa pang manggagawa.\n\n🔗 Link ng imbitasyon:\n{invite_link}\n\n👉 I-tap ang button sa ibaba upang ibahagi:",
+        "pending_share_text": "🌉 Sumali sa BridgeOS!\nMakipag-chat sa akin sa iyong wika:\n{invite_link}",
+        "no_worker_on_current_bot": "⚠️ Mangyaring kumonekta muna ng manggagawa sa bot na ito.\n\nGamitin ang /workers upang makita ang iyong mga kasalukuyang manggagawa, o ibahagi ang iyong imbitasyon sa iyong unang manggagawa.",
+        "limit_reached": "⚠️ *Naabot ang Limitasyon ng Manggagawa*\n\nMayroon ka nang {count} manggagawa (maximum na pinapayagan).\n\nUpang magdagdag ng isa pang manggagawa, mangyaring makipag-ugnayan sa suporta para sa mga opsyon ng negosyo.",
+        "all_bots_used": "⚠️ Lahat ng bot slot ay ginagamit.\n\nMayroon kang mga manggagawa sa lahat ng 5 bot. Hindi ito dapat mangyari - mangyaring makipag-ugnayan sa suporta.",
         "share_invitation_text": "🌉 Sumali sa BridgeOS!\nMakipag-chat sa akin sa iyong wika:\n{invite_link}",
-        "share_button": "🚀 Ibahagi ang Imbitasyon",
+        "share_button": "📤 Ibahagi ang Imbitasyon",
         "bot_greeting": "👋 *Handa nang magdagdag ng manggagawa!*\n\n📋 Ibahagi ang imbitasyong ito sa iyong manggagawa:\n\n👉 I-tap ang button sa ibaba upang ibahagi:",
-        "success": "✅ *Nakatalaga ang Slot ng Manggagawa sa {bot_name}*\n\n📱 Buksan ang bot na ito upang idagdag ang iyong manggagawa:\n{bot_link}\n\n💡 Ang imbitasyon ay naghihintay sa iyo doon!"
+        "success": "✅ *Naitalaga ang Worker Slot sa {bot_name}*\n\n📱 Buksan ang bot na ito upang idagdag ang iyong manggagawa:\n{bot_link}\n\n💡 Ang imbitasyon ay naghihintay sa iyo doon!"
+    },
+    "workers": {
+        "not_registered": "Mangyaring gamitin ang /start para magrehistro muna.",
+        "not_manager": "Ang mga manager lamang ang maaaring makakita ng mga manggagawa.\n\nAng mga manggagawa ay pinamamahalaan ng kanilang mga manager.",
+        "title": "👥 *Ang Iyong Mga Manggagawa*\n\n",
+        "bot_connected": "{bot_name}: {worker_name} ✅\n",
+        "bot_pending": "{bot_name}: ⏳ Nakabinbing imbitasyon\n",
+        "bot_available": "{bot_name}: Available\n",
+        "footer": "\n💡 Upang magdagdag ng manggagawa: /addworker\n💡 Upang mag-message sa manggagawa: Buksan ang chat ng bot na iyon"
     }
 }

@@ -1,7 +1,12 @@
 # FarmTranslate - TODO
 
 
-# Todo
+ # Bugs (21st conversation)
+ 2. SECURITY: XSS Vulnerability in Dashboard Templates
+ 12. PROMPT INJECTION VULNERABILITY
+ 13. MEMORY LEAK: I18n Translation Cache
+
+# Imporvements
 - 
 - **gemini-flash**
 - HTML, bot name can be changed
@@ -14,6 +19,8 @@
 - save conversation of all time
 - Feedback & Testing
 - change language
+ - remove worker - reset just for one worker. Not all workers. Also, what happens with payments?
+ - being manager on one bot and worker on another?
 - Add worker:
 2. **Dashboard updates** - Show `workers` array and `pending_bots` in manager detail page
 3. **Subscription logic** - **Pricing** for multiple workers (business decision) (Tier)

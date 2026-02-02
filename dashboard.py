@@ -13,9 +13,22 @@ import hashlib
 import requests
 import db_connection
 import os
+from datetime import datetime, timezone
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
+
+# CSRF Protection
+def generate_csrf_token():
+    if 'csrf_token' not in session:
+        session['csrf_token'] = secrets.token_hex(32)
+    return session['csrf_token']
+
+app.jinja_env.globals['csrf_token'] = generate_csrf_token
+
+def verify_csrf_token(token):
+    """Verify CSRF token matches session"""
+    return token and token == session.get('csrf_token')
 
 # Simple password protection
 DASHBOARD_PASSWORD = os.environ.get('DASHBOARD_PASSWORD')
@@ -161,7 +174,7 @@ def handle_subscription_updated(telegram_id: str, data: dict):
     if attrs["cancelled"]:
         subscription["status"] = "cancelled"
         if not subscription.get("cancelled_at"):
-            subscription["cancelled_at"] = datetime.utcnow().isoformat()
+            subscription["cancelled_at"] = datetime.now(timezone.utc).isoformat()
     subscription_manager.save_subscription(telegram_id, subscription)
     print(f"✅ Subscription updated for {telegram_id}")
 
@@ -174,7 +187,7 @@ def handle_subscription_cancelled(telegram_id: str, data: dict):
         print(f"WARNING: Subscription not found for {telegram_id}")
         return
     subscription["status"] = "cancelled"
-    subscription["cancelled_at"] = datetime.utcnow().isoformat()
+    subscription["cancelled_at"] = datetime.now(timezone.utc).isoformat()
     subscription["ends_at"] = attrs.get("ends_at")
     subscription_manager.save_subscription(telegram_id, subscription)
     print(
@@ -566,10 +579,12 @@ DASHBOARD_HTML = """
                         <a href="/manager/{{ manager.id }}" class="btn">👁️ View Details</a>
                         <form method="POST" action="/delete_user/{{ manager.id }}" style="display:inline;" 
                               onsubmit="return confirm('Delete this manager and all their data?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn danger">🗑️ Delete Manager</button>
                         </form>
                         {% if manager.blocked %}
                         <form method="POST" action="/reset_usage/{{ manager.id }}" style="display:inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn">🔄 Reset Usage</button>
                         </form>
                         {% endif %}
@@ -595,7 +610,8 @@ DASHBOARD_HTML = """
                     </div>
                     <div class="actions">
                         <form method="POST" action="/delete_user/{{ worker.id }}" style="display:inline;"
-                              onsubmit="return confirm('Delete this worker?');">
+                            onsubmit="return confirm('Delete this worker?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn danger">🗑️ Delete Worker</button>
                         </form>
                     </div>
@@ -662,6 +678,7 @@ DASHBOARD_HTML = """
                     <div class="actions">
                         <form method="POST" action="/clear_conversation/{{ conv.key }}" style="display:inline;"
                               onsubmit="return confirm('Clear this conversation history?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn danger">🧹 Clear History</button>
                         </form>
                     </div>
@@ -696,6 +713,7 @@ DASHBOARD_HTML = """
                     <div class="actions">
                         {% if fb.status == 'unread' %}
                         <form method="POST" action="/mark_feedback_read/{{ fb.id }}" style="display:inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn">✅ Mark as Read</button>
                         </form>
                         {% endif %}
@@ -796,6 +814,7 @@ LOGIN_HTML = """
         <form method="POST">
             <div class="form-group">
                 <label>Password</label>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="password" name="password" placeholder="Enter dashboard password" required autofocus>
             </div>
             <button type="submit" class="btn">Login</button>
@@ -960,6 +979,11 @@ def dashboard():
 def delete_user(user_id):
     if not session.get("authenticated"):
         return redirect("/login")
+    
+    # ✅ CSRF Protection
+    csrf_token = request.form.get('csrf_token')
+    if not verify_csrf_token(csrf_token):
+        return "Invalid CSRF token", 403
 
     user = database.get_user(user_id)
     if not user:
@@ -1000,8 +1024,18 @@ def delete_user(user_id):
 def clear_conversation_route(conv_key):
     if not session.get("authenticated"):
         return redirect("/login")
-
-    user1, user2 = conv_key.split("_")
+    
+    # ✅ CSRF Protection
+    csrf_token = request.form.get('csrf_token')
+    if not verify_csrf_token(csrf_token):
+        return "Invalid CSRF token", 403
+    
+    # ✅ FIX: Validate conversation key format
+    parts = conv_key.split("_")
+    if len(parts) != 2:
+        return redirect("/")
+    user1, user2 = parts
+    
     translation_msg_context.clear_conversation(user1, user2)
 
     return redirect("/")
@@ -1011,6 +1045,11 @@ def clear_conversation_route(conv_key):
 def reset_usage_route(user_id):
     if not session.get("authenticated"):
         return redirect("/login")
+    
+    # ✅ CSRF Protection
+    csrf_token = request.form.get('csrf_token')
+    if not verify_csrf_token(csrf_token):
+        return "Invalid CSRF token", 403
 
     usage_tracker.reset_user_usage(user_id)
 
@@ -1026,6 +1065,11 @@ def health_check():
 def mark_feedback_read_route(feedback_id):
     if not session.get("authenticated"):
         return redirect("/login")
+    
+    # ✅ CSRF Protection
+    csrf_token = request.form.get('csrf_token')
+    if not verify_csrf_token(csrf_token):
+        return "Invalid CSRF token", 403
     
     feedback.mark_as_read(feedback_id)
     return redirect("/")
@@ -1537,6 +1581,7 @@ MANAGER_DETAIL_HTML = """
             
             {% if manager.blocked %}
             <form method="POST" action="/reset_usage/{{ manager.id }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn">🔓 Reset Usage Limit</button>
             </form>
             {% endif %}
@@ -1545,11 +1590,13 @@ MANAGER_DETAIL_HTML = """
                 {% for worker in workers_list %}
                 <form method="POST" action="/clear_translation_context/{{ manager.id }}/{{ worker.worker_id }}" style="display:inline;"
                       onsubmit="return confirm('Clear translation context for Bot {{ worker.bot_id|upper }}?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn secondary">🧹 Clear Context (Bot {{ worker.bot_id|upper }})</button>
                 </form>
                 
                 <form method="POST" action="/clear_full_history/{{ manager.id }}/{{ worker.worker_id }}" style="display:inline;"
                       onsubmit="return confirm('Clear full history for Bot {{ worker.bot_id|upper }}?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn secondary">🗑️ Clear History (Bot {{ worker.bot_id|upper }})</button>
                 </form>
                 {% endfor %}
@@ -1557,6 +1604,7 @@ MANAGER_DETAIL_HTML = """
             
             <form method="POST" action="/delete_user/{{ manager.id }}" style="display:inline;" 
                   onsubmit="return confirm('Delete this manager and ALL their data? This cannot be undone!');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn danger">❌ Delete Manager Account</button>
             </form>
         </div>
@@ -1666,16 +1714,33 @@ def clear_translation_context_route(user_id, worker_id):
     """Clear translation context for a specific manager-worker pair"""
     if not session.get("authenticated"):
         return redirect("/login")
+    
+    # ✅ CSRF Protection
+    csrf_token = request.form.get('csrf_token')
+    if not verify_csrf_token(csrf_token):
+        return "Invalid CSRF token", 403
+    
+    # ✅ FIX: Validate user exists before clearing
+    if not database.get_user(user_id):
+        return redirect("/")
 
     translation_msg_context.clear_conversation(user_id, worker_id)
     return redirect(f"/manager/{user_id}")
-
 
 @app.route("/clear_full_history/<user_id>/<worker_id>", methods=["POST"])
 def clear_full_history_route(user_id, worker_id):
     """Clear full message history for a specific manager-worker pair"""
     if not session.get("authenticated"):
         return redirect("/login")
+    
+    # ✅ CSRF Protection
+    csrf_token = request.form.get('csrf_token')
+    if not verify_csrf_token(csrf_token):
+        return "Invalid CSRF token", 403
+    
+    # ✅ FIX: Validate user exists before clearing
+    if not database.get_user(user_id):
+        return redirect("/")
 
     message_history.clear_history(user_id, worker_id)
     return redirect(f"/manager/{user_id}")

@@ -1,5 +1,6 @@
 import os
 import random
+import re
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, ConversationHandler, CallbackQueryHandler
 import database
@@ -20,16 +21,41 @@ from collections import defaultdict
 # Conversation states
 LANGUAGE, GENDER, INDUSTRY = range(3)
 
+def validate_invitation_code(code: str) -> bool:
+    """
+    Validate invitation code format
+    Expected: BRIDGE-12345 (5 digits)
+    Returns: True if valid, False otherwise
+    """
+    if not code or not isinstance(code, str):
+        return False
+    return bool(re.match(r'^BRIDGE-\d{5}$', code))
 
-def generate_code():
-    """Generate unique code"""
-    while True:
+def generate_code(max_attempts=1000):
+    """
+    Generate unique invitation code 
+    Args:
+        max_attempts: Maximum number of generation attempts before failing        
+    Returns:
+        str: Unique code in format "BRIDGE-12345"       
+    Raises:
+        Exception: If unable to generate unique code after max_attempts
+    """
+    # Load existing codes once (performance optimization)
+    all_users = database.get_all_users()
+    existing_codes = {u.get('code') for u in all_users.values() if u.get('code')}
+    
+    # Try up to max_attempts times
+    for _ in range(max_attempts):
         code = f"BRIDGE-{random.randint(10000, 99999)}"
-        # Check if code already exists
-        all_users = database.get_all_users()
-        existing_codes = [u.get('code') for u in all_users.values() if u.get('code')]
         if code not in existing_codes:
             return code
+    
+    # If we get here, all attempts failed
+    raise Exception(
+        f"Unable to generate unique code after {max_attempts} attempts. "
+        f"Database has {len(existing_codes)} codes. Consider expanding code range."
+    )
 
 # ============================================
 # REGISTRATION COMMANDS
@@ -43,23 +69,57 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Check if user already registered
     if user:
+    # ✅ FIX: Check if already-registered user clicked an invite link
+        if context.args and len(context.args) > 0:
+            param = context.args[0]
+            if param.startswith('invite_'):
+                # Already registered user clicked invite
+                if user['role'] == 'manager':
+                    already_manager_text = get_text(
+                        user['language'],
+                        'start.already_manager_clicked_invite',
+                        default="You're already registered as a manager.\n\nUse /reset first if you want to join as someone's worker."
+                    )
+                    await update.message.reply_text(already_manager_text)
+                else:
+                    # Already a worker - maybe switching managers?
+                    already_worker_text = get_text(
+                        user['language'],
+                        'start.already_worker_clicked_invite',
+                        default="You're already registered as a worker.\n\nUse /reset first if you want to connect to a different manager."
+                    )
+                    await update.message.reply_text(already_worker_text)
+                return ConversationHandler.END
+        
+        # Normal welcome back (no invite link clicked)
         welcome_text = get_text(
-        user['language'],
-        'start.welcome_back',
-        default="Welcome back! You're registered as {role}.\n\nUse /help to see available commands.",
-        role=user['role']
-    )
+            user['language'],
+            'start.welcome_back',
+            default="Welcome back! You're registered as {role}.\n\nUse /help to see available commands.",
+            role=user['role']
+        )
         await update.message.reply_text(welcome_text)
         return ConversationHandler.END
     
     # Clear any existing conversation state to allow clean restart
     context.user_data.clear()
     
-    # Check for deep-link parameter (e.g., /start invite_FARM-1234)
+    # Check for deep-link parameter (e.g., /start invite_BRIDGE-12345)
     if context.args and len(context.args) > 0:
         param = context.args[0]
         if param.startswith('invite_'):
             code = param.replace('invite_', '')
+            
+            # ✅ FIX: Validate code format before storing
+            if not validate_invitation_code(code):
+                invalid_code_text = get_text(
+                    'English',  # Default to English for new users
+                    'registration.invalid_code_format',
+                    default="❌ Invalid invitation code format.\n\nExpected format: BRIDGE-12345\n\nPlease ask your manager for a valid invitation link."
+                )
+                await update.message.reply_text(invalid_code_text)
+                return ConversationHandler.END
+            
             # Store code in context for later use
             context.user_data['invite_code'] = code
     
@@ -85,6 +145,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def language_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """User selected language"""
     selected_language = update.message.text
+    config = load_config()
+    available_languages = config.get('languages', [])
+    
+    if selected_language not in available_languages:
+        keyboard = [available_languages[i:i+2] for i in range(0, len(available_languages), 2)]
+        await update.message.reply_text(
+            get_text('English', 'registration.invalid_language', 
+                    default="⚠️ Please select a language from the keyboard below."),
+            reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
+        )
+        return LANGUAGE
+    
     context.user_data['language'] = selected_language
     
     # Get translated gender question
@@ -117,6 +189,17 @@ async def gender_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     female = get_text(language, 'registration.gender_options.female', default="Female")
     prefer_not = get_text(language, 'registration.gender_options.prefer_not_to_say', default="Prefer not to say")
     
+    # ✅ VALIDATE: Check if user typed instead of tapping button
+    valid_options = [male, female, prefer_not]
+    if update.message.text not in valid_options:
+        keyboard = [[male, female], [prefer_not]]
+        await update.message.reply_text(
+            get_text(language, 'registration.invalid_gender',
+                    default="⚠️ Please select your gender from the keyboard below."),
+            reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
+        )
+        return GENDER
+    
     # Create reverse mapping: translated text → English
     gender_reverse_map = {
         male: 'Male',
@@ -133,6 +216,17 @@ async def gender_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Check if user came via deep-link with invite code
     if 'invite_code' in context.user_data:
         code = context.user_data['invite_code']
+        
+        # ✅ FIX: Re-validate code (defense-in-depth)
+        if not validate_invitation_code(code):
+            invalid_code_text = get_text(
+                language,
+                'registration.invalid_code_format',
+                default="❌ Invalid invitation code format.\n\nPlease ask your manager for a new invitation."
+            )
+            await send_message(invalid_code_text, reply_markup=ReplyKeyboardRemove())
+            return ConversationHandler.END
+        
         user_id = str(update.effective_user.id)
         gender = context.user_data['gender']  # Now in English
         
@@ -182,12 +276,18 @@ async def gender_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if existing_worker and existing_worker.get('manager'):
             old_manager_id = existing_worker['manager']
             if old_manager_id != manager_id:  # Switching to a different manager
-                # Clean up old manager's stale reference
                 old_manager = database.get_user(old_manager_id)
-                if old_manager and old_manager.get('worker') == user_id:
-                    old_manager['worker'] = None
+                if old_manager:
+                    # ✅ FIX: Clean up NEW format (workers array)
+                    workers_array = old_manager.get('workers', [])
+                    old_manager['workers'] = [
+                        w for w in workers_array if w.get('worker_id') != user_id
+                    ]
+                    # Clean up OLD format too (backwards compatibility)
+                    if old_manager.get('worker') == user_id:
+                        old_manager['worker'] = None
                     database.save_user(old_manager_id, old_manager)
-                    print(f"✅ Cleaned up old manager {old_manager_id} reference to worker {user_id}")
+                    print(f"✅ Cleaned up old manager {old_manager_id} workers array (removed worker {user_id})")
                     
                     # Notify old manager that worker disconnected
                     try:
@@ -215,19 +315,53 @@ async def gender_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
         }
         database.save_user(user_id, worker_data)
         
+        # ✅ FIX: Re-fetch manager data to prevent race condition
+        manager = database.get_user(manager_id)
+        if not manager:
+            no_manager_text = get_text(
+                language,
+                'registration.manager_disappeared',
+                default="❌ Manager account no longer exists.\n\nPlease ask for a new invitation."
+            )
+            await update.message.reply_text(
+                no_manager_text,
+                reply_markup=ReplyKeyboardRemove()
+            )
+            return ConversationHandler.END
+        
         # Update manager's workers array
         if 'workers' not in manager:
             manager['workers'] = []  # Initialize if old data format
 
+        # ✅ FIX: Re-check if this bot already has a worker (prevent race condition)
+        bot_id = os.environ.get('BOT_ID', 'bot1')
+        workers = manager.get('workers', [])
+        worker_on_this_bot = next((w for w in workers if w.get('bot_id') == bot_id), None)
+        
+        if worker_on_this_bot:
+            # ⚠️ LOG: Monitor race condition frequency
+            print(f"⚠️ RACE DETECTED: Worker {user_id} tried to join manager {manager_id} on {bot_id} but slot already taken by {worker_on_this_bot.get('worker_id')}")
+            
+            already_connected_text = get_text(
+                language,
+                'registration.worker_already_connected',
+                default="❌ Another worker just connected to this bot.\n\nPlease ask your manager for a different bot invitation."
+            )
+            await update.message.reply_text(
+                already_connected_text,
+                reply_markup=ReplyKeyboardRemove()
+            )
+            return ConversationHandler.END
+
+        # Safe to append worker
         manager['workers'].append({
             'worker_id': user_id,
-            'bot_id': os.environ.get('BOT_ID', 'bot1'),
+            'bot_id': bot_id,
             'status': 'active',
             'registered_at': datetime.now(timezone.utc).isoformat()
         })
 
-        # ✅ NEW: Remove this bot from pending_bots (invitation fulfilled)
-        bot_id = os.environ.get('BOT_ID', 'bot1')
+        # ✅ Remove this bot from pending_bots (invitation fulfilled)
         pending = manager.get('pending_bots', [])
         if bot_id in pending:
             pending.remove(bot_id)
@@ -246,7 +380,7 @@ async def gender_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         
         # Notify manager
-        worker_name = update.effective_user.first_name
+        worker_name = update.effective_user.first_name or "Worker"
         manager_notification_text = get_text(
             manager['language'],  # Use manager's language for notification
             'registration.manager_notification',
@@ -309,6 +443,27 @@ async def industry_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
             default=industries[key]['name']
         )
         industry_reverse_map[translated_name] = key
+    
+    # ✅ VALIDATE: Check if user typed instead of tapping button
+    if industry_name not in industry_reverse_map:
+        # Rebuild keyboard with translated names
+        industry_buttons = []
+        for key in industries.keys():
+            translated_name = get_text(
+                language,
+                f'industries.{key}',
+                default=industries[key]['name']
+            )
+            industry_buttons.append(translated_name)
+        
+        keyboard = [industry_buttons[i:i+2] for i in range(0, len(industry_buttons), 2)]
+        
+        await update.message.reply_text(
+            get_text(language, 'registration.invalid_industry',
+                    default="⚠️ Please select an industry from the keyboard below."),
+            reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
+        )
+        return INDUSTRY  # Stay in same state
     
     # ✅ NEW: Use reverse map to get English key
     industry_key = industry_reverse_map.get(industry_name, 'other')
@@ -416,7 +571,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         help_text = get_text(
             language,
             'help.manager_commands',
-            default="📋 *Available Commands:*\n\n/help - Show this help message\n/tasks - View your task list\n/daily - Get daily action items\n/subscription - View subscription status\n/reset - Delete account and start over\n/mycode - Show your connection code\n/refer - Recommend to other managers\n/feedback - Send feedback to BridgeOS team\n\n💬 *How to use:*\nJust type your message and it will be automatically translated and sent to your contact!"
+            default="📋 *Available Commands:*\n\n/help - Show this help message\n/tasks - View your task list\n/daily - Get daily action items\n/addworker - Add a new worker\n/subscription - View subscription status\n/refer - Recommend to other managers\n/feedback - Send feedback to BridgeOS team\n/reset - Delete account and start over\n\n💬 *How to use:*\nJust type your message and it will be automatically translated and sent to your contact!"
         )
     else:
         help_text = get_text(
@@ -448,8 +603,8 @@ async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard = [
             [InlineKeyboardButton(get_text(language, 'menu.tasks', default='📋 My Tasks'), callback_data='menu_tasks')],
             [InlineKeyboardButton(get_text(language, 'menu.daily', default='📊 Daily Action Items'), callback_data='menu_daily')],
+            [InlineKeyboardButton(get_text(language, 'menu.workers', default='👥 My Workers'), callback_data='menu_workers')],
             [InlineKeyboardButton(get_text(language, 'menu.addworker', default='➕ Add Worker'), callback_data='menu_addworker')],
-            [InlineKeyboardButton(get_text(language, 'menu.mycode', default='🔗 My Invitation Code'), callback_data='menu_mycode')],
             [InlineKeyboardButton(get_text(language, 'menu.subscription', default='💳 Subscription'), callback_data='menu_subscription')],
             [InlineKeyboardButton(get_text(language, 'menu.refer', default='📤 Refer BridgeOS'), callback_data='menu_refer')],
             [InlineKeyboardButton(get_text(language, 'menu.feedback', default='💬 Send Feedback'), callback_data='menu_feedback')],
@@ -482,8 +637,8 @@ async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TY
         await daily_command(update, context)
     elif query.data == 'menu_addworker':  # ← ADD THIS
         await addworker_command(update, context)
-    elif query.data == 'menu_mycode':
-        await mycode_command(update, context)
+    elif query.data == 'menu_workers':
+        await workers_command(update, context)
     elif query.data == 'menu_subscription':
         await subscription_command(update, context)
     elif query.data == 'menu_refer':
@@ -492,91 +647,6 @@ async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TY
         await feedback_command(update, context)
     elif query.data == 'menu_reset':
         await reset(update, context)
-
-async def mycode_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Show manager's code with share button"""
-    # Handle both direct command AND callback from menu
-    if update.callback_query:
-        user_id = str(update.callback_query.from_user.id)
-        user = database.get_user(user_id)
-        send_message = update.callback_query.message.reply_text
-    else:
-        user_id = str(update.effective_user.id)
-        user = database.get_user(user_id)
-        send_message = update.message.reply_text
-    
-    if not user:
-        not_registered_text = get_text(
-            'English',
-            'mycode.not_registered',
-            default="Please use /start to register first."
-        )
-        await send_message(not_registered_text)
-        return
-    
-    language = user['language']
-    
-    if user['role'] != 'manager':
-        not_manager_text = get_text(
-            language,
-            'mycode.not_manager',
-            default="Only managers have connection codes."
-        )
-        await send_message(not_manager_text)
-        return
-    
-    code = user.get('code', 'No code found')
-    workers = user.get('workers', [])
-    has_workers = len(workers) > 0
-    
-    # Create deep-link for invitation
-    bot_username = "FarmTranslateBot"  # Your bot username
-    deep_link = f"https://t.me/{bot_username}?start=invite_{code}"
-    
-    # Create share button with prefilled message
-    share_text = get_text(
-        language,
-        'registration.share_invitation_text',  # Reuse from registration
-        default="🌉 Join BridgeOS!\nChat with me in your language:\n{deep_link}",
-        deep_link=deep_link
-    )
-    
-    share_button_text = get_text(
-        language,
-        'mycode.share_button',
-        default="📤 Share Invitation"
-    )
-    
-    keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton(share_button_text, switch_inline_query=share_text)]
-    ])
-    
-    # Get status text
-    # Build workers list
-    workers_list = ""
-    if has_workers:
-        for idx, worker_data in enumerate(workers, 1):
-            bot_id = worker_data.get('bot_id', 'unknown')
-            worker_id = worker_data.get('worker_id', 'unknown')
-            status = worker_data.get('status', 'unknown')
-            workers_list += f"\n{idx}. Bot {bot_id}: Worker {worker_id} ({status})"
-    else:
-        workers_list = "\nNo workers connected yet"
-
-    # Send status and invitation
-    status_text = get_text(
-        language,
-        'mycode.status',
-        default="👥 Your Workers:{workers_list}\n\n📋 Your invitation code: {code}\n🔗 Invitation link:\n{deep_link}\n\n👉 Tap the button below to share with your contact:",
-        workers_list=workers_list,
-        code=code,
-        deep_link=deep_link
-    )
-    
-    await send_message(
-        status_text,
-        reply_markup=keyboard
-    )
 
 async def refer_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Let users share the bot with other managers/colleagues"""
@@ -689,10 +759,11 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 manager['workers'] = [w for w in workers if w.get('worker_id') != user_id]
                 database.save_user(manager_id, manager)
                 
+                # ✅ FIX: Only notify if manager exists and has language
                 try:
-                    worker_name = update.effective_user.first_name if not update.callback_query else update.callback_query.from_user.first_name
+                    worker_name = (update.effective_user.first_name or "Worker") if not update.callback_query else (update.callback_query.from_user.first_name or "Worker")
                     manager_notification_text = get_text(
-                        manager['language'],  # Use manager's language
+                        manager['language'],  # Safe - we're inside 'if manager:' block
                         'reset.manager_notification',
                         default="ℹ️ {worker_name} has reset their account and is no longer connected.",
                         worker_name=worker_name
@@ -701,8 +772,8 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         chat_id=manager_id,
                         text=manager_notification_text
                     )
-                except Exception:
-                    pass
+                except Exception as e:
+                    print(f"⚠️ Failed to notify manager {manager_id} about worker reset: {e}")
             
             translation_msg_context.clear_conversation(user_id, manager_id)
     
@@ -1345,8 +1416,9 @@ async def addworker_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     pending_bots = user.get('pending_bots', [])
     if pending_bots:
         pending_bot_id = pending_bots[0]  # Get first pending bot
+        code = user.get('code', 'No code found')
         
-        # Map bot_id to username
+        # Get bot username (use global BOT_USERNAMES if we defined it, or inline)
         bot_usernames = {
             'bot1': 'FarmTranslateBot',
             'bot2': 'BridgeOS_2bot',
@@ -1355,16 +1427,36 @@ async def addworker_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'bot5': 'BridgeOS_5bot'
         }
         pending_bot_username = bot_usernames.get(pending_bot_id, 'FarmTranslateBot')
-        pending_bot_link = f"https://t.me/{pending_bot_username}"
+        
+        # ✅ FIX: Generate FULL invitation link (with start parameter)
+        invite_link = f"https://t.me/{pending_bot_username}?start=invite_{code}"
+        
+        # Create share button
+        share_text = get_text(
+            language,
+            'addworker.pending_share_text',
+            default="🌉 Join BridgeOS!\nChat with me in your language:\n{invite_link}",
+            invite_link=invite_link
+        )
+        
+        share_button_text = get_text(
+            language,
+            'addworker.share_button',
+            default="📤 Share Invitation"
+        )
+        
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton(share_button_text, switch_inline_query=share_text)]
+        ])
         
         pending_invitation_text = get_text(
             language,
             'addworker.pending_invitation',
-            default="⚠️ You have a pending invitation on {bot_name}.\n\nPlease complete that invitation first before adding another worker.\n\n📱 Open {bot_name}:\n{bot_link}",
+            default="⏳ You have a pending invitation on {bot_name}.\n\nPlease complete that invitation first before adding another worker.\n\n🔗 Invitation link:\n{invite_link}\n\n👉 Tap the button below to share:",
             bot_name=pending_bot_id.upper(),
-            bot_link=pending_bot_link
+            invite_link=invite_link
         )
-        await send_message(pending_invitation_text)
+        await send_message(pending_invitation_text, reply_markup=keyboard)
         return
     
     # ✅ NEW: Check if current bot has a worker
@@ -1502,6 +1594,116 @@ async def addworker_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         success_text,
         parse_mode='Markdown'
     )
+
+async def workers_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show overview of all workers across all bots"""
+    # Handle both direct command AND callback from menu
+    if update.callback_query:
+        user_id = str(update.callback_query.from_user.id)
+        user = database.get_user(user_id)
+        send_message = update.callback_query.message.reply_text
+    else:
+        user_id = str(update.effective_user.id)
+        user = database.get_user(user_id)
+        send_message = update.message.reply_text
+    
+    if not user:
+        not_registered_text = get_text(
+            'English',
+            'workers.not_registered',
+            default="Please use /start to register first."
+        )
+        await send_message(not_registered_text)
+        return
+    
+    language = user['language']
+    
+    # Only managers have workers
+    if user['role'] != 'manager':
+        not_manager_text = get_text(
+            language,
+            'workers.not_manager',
+            default="Only managers can view workers.\n\nWorkers are managed by their managers."
+        )
+        await send_message(not_manager_text)
+        return
+    
+    # Get workers and pending bots
+    workers = user.get('workers', [])
+    pending_bots = user.get('pending_bots', [])
+    
+    # Build overview message
+    title = get_text(
+        language,
+        'workers.title',
+        default="👥 *Your Workers*\n\n"
+    )
+    
+    response = title
+    
+    # Show all 5 bots with their status
+    bot_names = {
+        'bot1': 'Bot 1',
+        'bot2': 'Bot 2',
+        'bot3': 'Bot 3',
+        'bot4': 'Bot 4',
+        'bot5': 'Bot 5'
+    }
+    
+    for bot_id in ['bot1', 'bot2', 'bot3', 'bot4', 'bot5']:
+        bot_name = bot_names[bot_id]
+        
+        # Check if this bot has a worker
+        worker_data = next((w for w in workers if w.get('bot_id') == bot_id), None)
+        
+        if worker_data:
+            # Worker connected - get worker's name
+            worker_id = worker_data.get('worker_id')
+            try:
+                worker_user = await context.bot.get_chat(worker_id)
+                worker_name = worker_user.first_name or f"Worker {worker_id}"
+            except Exception:
+                worker_name = f"Worker {worker_id}"
+            
+            status_line = get_text(
+                language,
+                'workers.bot_connected',
+                default="{bot_name}: {worker_name} ✅\n",
+                bot_name=bot_name,
+                worker_name=worker_name
+            )
+            response += status_line
+            
+        elif bot_id in pending_bots:
+            # Pending invitation
+            status_line = get_text(
+                language,
+                'workers.bot_pending',
+                default="{bot_name}: ⏳ Pending invitation\n",
+                bot_name=bot_name
+            )
+            response += status_line
+            
+        else:
+            # Available
+            status_line = get_text(
+                language,
+                'workers.bot_available',
+                default="{bot_name}: Available\n",
+                bot_name=bot_name
+            )
+            response += status_line
+    
+    # Add help text
+    footer = get_text(
+        language,
+        'workers.footer',
+        default="\n💡 To add a worker: /addworker\n💡 To message a worker: Open that bot's chat"
+    )
+    response += footer
+    
+    await send_message(response, parse_mode='Markdown')
+
 
 # ============================================
 # MESSAGE HANDLING
@@ -1717,7 +1919,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             language=user_lang
         )
         
-        manager_name = update.effective_user.first_name
+        manager_name = update.effective_user.first_name or "Manager"
         
         # Send to worker in worker's language
         message_prefix = get_text(
@@ -1818,7 +2020,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             language=user_lang
         )
         
-        sender_name = update.effective_user.first_name
+        sender_name = update.effective_user.first_name or "Worker"
         
         # Send to manager in manager's language
         message_prefix = get_text(
@@ -1867,7 +2069,22 @@ async def handle_task_creation(update: Update, context: ContextTypes.DEFAULT_TYP
         await update.message.reply_text(no_worker_text)
         return
 
-    worker_id = worker_on_this_bot.get('worker_id')  # ✅ ADD THIS LINE
+    worker_id = worker_on_this_bot.get('worker_id')
+
+    # ✅ FIX: Verify worker still exists BEFORE creating task (prevents race condition)
+    worker = database.get_user(worker_id)
+    if not worker:
+        # Clean up stale reference
+        user['workers'] = [w for w in workers if w.get('worker_id') != worker_id]
+        database.save_user(user_id, user)
+        
+        worker_not_found_text = get_text(
+            language,
+            'handle_task_creation.worker_not_found',
+            default="⚠️ Your worker's account no longer exists.\nThe stale connection has been removed.\n\nUse /addworker to add a new worker."
+        )
+        await update.message.reply_text(worker_not_found_text)
+        return
 
     # Extract task description (remove ** prefix)
     task_description = text[2:].strip()
@@ -2134,7 +2351,7 @@ async def handle_media(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         
         recipient_id = worker_on_this_bot.get('worker_id')
-        sender_name = update.effective_user.first_name
+        sender_name = update.effective_user.first_name or "Manager"
         # Get recipient's language for the prefix
         recipient = database.get_user(recipient_id)
         if recipient:
@@ -2162,7 +2379,7 @@ async def handle_media(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             await update.message.reply_text(no_manager_text)
             return
-        sender_name = update.effective_user.first_name
+        sender_name = update.effective_user.first_name or "Worker"
         # Get recipient's language for the prefix
         recipient = database.get_user(recipient_id)
         if recipient:
@@ -2179,6 +2396,16 @@ async def handle_media(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 default="📎 From {sender_name}:",
                 sender_name=sender_name
     )
+    
+    else:
+        # ✅ FIX: Handle invalid/corrupted role
+        invalid_role_text = get_text(
+            language,
+            'handle_media.invalid_role',
+            default="⚠️ Your account has an invalid role.\nPlease use /reset and register again."
+        )
+        await update.message.reply_text(invalid_role_text)
+        return
     
     # Check if recipient exists
     recipient = database.get_user(recipient_id)
@@ -2229,13 +2456,13 @@ def main():
     app.add_handler(conv_handler)
     app.add_handler(CommandHandler('help', help_command))
     app.add_handler(CommandHandler('menu', menu_command))
+    app.add_handler(CommandHandler('workers', workers_command))
     app.add_handler(CallbackQueryHandler(menu_callback_handler, pattern='^menu_'))
     app.add_handler(CommandHandler('tasks', tasks_command))
     app.add_handler(CommandHandler('daily', daily_command))
     app.add_handler(CommandHandler('reset', reset))
     app.add_handler(CommandHandler('subscription', subscription_command))
     app.add_handler(CommandHandler('feedback', feedback_command))
-    app.add_handler(CommandHandler('mycode', mycode_command))
     app.add_handler(CommandHandler('refer', refer_command))
     app.add_handler(CommandHandler('addworker', addworker_command))
     # Add callback handlers for tasks

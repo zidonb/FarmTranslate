@@ -1,7 +1,9 @@
 {
     "start": {
-        "welcome_back": "Tekrar hoş geldiniz! {role} olarak kayıtlısınız.\nDiliniz: {language}\n\nKullanılabilir komutları görmek için /help yazın.",
-        "welcome_new": "BridgeOS'a hoş geldiniz! 🌉\n\nDilinizi seçin:"
+        "welcome_back": "Tekrar hoş geldin! {role} olarak kayıtlısın.\n\nMevcut komutları görmek için /help kullan.",
+        "welcome_new": "BridgeOS'a hoş geldiniz! 🌉\n\n👇 Dilinizi seçmek için aşağıdaki bir düğmeye dokunun:",
+        "already_manager_clicked_invite": "Zaten yönetici olarak kayıtlısınız.\n\nBirinin işçisi olarak katılmak istiyorsanız önce /reset kullanın.",
+        "already_worker_clicked_invite": "Zaten işçi olarak kayıtlısınız.\n\nFarklı bir yöneticiye bağlanmak istiyorsanız önce /reset kullanın."
     },
     "registration": {
         "gender_question": "Cinsiyetiniz nedir?\n(Bu, doğru çeviriler için yardımcı olur)",
@@ -10,6 +12,9 @@
             "female": "👩 Kadın",
             "prefer_not_to_say": "🤷 Belirtmek istemiyorum"
         },
+        "invalid_language": "⚠️ Lütfen bir dil seçmek için aşağıdaki düğmeleri kullanın.\n\n💡 İpucu: Düğmeleri göremiyorsanız, ekranınızın altındaki klavye simgesine (⌨️) dokunun.",
+        "invalid_gender": "⚠️ Lütfen cinsiyetinizi seçmek için aşağıdaki düğmeleri kullanın.\n\n💡 İpucu: Düğmeleri göremiyorsanız, ekranınızın altındaki klavye simgesine (⌨️) dokunun.",
+        "invalid_industry": "⚠️ Lütfen bir sektör seçmek için aşağıdaki düğmeleri kullanın.\n\n💡 İpucu: Düğmeleri göremiyorsanız, ekranınızın altındaki klavye simgesine (⌨️) dokunun.",
         "invalid_code": "❌ Geçersiz davet kodu.\n\nLütfen iletişim kişinizden yeni bir davet bağlantısı isteyin.",
         "worker_already_connected": "❌ Bu iletişim kişisinin zaten bağlı bir çalışanı var.\nÖnce /reset kullanmalarını isteyin.",
         "connection_success": "✅ İletişim kişinize bağlandınız! Artık sohbet etmeye başlayabilirsiniz.\n\nKullanılabilir komutları görmek için /help yazın.",
@@ -184,14 +189,24 @@
     },
     "addworker": {
         "not_registered": "Lütfen önce kayıt olmak için /start kullanın.",
-        "not_manager": "⚠️ Sadece yöneticiler çalışan ekleyebilir.\n\nÇalışanlar yöneticileri tarafından eklenir.",
-        "pending_invitation": "⚠️ {bot_name} üzerinde bekleyen bir davetiniz var.\n\nLütfen başka bir çalışan eklemeden önce o daveti tamamlayın.\n\n📱 {bot_name} açın:\n{bot_link}",
-        "no_worker_on_current_bot": "⚠️ Lütfen önce bu bota bir çalışan bağlayın.\n\nİlk çalışanınızla davetiyenizi paylaşmak için /mycode kullanın.",
-        "limit_reached": "⚠️ *Çalışan Limiti Doldu*\n\nZaten {count} çalışanınız var (izin verilen maksimum).\n\nBaşka bir çalışan eklemek için, lütfen kurumsal seçenekler için destek ile iletişime geçin.",
-        "all_bots_used": "⚠️ Tüm bot slotları kullanımda.\n\nTüm 5 bot üzerinde çalışanlarınız var. Bu olmamalı - lütfen destek ile iletişime geçin.",
-        "share_invitation_text": "🌉 BridgeOS'a katılın!\nKendi dilinizde benimle sohbet edin:\n{invite_link}",
-        "share_button": "🚀 Daveti Paylaş",
-        "bot_greeting": "👋 *Çalışan eklemek için hazır!*\n\n📋 Bu daveti çalışanınızla paylaşın:\n\n👉 Paylaşmak için aşağıdaki düğmeye dokunun:",
-        "success": "✅ *{bot_name} üzerinde Çalışan Slotu Atandı*\n\n📱 Çalışanınızı eklemek için bu botu açın:\n{bot_link}\n\n💡 Davet sizi orada bekliyor!"
+        "not_manager": "⚠️ Sadece yöneticiler çalışan ekleyebilir.\n\nÇalışanlar, yöneticileri tarafından eklenir.",
+        "pending_invitation": "⏳ {bot_name} üzerinde bekleyen bir davetiniz var.\n\nLütfen başka bir çalışan eklemeden önce bu daveti tamamlayın.\n\n🔗 Davet bağlantısı:\n{invite_link}\n\n👉 Paylaşmak için aşağıdaki düğmeye dokunun:",
+        "pending_share_text": "🌉 BridgeOS'a katıl!\nBenimle kendi dilinde sohbet et:\n{invite_link}",
+        "no_worker_on_current_bot": "⚠️ Lütfen önce bu bota bir çalışan bağlayın.\n\nMevcut çalışanlarınızı görmek için /workers kullanın veya ilk çalışanınızla davetinizi paylaşın.",
+        "limit_reached": "⚠️ *Çalışan Sınırına Ulaşıldı*\n\nZaten {count} çalışanınız var (izin verilen maksimum).\n\nBaşka bir çalışan eklemek için lütfen kurumsal seçenekler için destek ile iletişime geçin.",
+        "all_bots_used": "⚠️ Tüm bot yuvaları kullanımda.\n\n5 botun tamamında çalışanlarınız var. Bu olmamalı - lütfen destek ile iletişime geçin.",
+        "share_invitation_text": "🌉 BridgeOS'a katıl!\nBenimle kendi dilinde sohbet et:\n{invite_link}",
+        "share_button": "📤 Daveti Paylaş",
+        "bot_greeting": "👋 *Çalışan eklemeye hazır!*\n\n📋 Bu daveti çalışanınızla paylaşın:\n\n👉 Paylaşmak için aşağıdaki düğmeye dokunun:",
+        "success": "✅ *{bot_name} Üzerinde Çalışan Yuvası Atandı*\n\n📱 Çalışanınızı eklemek için bu botu açın:\n{bot_link}\n\n💡 Davet orada sizi bekliyor!"
+    },
+    "workers": {
+        "not_registered": "Lütfen önce kayıt olmak için /start kullanın.",
+        "not_manager": "Sadece yöneticiler çalışanları görebilir.\n\nÇalışanlar, yöneticileri tarafından yönetilir.",
+        "title": "👥 *Çalışanlarınız*\n\n",
+        "bot_connected": "{bot_name}: {worker_name} ✅\n",
+        "bot_pending": "{bot_name}: ⏳ Bekleyen davet\n",
+        "bot_available": "{bot_name}: Müsait\n",
+        "footer": "\n💡 Çalışan eklemek için: /addworker\n💡 Çalışana mesaj göndermek için: O botun sohbetini açın"
     }
 }

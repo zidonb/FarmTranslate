@@ -81,7 +81,15 @@ def translate_with_claude(text: str, from_lang: str, to_lang: str, target_gender
     config = load_config()
     claude_config = config['claude']
     
-    client = Anthropic(api_key=claude_config['api_key'])
+    # ✅ FIX: Validate API key exists before creating client
+    api_key = claude_config.get('api_key')
+    if not api_key:
+        raise ValueError(
+            "Claude API key not configured. "
+            "Please set CLAUDE_API_KEY in Railway environment variables or secrets.json"
+        )
+    
+    client = Anthropic(api_key=api_key)
     
     prompt = build_translation_prompt(text, from_lang, to_lang, target_gender, conversation_history, industry)
     

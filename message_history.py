@@ -29,46 +29,29 @@ def get_conversation_key(user_id_1: str, user_id_2: str) -> str:
 def save_message(user_id_1: str, user_id_2: str, from_id: str, text: str, language: str):
     """
     Save a message to full history
-    Automatically cleans up old messages after saving
-    
-    Args:
-        user_id_1: First user ID
-        user_id_2: Second user ID
-        from_id: ID of sender
-        text: Message text
-        language: Message language
+    ✅ OPTIMIZED: Uses atomic append instead of reading entire array
     """
     key = get_conversation_key(user_id_1, user_id_2)
     
+    # Create new message
+    message = {
+        "from": str(from_id),
+        "text": text,
+        "lang": language,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    
     with get_db_cursor() as cur:
-        # Get existing messages
-        cur.execute("SELECT messages FROM message_history WHERE conversation_key = %s", (key,))
-        row = cur.fetchone()
-        
-        if row:
-            messages = row[0]
-        else:
-            messages = []
-        
-        # Add new message with timestamp
-        message = {
-            "from": str(from_id),
-            "text": text,
-            "lang": language,
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
-        messages.append(message)
-        
-        # Upsert messages
+        # ✅ Atomic append - no SELECT needed
         cur.execute("""
             INSERT INTO message_history (conversation_key, messages)
             VALUES (%s, %s)
             ON CONFLICT (conversation_key)
-            DO UPDATE SET messages = EXCLUDED.messages
-        """, (key, Json(messages)))
+            DO UPDATE SET messages = message_history.messages || EXCLUDED.messages
+        """, (key, Json([message])))
     # Auto-commits! ✅
     
-    # Cleanup old messages for this conversation
+    # Cleanup old messages (runs probabilistically)
     cleanup_old_messages(user_id_1, user_id_2)
 
 def get_messages(user_id_1: str, user_id_2: str, hours: Optional[int] = None) -> List[Dict]:
@@ -111,41 +94,36 @@ def get_messages(user_id_1: str, user_id_2: str, hours: Optional[int] = None) ->
 def cleanup_old_messages(user_id_1: str, user_id_2: str):
     """
     Delete messages older than retention period for a specific conversation
-    Retention period is configurable in config.json (default: 30 days)
+    ✅ OPTIMIZED: Runs probabilistically (10% of saves) and uses database-side filtering
     """
     try:
+        # ✅ Run cleanup only 10% of the time to reduce database load
+        import random
+        if random.random() > 0.1:
+            return
+        
         config = load_config()
         retention_days = config.get('message_retention_days', 30)
+        cutoff = datetime.now(timezone.utc) - timedelta(days=retention_days)
         
         key = get_conversation_key(user_id_1, user_id_2)
         
         with get_db_cursor() as cur:
-            # Get existing messages
-            cur.execute("SELECT messages FROM message_history WHERE conversation_key = %s", (key,))
-            row = cur.fetchone()
+            # ✅ Database-side filtering using PostgreSQL JSONB functions
+            # This filters messages in the database without loading into Python
+            cur.execute("""
+                UPDATE message_history
+                SET messages = (
+                    SELECT COALESCE(jsonb_agg(msg), '[]'::jsonb)
+                    FROM jsonb_array_elements(messages) AS msg
+                    WHERE (msg->>'timestamp') > %s
+                )
+                WHERE conversation_key = %s
+                AND messages IS NOT NULL
+            """, (cutoff.isoformat(), key))
             
-            if not row:
-                return
-            
-            messages = row[0]
-            
-            # Filter out messages older than retention period
-            cutoff = datetime.now(timezone.utc) - timedelta(days=retention_days)
-            filtered_messages = [
-                msg for msg in messages
-                if datetime.fromisoformat(msg['timestamp']) > cutoff
-            ]
-            
-            # Update if messages were deleted
-            if len(filtered_messages) < len(messages):
-                cur.execute("""
-                    UPDATE message_history
-                    SET messages = %s
-                    WHERE conversation_key = %s
-                """, (Json(filtered_messages), key))
-                
-                deleted_count = len(messages) - len(filtered_messages)
-                print(f"Cleaned up {deleted_count} old messages for conversation {key}")
+            if cur.rowcount > 0:
+                print(f"✅ Cleaned up old messages for conversation {key}")
         # Auto-commits! ✅
         
     except Exception as e:

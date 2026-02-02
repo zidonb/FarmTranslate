@@ -1,7 +1,9 @@
 {
     "start": {
-        "welcome_back": "Welcome back! You're registered as {role}.\nYour language: {language}\n\nUse /help to see available commands.",
-        "welcome_new": "Welcome to BridgeOS! 🌉\n\nSelect your language:"
+        "welcome_back": "Welcome back! You're registered as {role}.\n\nUse /help to see available commands.",
+        "welcome_new": "Welcome to BridgeOS! 🌉\n\n👇 Tap a button below to select your language:",
+        "already_manager_clicked_invite": "You're already registered as a manager.\n\nUse /reset first if you want to join as someone's worker.",
+        "already_worker_clicked_invite": "You're already registered as a worker.\n\nUse /reset first if you want to connect to a different manager."
     },
     "registration": {
         "gender_question": "What is your gender?\n(This helps with accurate translations)",
@@ -10,6 +12,9 @@
             "female": "👩 Female",
             "prefer_not_to_say": "🤷 Prefer not to say"
         },
+        "invalid_language": "⚠️ Please use the buttons below to select a language.\n\n💡 Tip: If you don't see buttons, tap the keyboard icon (⌨️) at the bottom of your screen.",
+        "invalid_gender": "⚠️ Please use the buttons below to select your gender.\n\n💡 Tip: If you don't see buttons, tap the keyboard icon (⌨️) at the bottom of your screen.",
+        "invalid_industry": "⚠️ Please use the buttons below to select an industry.\n\n💡 Tip: If you don't see buttons, tap the keyboard icon (⌨️) at the bottom of your screen.",
         "invalid_code": "❌ Invalid invitation code.\n\nPlease ask your contact for a new invitation link.",
         "worker_already_connected": "❌ This contact already has a worker connected.\nAsk them to use /reset first.",
         "connection_success": "✅ Connected to your contact! You can start chatting now.\n\nUse /help to see available commands.",
@@ -185,13 +190,23 @@
     "addworker": {
         "not_registered": "Please use /start to register first.",
         "not_manager": "⚠️ Only managers can add workers.\n\nWorkers are added by their managers.",
-        "pending_invitation": "⚠️ You have a pending invitation on {bot_name}.\n\nPlease complete that invitation first before adding another worker.\n\n📱 Open {bot_name}:\n{bot_link}",
-        "no_worker_on_current_bot": "⚠️ Please connect a worker to this bot first.\n\nUse /mycode to share your invitation with your first worker.",
+        "pending_invitation": "⏳ You have a pending invitation on {bot_name}.\n\nPlease complete that invitation first before adding another worker.\n\n🔗 Invitation link:\n{invite_link}\n\n👉 Tap the button below to share:",
+        "pending_share_text": "🌉 Join BridgeOS!\nChat with me in your language:\n{invite_link}",
+        "no_worker_on_current_bot": "⚠️ Please connect a worker to this bot first.\n\nUse /workers to see your current workers, or share your invitation with your first worker.",
         "limit_reached": "⚠️ *Worker Limit Reached*\n\nYou already have {count} workers (maximum allowed).\n\nTo add another worker, please contact support for enterprise options.",
         "all_bots_used": "⚠️ All bot slots are in use.\n\nYou have workers on all 5 bots. This shouldn't happen - please contact support.",
         "share_invitation_text": "🌉 Join BridgeOS!\nChat with me in your language:\n{invite_link}",
-        "share_button": "🚀 Share Invitation",
+        "share_button": "📤 Share Invitation",
         "bot_greeting": "👋 *Ready to add a worker!*\n\n📋 Share this invitation with your worker:\n\n👉 Tap the button below to share:",
         "success": "✅ *Worker Slot Assigned on {bot_name}*\n\n📱 Open this bot to add your worker:\n{bot_link}\n\n💡 The invitation is waiting for you there!"
+    },
+    "workers": {
+        "not_registered": "Please use /start to register first.",
+        "not_manager": "Only managers can view workers.\n\nWorkers are managed by their managers.",
+        "title": "👥 *Your Workers*\n\n",
+        "bot_connected": "{bot_name}: {worker_name} ✅\n",
+        "bot_pending": "{bot_name}: ⏳ Pending invitation\n",
+        "bot_available": "{bot_name}: Available\n",
+        "footer": "\n💡 To add a worker: /addworker\n💡 To message a worker: Open that bot's chat"
     }
 }

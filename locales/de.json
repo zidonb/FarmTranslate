@@ -1,7 +1,9 @@
 {
     "start": {
-        "welcome_back": "Willkommen zurück! Sie sind registriert als {role}.\nIhre Sprache: {language}\n\nVerwenden Sie /help, um verfügbare Befehle anzuzeigen.",
-        "welcome_new": "Willkommen bei BridgeOS! 🌉\n\nWählen Sie Ihre Sprache:"
+        "welcome_back": "Willkommen zurück! Sie sind als {role} registriert.\n\nVerwenden Sie /help, um verfügbare Befehle anzuzeigen.",
+        "welcome_new": "Willkommen bei BridgeOS! 🌉\n\n👇 Tippen Sie auf eine Schaltfläche unten, um Ihre Sprache auszuwählen:",
+        "already_manager_clicked_invite": "Sie sind bereits als Manager registriert.\n\nVerwenden Sie zuerst /reset, wenn Sie als Arbeiter von jemandem beitreten möchten.",
+        "already_worker_clicked_invite": "Sie sind bereits als Arbeiter registriert.\n\nVerwenden Sie zuerst /reset, wenn Sie sich mit einem anderen Manager verbinden möchten."
     },
     "registration": {
         "gender_question": "Was ist Ihr Geschlecht?\n(Dies hilft bei präzisen Übersetzungen)",
@@ -10,6 +12,9 @@
             "female": "👩 Weiblich",
             "prefer_not_to_say": "🤷 Keine Angabe"
         },
+        "invalid_language": "⚠️ Bitte verwenden Sie die Schaltflächen unten, um eine Sprache auszuwählen.\n\n💡 Tipp: Wenn Sie die Schaltflächen nicht sehen, tippen Sie auf das Tastatursymbol (⌨️) am unteren Bildschirmrand.",
+        "invalid_gender": "⚠️ Bitte verwenden Sie die Schaltflächen unten, um Ihr Geschlecht auszuwählen.\n\n💡 Tipp: Wenn Sie die Schaltflächen nicht sehen, tippen Sie auf das Tastatursymbol (⌨️) am unteren Bildschirmrand.",
+        "invalid_industry": "⚠️ Bitte verwenden Sie die Schaltflächen unten, um eine Branche auszuwählen.\n\n💡 Tipp: Wenn Sie die Schaltflächen nicht sehen, tippen Sie auf das Tastatursymbol (⌨️) am unteren Bildschirmrand.",
         "invalid_code": "❌ Ungültiger Einladungscode.\n\nBitten Sie Ihren Kontakt um einen neuen Einladungslink.",
         "worker_already_connected": "❌ Dieser Kontakt hat bereits einen Mitarbeiter verbunden.\nBitten Sie ihn, zuerst /reset zu verwenden.",
         "connection_success": "✅ Mit Ihrem Kontakt verbunden! Sie können jetzt chatten.\n\nVerwenden Sie /help, um verfügbare Befehle anzuzeigen.",
@@ -183,15 +188,25 @@
         "reset": "🗑️ Konto zurücksetzen"
     },
     "addworker": {
-        "not_registered": "Bitte verwenden Sie zuerst /start, um sich zu registrieren.",
-        "not_manager": "⚠️ Nur Manager können Mitarbeiter hinzufügen.\n\nMitarbeiter werden von ihren Managern hinzugefügt.",
-        "pending_invitation": "⚠️ Sie haben eine ausstehende Einladung auf {bot_name}.\n\nBitte schließen Sie diese Einladung zuerst ab, bevor Sie einen weiteren Mitarbeiter hinzufügen.\n\n📱 Öffnen Sie {bot_name}:\n{bot_link}",
-        "no_worker_on_current_bot": "⚠️ Bitte verbinden Sie zuerst einen Mitarbeiter mit diesem Bot.\n\nVerwenden Sie /mycode, um Ihre Einladung mit Ihrem ersten Mitarbeiter zu teilen.",
-        "limit_reached": "⚠️ *Mitarbeiterlimit erreicht*\n\nSie haben bereits {count} Mitarbeiter (maximal erlaubt).\n\nUm einen weiteren Mitarbeiter hinzuzufügen, wenden Sie sich bitte an den Support für Unternehmensoptionen.",
-        "all_bots_used": "⚠️ Alle Bot-Slots sind belegt.\n\nSie haben Mitarbeiter auf allen 5 Bots. Dies sollte nicht passieren - bitte kontaktieren Sie den Support.",
+        "not_registered": "Bitte verwenden Sie zuerst /start zur Registrierung.",
+        "not_manager": "⚠️ Nur Manager können Arbeiter hinzufügen.\n\nArbeiter werden von ihren Managern hinzugefügt.",
+        "pending_invitation": "⏳ Sie haben eine ausstehende Einladung auf {bot_name}.\n\nBitte vervollständigen Sie diese Einladung, bevor Sie einen weiteren Arbeiter hinzufügen.\n\n🔗 Einladungslink:\n{invite_link}\n\n👉 Tippen Sie auf die Schaltfläche unten zum Teilen:",
+        "pending_share_text": "🌉 Tritt BridgeOS bei!\nChatte mit mir in deiner Sprache:\n{invite_link}",
+        "no_worker_on_current_bot": "⚠️ Bitte verbinden Sie zuerst einen Arbeiter mit diesem Bot.\n\nVerwenden Sie /workers, um Ihre aktuellen Arbeiter zu sehen, oder teilen Sie Ihre Einladung mit Ihrem ersten Arbeiter.",
+        "limit_reached": "⚠️ *Arbeiter-Limit Erreicht*\n\nSie haben bereits {count} Arbeiter (maximal erlaubt).\n\nUm einen weiteren Arbeiter hinzuzufügen, wenden Sie sich bitte an den Support für Unternehmensoptionen.",
+        "all_bots_used": "⚠️ Alle Bot-Plätze werden verwendet.\n\nSie haben Arbeiter auf allen 5 Bots. Das sollte nicht passieren - bitte wenden Sie sich an den Support.",
         "share_invitation_text": "🌉 Tritt BridgeOS bei!\nChatte mit mir in deiner Sprache:\n{invite_link}",
-        "share_button": "🚀 Einladung teilen",
-        "bot_greeting": "👋 *Bereit, einen Mitarbeiter hinzuzufügen!*\n\n📋 Teilen Sie diese Einladung mit Ihrem Mitarbeiter:\n\n👉 Tippen Sie auf die Schaltfläche unten zum Teilen:",
-        "success": "✅ *Mitarbeiterplatz auf {bot_name} zugewiesen*\n\n📱 Öffnen Sie diesen Bot, um Ihren Mitarbeiter hinzuzufügen:\n{bot_link}\n\n💡 Die Einladung wartet dort auf Sie!"
+        "share_button": "📤 Einladung Teilen",
+        "bot_greeting": "👋 *Bereit, einen Arbeiter hinzuzufügen!*\n\n📋 Teilen Sie diese Einladung mit Ihrem Arbeiter:\n\n👉 Tippen Sie auf die Schaltfläche unten zum Teilen:",
+        "success": "✅ *Arbeiterplatz auf {bot_name} Zugewiesen*\n\n📱 Öffnen Sie diesen Bot, um Ihren Arbeiter hinzuzufügen:\n{bot_link}\n\n💡 Die Einladung wartet dort auf Sie!"
+    },
+    "workers": {
+        "not_registered": "Bitte verwenden Sie zuerst /start zur Registrierung.",
+        "not_manager": "Nur Manager können Arbeiter anzeigen.\n\nArbeiter werden von ihren Managern verwaltet.",
+        "title": "👥 *Ihre Arbeiter*\n\n",
+        "bot_connected": "{bot_name}: {worker_name} ✅\n",
+        "bot_pending": "{bot_name}: ⏳ Ausstehende Einladung\n",
+        "bot_available": "{bot_name}: Verfügbar\n",
+        "footer": "\n💡 Um einen Arbeiter hinzuzufügen: /addworker\n💡 Um einen Arbeiter zu kontaktieren: Öffnen Sie den Chat dieses Bots"
     }
 }

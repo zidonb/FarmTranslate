@@ -1,7 +1,7 @@
 import os
 import psycopg2
 from psycopg2.extras import Json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Dict
 from config import load_config
 from db_connection import get_db_cursor
@@ -35,7 +35,7 @@ def get_usage(telegram_user_id: str) -> Dict:
             return {
                 'messages_sent': 0,
                 'blocked': False,
-                'first_seen': datetime.utcnow().isoformat(),
+                'first_seen': datetime.now(timezone.utc).isoformat(),
                 'last_message': None
             }
     except Exception as e:
@@ -69,7 +69,7 @@ def is_user_blocked(telegram_user_id: str) -> bool:
 
 def increment_message_count(telegram_user_id: str) -> bool:
     """
-    Increment message counter for user
+    Atomically increment message counter for user
     Returns True if message allowed, False if limit reached
     """
     config = load_config()
@@ -80,26 +80,62 @@ def increment_message_count(telegram_user_id: str) -> bool:
     if not enforce_limits:
         return True
     
-    # Get current usage
-    usage = get_usage(telegram_user_id)
-    
-    # If already blocked, deny
-    if usage.get('blocked', False):
-        return False
-    
-    # Increment counter
-    usage['messages_sent'] = usage.get('messages_sent', 0) + 1
-    usage['last_message'] = datetime.utcnow().isoformat()
-    
-    # Check if limit reached
-    if usage['messages_sent'] >= free_limit:
-        usage['blocked'] = True
-    
-    # Save updated usage
-    save_usage(telegram_user_id, usage)
-    
-    # Return whether user is now blocked
-    return not usage['blocked']
+    # ✅ FIX: Atomic increment with race condition protection
+    with get_db_cursor() as cur:
+        # First, ensure row exists (upsert if needed)
+        cur.execute("""
+            INSERT INTO usage_tracking (telegram_user_id, data)
+            VALUES (%s, %s)
+            ON CONFLICT (telegram_user_id) DO NOTHING
+        """, (str(telegram_user_id), Json({
+            'messages_sent': 0,
+            'blocked': False,
+            'first_seen': datetime.now(timezone.utc).isoformat(),
+            'last_message': None
+        })))
+        
+        # ✅ Atomic increment + check limit in single operation
+        cur.execute("""
+            UPDATE usage_tracking
+            SET data = jsonb_set(
+                jsonb_set(
+                    data,
+                    '{messages_sent}',
+                    to_jsonb((COALESCE((data->>'messages_sent')::int, 0) + 1))
+                ),
+                '{last_message}',
+                to_jsonb(%s::text)
+            )
+            WHERE telegram_user_id = %s
+            RETURNING 
+                (data->>'messages_sent')::int as messages_sent,
+                (data->>'blocked')::boolean as blocked
+        """, (datetime.now(timezone.utc).isoformat(), str(telegram_user_id)))
+        
+        result = cur.fetchone()
+        
+        if not result:
+            # This shouldn't happen due to INSERT above, but handle gracefully
+            return True
+        
+        messages_sent, currently_blocked = result
+        
+        # If already blocked, deny
+        if currently_blocked:
+            return False
+        
+        # Check if just hit the limit
+        if messages_sent >= free_limit:
+            # ✅ Atomically block user
+            cur.execute("""
+                UPDATE usage_tracking
+                SET data = jsonb_set(data, '{blocked}', 'true'::jsonb)
+                WHERE telegram_user_id = %s
+            """, (str(telegram_user_id),))
+            return False  # This message NOT allowed (just hit limit)
+        
+        return True  # Message allowed
+    # Auto-commits all changes atomically
 
 def block_user(telegram_user_id: str):
     """Manually block a user from sending messages"""

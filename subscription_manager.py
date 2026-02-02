@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Optional, Dict
 from config import load_config
 from db_connection import get_db_cursor
+from datetime import datetime, timezone
 
 
 def init_subscriptions_table():
@@ -65,7 +66,7 @@ def is_subscribed(telegram_user_id: str) -> bool:
         ends_at_str = subscription.get('ends_at')
         if ends_at_str:
             ends_at = datetime.fromisoformat(ends_at_str.replace('Z', '+00:00'))
-            if datetime.utcnow().replace(tzinfo=ends_at.tzinfo) < ends_at:
+            if datetime.now(timezone.utc) < ends_at:
                 return True
     
     return False
