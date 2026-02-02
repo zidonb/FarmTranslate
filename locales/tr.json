@@ -1,212 +1,212 @@
 {
-    "start": {
-        "welcome_back": "Tekrar hoş geldin! {role} olarak kayıtlısın.\n\nMevcut komutları görmek için /help kullan.",
-        "welcome_new": "BridgeOS'a hoş geldiniz! 🌉\n\n👇 Dilinizi seçmek için aşağıdaki bir düğmeye dokunun:",
-        "already_manager_clicked_invite": "Zaten yönetici olarak kayıtlısınız.\n\nBirinin işçisi olarak katılmak istiyorsanız önce /reset kullanın.",
-        "already_worker_clicked_invite": "Zaten işçi olarak kayıtlısınız.\n\nFarklı bir yöneticiye bağlanmak istiyorsanız önce /reset kullanın."
+  "start": {
+    "welcome_back": "Tekrar hoş geldin! {role} olarak kayıtlısın.\n\nMevcut komutları görmek için /help kullan.",
+    "welcome_new": "BridgeOS'a hoş geldiniz! 🌉\n\n👇 Dilinizi seçmek için aşağıdaki bir düğmeye dokunun:",
+    "already_manager_clicked_invite": "Zaten yönetici olarak kayıtlısınız.\n\nBirinin işçisi olarak katılmak istiyorsanız önce /reset kullanın.",
+    "already_worker_clicked_invite": "Zaten işçi olarak kayıtlısınız.\n\nFarklı bir yöneticiye bağlanmak istiyorsanız önce /reset kullanın."
+  },
+  "registration": {
+    "gender_question": "Cinsiyetiniz nedir?\n(Bu, doğru çeviriler için yardımcı olur)",
+    "gender_options": {
+      "male": "👨 Erkek",
+      "female": "👩 Kadın",
+      "prefer_not_to_say": "🤷 Belirtmek istemiyorum"
     },
-    "registration": {
-        "gender_question": "Cinsiyetiniz nedir?\n(Bu, doğru çeviriler için yardımcı olur)",
-        "gender_options": {
-            "male": "👨 Erkek",
-            "female": "👩 Kadın",
-            "prefer_not_to_say": "🤷 Belirtmek istemiyorum"
-        },
-        "invalid_language": "⚠️ Lütfen bir dil seçmek için aşağıdaki düğmeleri kullanın.\n\n💡 İpucu: Düğmeleri göremiyorsanız, ekranınızın altındaki klavye simgesine (⌨️) dokunun.",
-        "invalid_gender": "⚠️ Lütfen cinsiyetinizi seçmek için aşağıdaki düğmeleri kullanın.\n\n💡 İpucu: Düğmeleri göremiyorsanız, ekranınızın altındaki klavye simgesine (⌨️) dokunun.",
-        "invalid_industry": "⚠️ Lütfen bir sektör seçmek için aşağıdaki düğmeleri kullanın.\n\n💡 İpucu: Düğmeleri göremiyorsanız, ekranınızın altındaki klavye simgesine (⌨️) dokunun.",
-        "invalid_code": "❌ Geçersiz davet kodu.\n\nLütfen iletişim kişinizden yeni bir davet bağlantısı isteyin.",
-        "worker_already_connected": "❌ Bu iletişim kişisinin zaten bağlı bir çalışanı var.\nÖnce /reset kullanmalarını isteyin.",
-        "connection_success": "✅ İletişim kişinize bağlandınız! Artık sohbet etmeye başlayabilirsiniz.\n\nKullanılabilir komutları görmek için /help yazın.",
-        "manager_notification": "✅ {worker_name} çalışanınız olarak bağlandı!",
-        "industry_question": "Hangi sektörde çalışıyorsunuz?\n\nBu, teknik terimlerin ve işyerine özgü dilin doğru çevirisini sağlamaya yardımcı olur.",
-        "share_invitation_text": "🌉 BridgeOS'a katılın!\nBenimle kendi dilinizde sohbet edin:\n{deep_link}",
-        "share_invitation_button": "🚀 Daveti Şimdi Gönder",
-        "registration_complete": "✅ Kayıt tamamlandı!\n\n📋 Davet kodunuz: {code}\n🔗 Davet bağlantınız:\n{deep_link}\n\n👉 İletişim kişinizle paylaşmak için aşağıdaki düğmeye dokunun:",
-        "ready_to_start": "Başlamaya hazır! İstediğiniz zaman /help yazabilirsiniz.",
-        "cancelled": "Kayıt iptal edildi. Tekrar denemek için /start yazın.",
-        "worker_switched": "⚠️ {worker_name} farklı bir yöneticiye bağlandı.\n\nŞimdi /mycode kullanarak yeni bir çalışan davet edebilirsiniz"
+    "invalid_language": "⚠️ Lütfen bir dil seçmek için aşağıdaki düğmeleri kullanın.\n\n💡 İpucu: Düğmeleri göremiyorsanız, ekranınızın altındaki klavye simgesine (⌨️) dokunun.",
+    "invalid_gender": "⚠️ Lütfen cinsiyetinizi seçmek için aşağıdaki düğmeleri kullanın.\n\n💡 İpucu: Düğmeleri göremiyorsanız, ekranınızın altındaki klavye simgesine (⌨️) dokunun.",
+    "invalid_industry": "⚠️ Lütfen bir sektör seçmek için aşağıdaki düğmeleri kullanın.\n\n💡 İpucu: Düğmeleri göremiyorsanız, ekranınızın altındaki klavye simgesine (⌨️) dokunun.",
+    "invalid_code": "❌ Geçersiz davet kodu.\n\nLütfen iletişim kişinizden yeni bir davet bağlantısı isteyin.",
+    "worker_already_connected": "❌ Bu iletişim kişisinin zaten bağlı bir çalışanı var.\nÖnce /reset kullanmalarını isteyin.",
+    "connection_success": "✅ İletişim kişinize bağlandınız! Artık sohbet etmeye başlayabilirsiniz.\n\nKullanılabilir komutları görmek için /help yazın.",
+    "manager_notification": "✅ {worker_name} çalışanınız olarak bağlandı!",
+    "industry_question": "Hangi sektörde çalışıyorsunuz?\n\nBu, teknik terimlerin ve işyerine özgü dilin doğru çevirisini sağlamaya yardımcı olur.",
+    "share_invitation_text": "🌉 BridgeOS'a katılın!\nBenimle kendi dilinizde sohbet edin:\n{deep_link}",
+    "share_invitation_button": "🚀 Daveti Şimdi Gönder",
+    "registration_complete": "✅ Kayıt tamamlandı!\n\n📋 Davet kodunuz: {code}\n🔗 Davet bağlantınız:\n{deep_link}\n\n👉 İletişim kişinizle paylaşmak için aşağıdaki düğmeye dokunun:",
+    "ready_to_start": "Başlamaya hazır! İstediğiniz zaman /help yazabilirsiniz.",
+    "cancelled": "Kayıt iptal edildi. Tekrar denemek için /start yazın.",
+    "worker_switched": "⚠️ {worker_name} farklı bir yöneticiye bağlandı.\n\nŞimdi /mycode kullanarak yeni bir çalışan davet edebilirsiniz"
+  },
+  "industries": {
+    "dairy_farm": "🐄 Süt Çiftliği",
+    "elderly_care": "👴 Yaşlı Bakımı",
+    "hospitality": "🏨 Otelcilik / Oteller",
+    "farm": "🌾 Çiftlik / Tarım",
+    "construction": "🏗️ İnşaat",
+    "restaurant": "🍽️ Restoran",
+    "warehouse": "📦 Depo",
+    "other": "💼 Genel İşyeri"
+  },
+  "help": {
+    "not_registered": "Lütfen önce kayıt olmak için /start yazın.",
+    "manager_commands": "📋 *Kullanılabilir Komutlar:*\n\n/help - Bu yardım mesajını göster\n/tasks - Görev listenizi görüntüleyin\n/daily - Günlük eylem öğelerini alın\n/subscription - Abonelik durumunu görüntüleyin\n/reset - Hesabı silin ve yeniden başlayın\n/mycode - Bağlantı kodunuzu gösterin\n/refer - BridgeOS'u diğer yöneticilere önerin\n/feedback - BridgeOS ekibine geri bildirim gönderin\n\n💬 *Nasıl kullanılır:*\nSadece mesajınızı yazın, otomatik olarak çevrilip iletişim kişinize gönderilecektir!",
+    "worker_commands": "📋 *Kullanılabilir Komutlar:*\n\n/help - Bu yardım mesajını göster\n/tasks - Görev listenizi görüntüleyin\n/refer - BridgeOS'u diğer yöneticilere önerin\n/feedback - BridgeOS ekibine geri bildirim gönderin\n/reset - Hesabı sil\n\n💬 *Nasıl kullanılır:*\nSadece mesajınızı yazın, otomatik olarak çevrilip iletişim kişinize gönderilecektir!"
+  },
+  "mycode": {
+    "not_registered": "Lütfen önce kayıt olmak için /start yazın.",
+    "not_manager": "Sadece yöneticilerin bağlantı kodları vardır.",
+    "share_button": "📤 Daveti Paylaş",
+    "status": "👥 Çalışan bağlı: {status}\n\n📋 Davet kodunuz: {code}\n🔗 Davet bağlantınız:\n{deep_link}\n\n👉 İletişim kişinizle paylaşmak için aşağıdaki düğmeye dokunun:",
+    "worker_status_yes": "Evet ✅",
+    "worker_status_no": "Hayır ❌"
+  },
+  "refer": {
+    "share_text": "🌉 BridgeOS'a göz atın!\n\nEkibimle gerçek zamanlı iletişim kurmak için kullanıyorum - farklı diller konuşuyoruz ama doğal bir şekilde sohbet ediyoruz!\n\n🌍 {language_count} dil desteği\n✅ Anında çeviri\n🏭 Sektöre özel terimler\n💬 Basit ve etkili\n\nÜcretsiz deneyin: https://t.me/FarmTranslateBot",
+    "button": "📤 BridgeOS'u Öner",
+    "message": "🌉 BridgeOS'u sevdiniz mi?\n\nDiğer yöneticilerin dil engellerini aşmasına yardımcı olun!\n\nBridgeOS'u farklı diller konuşan ekipleri yöneten meslektaşlarınıza, arkadaşlarınıza veya herkese önerin.\n\n👉 Paylaşmak için düğmeye dokunun:"
+  },
+  "reset": {
+    "no_account": "Sıfırlanacak bir hesabınız yok.",
+    "worker_notification": "⚠️ İletişim kişiniz hesabını sıfırladı.\nHesabınız da sıfırlandı.\n\nYeniden bağlanmak için yeni bir davet gerekecek.",
+    "manager_notification": "ℹ️ {worker_name} hesabını sıfırladı ve artık bağlı değil.",
+    "success": "✅ Hesabınız sıfırlandı!\n\nTüm verileriniz ve bağlantılarınız silindi.\nTekrar kayıt olmak için /start yazın."
+  },
+  "daily": {
+    "not_registered": "Lütfen önce kayıt olmak için /start yazın.",
+    "not_manager": "Sadece yöneticiler özet oluşturabilir.\n\nBu özellik, yöneticilerin eylem öğelerini ve görevleri takip etmesine yardımcı olur.",
+    "no_worker": "Henüz bağlı bir çalışanınız yok.\n\nKonuşma özetlerini görmek için önce bir çalışanla bağlantı kurun.",
+    "generating": "⏳ Günlük Eylem Öğeleri Oluşturuluyor (Son 24 Saat)...\n\nSon 24 saatlik konuşma analiz ediliyor.",
+    "result_header": "📋 *Günlük Eylem Öğeleri (Son 24 Saat)*\n\n{action_items}",
+    "message_count": "\n\n_Toplam mesaj: {count}_",
+    "error": "❌ Günlük eylem öğeleri oluşturulurken hata: {error}\n\nLütfen daha sonra tekrar deneyin veya desteğe başvurun."
+  },
+  "subscription": {
+    "not_registered": "Lütfen önce kayıt olmak için /start yazın.",
+    "worker_unlimited": "Çalışanların sınırsız mesajı var! 🎉\n\nSadece yöneticilerin aboneliğe ihtiyacı var.",
+    "no_subscription": {
+      "title": "📋 *Abonelik Durumu*\n\n",
+      "status": "Durum: ❌ Aktif Abonelik Yok\n",
+      "usage": "Kullanılan Mesajlar: {messages_sent} / {free_limit} (Ücretsiz Paket)\n\n",
+      "benefits_header": "💳 *BridgeOS'a Abone Olun:*\n",
+      "benefits": "• Sınırsız mesaj\n• Aylık ${price}\n• İstediğiniz zaman iptal edin",
+      "button": "🏢 İş Lisansına Yükseltin (Aylık ${price})"
     },
-    "industries": {
-        "dairy_farm": "🐄 Süt Çiftliği",
-        "elderly_care": "👴 Yaşlı Bakımı",
-        "hospitality": "🏨 Otelcilik / Oteller",
-        "farm": "🌾 Çiftlik / Tarım",
-        "construction": "🏗️ İnşaat",
-        "restaurant": "🍽️ Restoran",
-        "warehouse": "📦 Depo",
-        "other": "💼 Genel İşyeri"
-    },
-    "help": {
-        "not_registered": "Lütfen önce kayıt olmak için /start yazın.",
-        "manager_commands": "📋 *Kullanılabilir Komutlar:*\n\n/help - Bu yardım mesajını göster\n/tasks - Görev listenizi görüntüleyin\n/daily - Günlük eylem öğelerini alın\n/subscription - Abonelik durumunu görüntüleyin\n/reset - Hesabı silin ve yeniden başlayın\n/mycode - Bağlantı kodunuzu gösterin\n/refer - BridgeOS'u diğer yöneticilere önerin\n/feedback - BridgeOS ekibine geri bildirim gönderin\n\n💬 *Nasıl kullanılır:*\nSadece mesajınızı yazın, otomatik olarak çevrilip iletişim kişinize gönderilecektir!",
-        "worker_commands": "📋 *Kullanılabilir Komutlar:*\n\n/help - Bu yardım mesajını göster\n/tasks - Görev listenizi görüntüleyin\n/refer - BridgeOS'u diğer yöneticilere önerin\n/feedback - BridgeOS ekibine geri bildirim gönderin\n/reset - Hesabı sil\n\n💬 *Nasıl kullanılır:*\nSadece mesajınızı yazın, otomatik olarak çevrilip iletişim kişinize gönderilecektir!"
-    },
-    "mycode": {
-        "not_registered": "Lütfen önce kayıt olmak için /start yazın.",
-        "not_manager": "Sadece yöneticilerin bağlantı kodları vardır.",
-        "share_button": "📤 Daveti Paylaş",
-        "status": "👥 Çalışan bağlı: {status}\n\n📋 Davet kodunuz: {code}\n🔗 Davet bağlantınız:\n{deep_link}\n\n👉 İletişim kişinizle paylaşmak için aşağıdaki düğmeye dokunun:",
-        "worker_status_yes": "Evet ✅",
-        "worker_status_no": "Hayır ❌"
-    },
-    "refer": {
-        "share_text": "🌉 BridgeOS'a göz atın!\n\nEkibimle gerçek zamanlı iletişim kurmak için kullanıyorum - farklı diller konuşuyoruz ama doğal bir şekilde sohbet ediyoruz!\n\n🌍 {language_count} dil desteği\n✅ Anında çeviri\n🏭 Sektöre özel terimler\n💬 Basit ve etkili\n\nÜcretsiz deneyin: https://t.me/FarmTranslateBot",
-        "button": "📤 BridgeOS'u Öner",
-        "message": "🌉 BridgeOS'u sevdiniz mi?\n\nDiğer yöneticilerin dil engellerini aşmasına yardımcı olun!\n\nBridgeOS'u farklı diller konuşan ekipleri yöneten meslektaşlarınıza, arkadaşlarınıza veya herkese önerin.\n\n👉 Paylaşmak için düğmeye dokunun:"
-    },
-    "reset": {
-        "no_account": "Sıfırlanacak bir hesabınız yok.",
-        "worker_notification": "⚠️ İletişim kişiniz hesabını sıfırladı.\nHesabınız da sıfırlandı.\n\nYeniden bağlanmak için yeni bir davet gerekecek.",
-        "manager_notification": "ℹ️ {worker_name} hesabını sıfırladı ve artık bağlı değil.",
-        "success": "✅ Hesabınız sıfırlandı!\n\nTüm verileriniz ve bağlantılarınız silindi.\nTekrar kayıt olmak için /start yazın."
-    },
-    "daily": {
-        "not_registered": "Lütfen önce kayıt olmak için /start yazın.",
-        "not_manager": "Sadece yöneticiler özet oluşturabilir.\n\nBu özellik, yöneticilerin eylem öğelerini ve görevleri takip etmesine yardımcı olur.",
-        "no_worker": "Henüz bağlı bir çalışanınız yok.\n\nKonuşma özetlerini görmek için önce bir çalışanla bağlantı kurun.",
-        "generating": "⏳ Günlük Eylem Öğeleri Oluşturuluyor (Son 24 Saat)...\n\nSon 24 saatlik konuşma analiz ediliyor.",
-        "result_header": "📋 *Günlük Eylem Öğeleri (Son 24 Saat)*\n\n{action_items}",
-        "message_count": "\n\n_Toplam mesaj: {count}_",
-        "error": "❌ Günlük eylem öğeleri oluşturulurken hata: {error}\n\nLütfen daha sonra tekrar deneyin veya desteğe başvurun."
-    },
-    "subscription": {
-        "not_registered": "Lütfen önce kayıt olmak için /start yazın.",
-        "worker_unlimited": "Çalışanların sınırsız mesajı var! 🎉\n\nSadece yöneticilerin aboneliğe ihtiyacı var.",
-        "no_subscription": {
-            "title": "📋 *Abonelik Durumu*\n\n",
-            "status": "Durum: ❌ Aktif Abonelik Yok\n",
-            "usage": "Kullanılan Mesajlar: {messages_sent} / {free_limit} (Ücretsiz Paket)\n\n",
-            "benefits_header": "💳 *BridgeOS'a Abone Olun:*\n",
-            "benefits": "• Sınırsız mesaj\n• Aylık ${price}\n• İstediğiniz zaman iptal edin",
-            "button": "🏢 İş Lisansına Yükseltin (Aylık ${price})"
-        },
-        "active_subscription": {
-            "title": "📋 *Aboneliğiniz*\n\n",
-            "status": "{emoji} Durum: {status}\n",
-            "plan": "💳 Plan: Sınırsız Mesaj\n",
-            "price": "💵 Fiyat: Aylık ${price}\n",
-            "renews": "📅 Yenilenir: {date}\n",
-            "access_until": "📅 Erişim Süresi: {date}\n",
-            "footer": "\n_İstediğiniz zaman yönetin veya iptal edin._",
-            "manage_button": "⚙️ İş Lisansını Yönet"
-        }
-    },
-    "tasks": {
-        "not_registered": "Lütfen önce kayıt olmak için /start yazın.",
-        "manager": {
-            "title": "📋 *Görevleriniz*\n\n",
-            "no_tasks": "Henüz görev yok.\n\n\\*\\* ile başlayan bir mesaj göndererek görev oluşturun\nÖrnek: \\*\\* 115 numaralı ineği kontrol et",
-            "pending_header": "⏳ *BEKLEMEDE ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
-            "task_item": "• {description}\n  _Oluşturuldu: Bugün saat {time}_\n\n",
-            "completed_header": "\n✅ *BUGÜN TAMAMLANANLAR ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
-            "completed_item": "• {description}\n  _Tamamlandı: {time}_\n\n"
-        },
-        "worker": {
-            "title": "📋 *Görevleriniz*\n\n",
-            "no_tasks": "Henüz görev atanmadı.\n\nYöneticiniz gerektiğinde size görevler gönderecek.",
-            "todo_header": "⏳ *YAPILACAKLAR ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
-            "task_item": "• {description}\n\n",
-            "instruction": "_Tamamlamak için her görev mesajındaki ✅ Tamamlandı Olarak İşaretle düğmesine dokunun._\n\n",
-            "completed_header": "\n✅ *BUGÜN TAMAMLANANLAR ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
-            "completed_item": "• {description} ✓\n"
-        }
-    },
-    "view_tasks_callback": {
-        "not_manager": "⚠️ Sadece yöneticiler görevleri görüntüleyebilir.",
-        "no_other_tasks": "📋 *Görevleriniz*\n\nBaşka görev yok.\n\n** ile başlayan mesajlar göndererek daha fazla görev oluşturun"
-    },
-    "feedback": {
-        "prompt": "💡 *Geri Bildiriminizi Gönderin*\n\nAşağıya mesajınızı yazın, BridgeOS ekibine ileteceğim.\n\nÖnerilerinizi paylaşın, hataları bildirin veya ne düşündüğünüzü bize söyleyin!"
-    },
-    "feedback_handling": {
-        "admin_error": "⚠️ Hata: Yönetici yapılandırılmamış. Lütfen desteğe başvurun.",
-        "success": "✅ *Geri Bildirim Gönderildi!*\n\nDüşüncelerinizi bizimle paylaştığınız için teşekkür ederiz. Her mesajı okuyoruz ve katkılarınızı gerçekten takdir ediyoruz!",
-        "error": "⚠️ Üzgünüz, geri bildiriminiz gönderilirken bir hata oluştu. Lütfen daha sonra tekrar deneyin."
-    },
-    "handle_message": {
-        "not_registered": "Lütfen önce kayıt olmak için /start yazın.",
-        "limit_reached": {
-            "title": "⚠️ *Ücretsiz Plan Limiti Doldu*\n\n",
-            "message": "İşletmeniz {free_limit} çevrilmiş mesaj tahsisini kullandı.\nKesintisiz operasyonlara devam etmek için lütfen hesabınızı *İş Lisansı*na yükseltin.\n\n",
-            "benefits_header": "*BridgeOS İş Lisansı:*\n",
-            "benefits": "✅ Tam İşletme Erişimi (Sınırsız kullanım)\n✅ Yönetici Panosu\n✅ Öncelikli İşleme\n✅ Sektöre Özel Çeviriler\n✅ Çoklu Dil Desteği (12 dil)\n• *Fiyat:* Aylık ${price} (İstediğiniz zaman iptal edin)\n\n",
-            "cta": "Yükseltmek için aşağıya dokunun:",
-            "button": "💳 İş Lisansına Yükseltin (Aylık ${price})"
-        },
-        "manager": {
-            "no_worker": "⚠️ Henüz bağlı bir iletişim kişiniz yok.\nDavetinizi (/mycode kullanın) iletişim kişinizle paylaşın.",
-            "worker_not_found": "⚠️ İletişim kişinizin hesabı artık mevcut değil.\nYeniden başlamak için /reset kullanın.",
-            "message_prefix": "🗣️ {name} kişisinden: {translated}",
-            "last_message": "⚠️ *Bu son ücretsiz mesajınızdı!*\n\nTüm {free_limit} ücretsiz mesajı kullandınız.\n\n💳 Sınırsız mesaj için abone olun (Aylık ${price}):",
-            "last_message_button": "🏢 İş Lisansına Yükseltin (Aylık ${price})"
-        },
-        "worker": {
-            "no_manager": "⚠️ Bir iletişim kişisine bağlı değilsiniz.\nİletişim kişinizden davet bağlantısını isteyin.",
-            "manager_not_found": "⚠️ İletişim kişinizin hesabı artık mevcut değil.\n/reset kullanın ve yeni bir davet bekleyin.",
-            "message_prefix": "🗣️ {name} kişisinden: {translated}"
-        }
-    },
-    "handle_task_creation": {
-        "not_manager": "⚠️ Sadece yöneticiler görev oluşturabilir.\nNormal mesaj göndermek için ** kullanmayın",
-        "no_worker": "⚠️ Henüz bağlı bir çalışanınız yok.\nÖnce çalışanınızla davetinizi (/mycode kullanın) paylaşın.",
-        "empty_description": "⚠️ Lütfen ** sonrasında bir görev açıklaması ekleyin\n\nÖrnek: ** İnek 115'i kızgınlık için kontrol et",
-        "worker_not_found": "⚠️ Çalışanınızın hesabı artık mevcut değil.\nYeniden başlamak için /reset kullanın.",
-        "translation_error": "⚠️ Görev çevrilirken hata: {error}\nLütfen tekrar deneyin.",
-        "creation_error": "⚠️ Görev oluşturulurken hata: {error}\nLütfen tekrar deneyin.",
-        "send_error": "⚠️ Görev çalışana gönderilirken hata: {error}",
-        "worker_task": "📋 *{manager_name} kişisinden görev:*\n{task}",
-        "mark_done_button": "✅ Tamamlandı Olarak İşaretle",
-        "manager_confirmation": "✅ *Görev çalışana gönderildi:*\n\"{task}\"",
-        "view_all_button": "📋 Tüm Görevleri Görüntüle"
-    },
-    "task_completion_callback": {
-        "invalid_task_id": "⚠️ Geçersiz görev kimliği",
-        "not_worker": "⚠️ Sadece çalışanlar görevleri tamamlayabilir",
-        "not_found": "⚠️ Görev bulunamadı veya zaten tamamlanmış",
-        "not_assigned": "⚠️ Bu görev size atanmamış",
-        "task_completed": "📋 *Görev:*\n{task}\n\n✅ *Tamamlandı!*",
-        "completion_confirmation": "✅ Görev tamamlandı olarak işaretlendi",
-        "manager_notification": "✅ *{worker_name} tarafından tamamlanan görev:*\n\"{task}\"\n\n🕐 Tamamlanma saati: {time}"
-    },
-    "handle_media": {
-        "not_registered": "Lütfen önce kayıt olmak için /start yazın.",
-        "manager_no_worker": "⚠️ Henüz bağlı bir iletişim kişiniz yok.\nDavetinizi (/mycode kullanın) iletişim kişinizle paylaşın.",
-        "worker_no_manager": "⚠️ Bir iletişim kişisine bağlı değilsiniz.\nİletişim kişinizden davet bağlantısını isteyin.",
-        "contact_not_found": "⚠️ İletişim kişinizin hesabı artık mevcut değil.\nYeniden başlamak için /reset kullanın.",
-        "media_prefix": "📎 {sender_name} kişisinden:"
-    },
-    "menu": {
-        "not_registered": "Lütfen önce kayıt olmak için /start komutunu kullanın.",
-        "title": "📋 BridgeOS Menüsü\n\nBir seçenek seçin:",
-        "tasks": "📋 Görevlerim",
-        "daily": "📊 Günlük Eylem Öğeleri",
-        "mycode": "🔗 Davet Kodum",
-        "subscription": "💳 Abonelik",
-        "refer": "📤 BridgeOS'u Öner",
-        "feedback": "💬 Geri Bildirim Gönder",
-        "reset": "🗑️ Hesabı Sıfırla"
-    },
-    "addworker": {
-        "not_registered": "Lütfen önce kayıt olmak için /start kullanın.",
-        "not_manager": "⚠️ Sadece yöneticiler çalışan ekleyebilir.\n\nÇalışanlar, yöneticileri tarafından eklenir.",
-        "pending_invitation": "⏳ {bot_name} üzerinde bekleyen bir davetiniz var.\n\nLütfen başka bir çalışan eklemeden önce bu daveti tamamlayın.\n\n🔗 Davet bağlantısı:\n{invite_link}\n\n👉 Paylaşmak için aşağıdaki düğmeye dokunun:",
-        "pending_share_text": "🌉 BridgeOS'a katıl!\nBenimle kendi dilinde sohbet et:\n{invite_link}",
-        "no_worker_on_current_bot": "⚠️ Lütfen önce bu bota bir çalışan bağlayın.\n\nMevcut çalışanlarınızı görmek için /workers kullanın veya ilk çalışanınızla davetinizi paylaşın.",
-        "limit_reached": "⚠️ *Çalışan Sınırına Ulaşıldı*\n\nZaten {count} çalışanınız var (izin verilen maksimum).\n\nBaşka bir çalışan eklemek için lütfen kurumsal seçenekler için destek ile iletişime geçin.",
-        "all_bots_used": "⚠️ Tüm bot yuvaları kullanımda.\n\n5 botun tamamında çalışanlarınız var. Bu olmamalı - lütfen destek ile iletişime geçin.",
-        "share_invitation_text": "🌉 BridgeOS'a katıl!\nBenimle kendi dilinde sohbet et:\n{invite_link}",
-        "share_button": "📤 Daveti Paylaş",
-        "bot_greeting": "👋 *Çalışan eklemeye hazır!*\n\n📋 Bu daveti çalışanınızla paylaşın:\n\n👉 Paylaşmak için aşağıdaki düğmeye dokunun:",
-        "success": "✅ *{bot_name} Üzerinde Çalışan Yuvası Atandı*\n\n📱 Çalışanınızı eklemek için bu botu açın:\n{bot_link}\n\n💡 Davet orada sizi bekliyor!"
-    },
-    "workers": {
-        "not_registered": "Lütfen önce kayıt olmak için /start kullanın.",
-        "not_manager": "Sadece yöneticiler çalışanları görebilir.\n\nÇalışanlar, yöneticileri tarafından yönetilir.",
-        "title": "👥 *Çalışanlarınız*\n\n",
-        "bot_connected": "{bot_name}: {worker_name} ✅\n",
-        "bot_pending": "{bot_name}: ⏳ Bekleyen davet\n",
-        "bot_available": "{bot_name}: Müsait\n",
-        "footer": "\n💡 Çalışan eklemek için: /addworker\n💡 Çalışana mesaj göndermek için: O botun sohbetini açın"
+    "active_subscription": {
+      "title": "📋 *Aboneliğiniz*\n\n",
+      "status": "{emoji} Durum: {status}\n",
+      "plan": "💳 Plan: Sınırsız Mesaj\n",
+      "price": "💵 Fiyat: Aylık ${price}\n",
+      "renews": "📅 Yenilenir: {date}\n",
+      "access_until": "📅 Erişim Süresi: {date}\n",
+      "footer": "\n_İstediğiniz zaman yönetin veya iptal edin._",
+      "manage_button": "⚙️ İş Lisansını Yönet"
     }
+  },
+  "tasks": {
+    "not_registered": "Lütfen önce kayıt olmak için /start yazın.",
+    "manager": {
+      "title": "📋 *Görevleriniz*\n\n",
+      "no_tasks": "Henüz görev yok.\n\n\\*\\* ile başlayan bir mesaj göndererek görev oluşturun\nÖrnek: \\*\\* 115 numaralı ineği kontrol et",
+      "pending_header": "⏳ *BEKLEMEDE ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
+      "task_item": "• {description}\n  _Oluşturuldu: Bugün saat {time}_\n\n",
+      "completed_header": "\n✅ *BUGÜN TAMAMLANANLAR ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
+      "completed_item": "• {description}\n  _Tamamlandı: {time}_\n\n"
+    },
+    "worker": {
+      "title": "📋 *Görevleriniz*\n\n",
+      "no_tasks": "Henüz görev atanmadı.\n\nYöneticiniz gerektiğinde size görevler gönderecek.",
+      "todo_header": "⏳ *YAPILACAKLAR ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
+      "task_item": "• {description}\n\n",
+      "instruction": "_Tamamlamak için her görev mesajındaki ✅ Tamamlandı Olarak İşaretle düğmesine dokunun._\n\n",
+      "completed_header": "\n✅ *BUGÜN TAMAMLANANLAR ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
+      "completed_item": "• {description} ✓\n"
+    }
+  },
+  "view_tasks_callback": {
+    "not_manager": "⚠️ Sadece yöneticiler görevleri görüntüleyebilir.",
+    "no_other_tasks": "📋 *Görevleriniz*\n\nBaşka görev yok.\n\n** ile başlayan mesajlar göndererek daha fazla görev oluşturun"
+  },
+  "feedback": {
+    "prompt": "💡 *Geri Bildiriminizi Gönderin*\n\nAşağıya mesajınızı yazın, BridgeOS ekibine ileteceğim.\n\nÖnerilerinizi paylaşın, hataları bildirin veya ne düşündüğünüzü bize söyleyin!"
+  },
+  "feedback_handling": {
+    "admin_error": "⚠️ Hata: Yönetici yapılandırılmamış. Lütfen desteğe başvurun.",
+    "success": "✅ *Geri Bildirim Gönderildi!*\n\nDüşüncelerinizi bizimle paylaştığınız için teşekkür ederiz. Her mesajı okuyoruz ve katkılarınızı gerçekten takdir ediyoruz!",
+    "error": "⚠️ Üzgünüz, geri bildiriminiz gönderilirken bir hata oluştu. Lütfen daha sonra tekrar deneyin."
+  },
+  "handle_message": {
+    "not_registered": "Lütfen önce kayıt olmak için /start yazın.",
+    "limit_reached": {
+      "title": "⚠️ *Ücretsiz Plan Limiti Doldu*\n\n",
+      "message": "İşletmeniz {free_limit} çevrilmiş mesaj tahsisini kullandı.\nKesintisiz operasyonlara devam etmek için lütfen hesabınızı *İş Lisansı*na yükseltin.\n\n",
+      "benefits_header": "*BridgeOS İş Lisansı:*\n",
+      "benefits": "✅ Tam İşletme Erişimi (Sınırsız kullanım)\n✅ Yönetici Panosu\n✅ Öncelikli İşleme\n✅ Sektöre Özel Çeviriler\n✅ Çoklu Dil Desteği (12 dil)\n• *Fiyat:* Aylık ${price} (İstediğiniz zaman iptal edin)\n\n",
+      "cta": "Yükseltmek için aşağıya dokunun:",
+      "button": "💳 İş Lisansına Yükseltin (Aylık ${price})"
+    },
+    "manager": {
+      "no_worker": "⚠️ Bu bota henüz bağlı çalışanınız yok.\n\nBir çalışan bağlamak için davetinizi paylaşın:\n\n📋 Kod: {code}\n🔗 {invite_link}",
+      "worker_not_found": "⚠️ İletişim kişinizin hesabı artık mevcut değil.\nYeniden başlamak için /reset kullanın.",
+      "message_prefix": "🗣️ {name} kişisinden: {translated}",
+      "last_message": "⚠️ *Bu son ücretsiz mesajınızdı!*\n\nTüm {free_limit} ücretsiz mesajı kullandınız.\n\n💳 Sınırsız mesaj için abone olun (Aylık ${price}):",
+      "last_message_button": "🏢 İş Lisansına Yükseltin (Aylık ${price})"
+    },
+    "worker": {
+      "no_manager": "⚠️ Bir iletişim kişisine bağlı değilsiniz.\nİletişim kişinizden davet bağlantısını isteyin.",
+      "manager_not_found": "⚠️ İletişim kişinizin hesabı artık mevcut değil.\n/reset kullanın ve yeni bir davet bekleyin.",
+      "message_prefix": "🗣️ {name} kişisinden: {translated}"
+    }
+  },
+  "handle_task_creation": {
+    "not_manager": "⚠️ Sadece yöneticiler görev oluşturabilir.\nNormal mesaj göndermek için ** kullanmayın",
+    "no_worker": "⚠️ Bu bota henüz bağlı çalışanınız yok.\n\nBir çalışan bağlamak için davetinizi paylaşın:\n\n📋 Kod: {code}\n🔗 {invite_link}",
+    "empty_description": "⚠️ Lütfen ** sonrasında bir görev açıklaması ekleyin\n\nÖrnek: ** İnek 115'i kızgınlık için kontrol et",
+    "worker_not_found": "⚠️ Çalışanınızın hesabı artık mevcut değil.\nYeniden başlamak için /reset kullanın.",
+    "translation_error": "⚠️ Görev çevrilirken hata: {error}\nLütfen tekrar deneyin.",
+    "creation_error": "⚠️ Görev oluşturulurken hata: {error}\nLütfen tekrar deneyin.",
+    "send_error": "⚠️ Görev çalışana gönderilirken hata: {error}",
+    "worker_task": "📋 *{manager_name} kişisinden görev:*\n{task}",
+    "mark_done_button": "✅ Tamamlandı Olarak İşaretle",
+    "manager_confirmation": "✅ *Görev çalışana gönderildi:*\n\"{task}\"",
+    "view_all_button": "📋 Tüm Görevleri Görüntüle"
+  },
+  "task_completion_callback": {
+    "invalid_task_id": "⚠️ Geçersiz görev kimliği",
+    "not_worker": "⚠️ Sadece çalışanlar görevleri tamamlayabilir",
+    "not_found": "⚠️ Görev bulunamadı veya zaten tamamlanmış",
+    "not_assigned": "⚠️ Bu görev size atanmamış",
+    "task_completed": "📋 *Görev:*\n{task}\n\n✅ *Tamamlandı!*",
+    "completion_confirmation": "✅ Görev tamamlandı olarak işaretlendi",
+    "manager_notification": "✅ *{worker_name} tarafından tamamlanan görev:*\n\"{task}\"\n\n🕐 Tamamlanma saati: {time}"
+  },
+  "handle_media": {
+    "not_registered": "Lütfen önce kayıt olmak için /start yazın.",
+    "manager_no_worker": "⚠️ Bu bota henüz bağlı çalışanınız yok.\n\nBir çalışan bağlamak için davetinizi paylaşın:\n\n📋 Kod: {code}\n🔗 {invite_link}",
+    "worker_no_manager": "⚠️ Bir iletişim kişisine bağlı değilsiniz.\nİletişim kişinizden davet bağlantısını isteyin.",
+    "contact_not_found": "⚠️ İletişim kişinizin hesabı artık mevcut değil.\nYeniden başlamak için /reset kullanın.",
+    "media_prefix": "📎 {sender_name} kişisinden:"
+  },
+  "menu": {
+    "not_registered": "Lütfen önce kayıt olmak için /start komutunu kullanın.",
+    "title": "📋 BridgeOS Menüsü\n\nBir seçenek seçin:",
+    "tasks": "📋 Görevlerim",
+    "daily": "📊 Günlük Eylem Öğeleri",
+    "mycode": "🔗 Davet Kodum",
+    "subscription": "💳 Abonelik",
+    "refer": "📤 BridgeOS'u Öner",
+    "feedback": "💬 Geri Bildirim Gönder",
+    "reset": "🗑️ Hesabı Sıfırla"
+  },
+  "addworker": {
+    "not_registered": "Lütfen önce kayıt olmak için /start kullanın.",
+    "not_manager": "⚠️ Sadece yöneticiler çalışan ekleyebilir.\n\nÇalışanlar, yöneticileri tarafından eklenir.",
+    "pending_invitation": "⏳ {bot_name} üzerinde bekleyen bir davetiniz var.\n\nLütfen başka bir çalışan eklemeden önce bu daveti tamamlayın.\n\n🔗 Davet bağlantısı:\n{invite_link}\n\n👉 Paylaşmak için aşağıdaki düğmeye dokunun:",
+    "pending_share_text": "🌉 BridgeOS'a katıl!\nBenimle kendi dilinde sohbet et:\n{invite_link}",
+    "no_worker_on_current_bot": "⚠️ Lütfen önce bu bota bir çalışan bağlayın.\n\nİlk çalışanınızla davetinizi paylaşın:\n\n📋 Kod: {code}\n🔗 Bağlantı: {invite_link}",
+    "limit_reached": "⚠️ *Çalışan Sınırına Ulaşıldı*\n\nZaten {count} çalışanınız var (izin verilen maksimum).\n\nBaşka bir çalışan eklemek için lütfen kurumsal seçenekler için destek ile iletişime geçin.",
+    "all_bots_used": "⚠️ Tüm bot yuvaları kullanımda.\n\n5 botun tamamında çalışanlarınız var. Bu olmamalı - lütfen destek ile iletişime geçin.",
+    "share_invitation_text": "🌉 BridgeOS'a katıl!\nBenimle kendi dilinde sohbet et:\n{invite_link}",
+    "share_button": "📤 Daveti Paylaş",
+    "bot_greeting": "👋 *Çalışan eklemeye hazır!*\n\n📋 Bu daveti çalışanınızla paylaşın:\n\n👉 Paylaşmak için aşağıdaki düğmeye dokunun:",
+    "success": "✅ *{bot_name} Üzerinde Çalışan Yuvası Atandı*\n\n📱 Çalışanınızı eklemek için bu botu açın:\n{bot_link}\n\n💡 Davet orada sizi bekliyor!"
+  },
+  "workers": {
+    "not_registered": "Lütfen önce kayıt olmak için /start kullanın.",
+    "not_manager": "Sadece yöneticiler çalışanları görebilir.\n\nÇalışanlar, yöneticileri tarafından yönetilir.",
+    "title": "👥 *Çalışanlarınız*\n\n",
+    "bot_connected": "{bot_name}: {worker_name} ✅\n",
+    "bot_pending": "{bot_name}: ⏳ Bekleyen davet\n",
+    "bot_available": "{bot_name}: Müsait\n",
+    "footer": "\n💡 Çalışan eklemek için: /addworker\n💡 Çalışana mesaj göndermek için: O botun sohbetini açın"
+  }
 }

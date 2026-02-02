@@ -1,212 +1,212 @@
 {
-    "start": {
-        "welcome_back": "Maligayang pagbabalik! Nakarehistro ka bilang {role}.\n\nGamitin ang /help upang makita ang mga available na command.",
-        "welcome_new": "Maligayang pagdating sa BridgeOS! 🌉\n\n👇 Pindutin ang isang button sa ibaba upang piliin ang iyong wika:",
-        "already_manager_clicked_invite": "Nakarehistro ka na bilang manager.\n\nGamitin muna ang /reset kung gusto mong sumali bilang manggagawa ng iba.",
-        "already_worker_clicked_invite": "Nakarehistro ka na bilang manggagawa.\n\nGamitin muna ang /reset kung gusto mong kumonekta sa ibang manager."
+  "start": {
+    "welcome_back": "Maligayang pagbabalik! Nakarehistro ka bilang {role}.\n\nGamitin ang /help upang makita ang mga available na command.",
+    "welcome_new": "Maligayang pagdating sa BridgeOS! 🌉\n\n👇 Pindutin ang isang button sa ibaba upang piliin ang iyong wika:",
+    "already_manager_clicked_invite": "Nakarehistro ka na bilang manager.\n\nGamitin muna ang /reset kung gusto mong sumali bilang manggagawa ng iba.",
+    "already_worker_clicked_invite": "Nakarehistro ka na bilang manggagawa.\n\nGamitin muna ang /reset kung gusto mong kumonekta sa ibang manager."
+  },
+  "registration": {
+    "gender_question": "Ano ang iyong kasarian?\n(Tumutulong ito para sa tumpak na pagsasalin)",
+    "gender_options": {
+      "male": "👨 Lalaki",
+      "female": "👩 Babae",
+      "prefer_not_to_say": "🤷 Ayaw sabihin"
     },
-    "registration": {
-        "gender_question": "Ano ang iyong kasarian?\n(Tumutulong ito para sa tumpak na pagsasalin)",
-        "gender_options": {
-            "male": "👨 Lalaki",
-            "female": "👩 Babae",
-            "prefer_not_to_say": "🤷 Ayaw sabihin"
-        },
-        "invalid_language": "⚠️ Mangyaring gamitin ang mga button sa ibaba upang pumili ng wika.\n\n💡 Tip: Kung hindi mo nakikita ang mga button, pindutin ang icon ng keyboard (⌨️) sa ibaba ng iyong screen.",
-        "invalid_gender": "⚠️ Mangyaring gamitin ang mga button sa ibaba upang piliin ang iyong kasarian.\n\n💡 Tip: Kung hindi mo nakikita ang mga button, pindutin ang icon ng keyboard (⌨️) sa ibaba ng iyong screen.",
-        "invalid_industry": "⚠️ Mangyaring gamitin ang mga button sa ibaba upang pumili ng industriya.\n\n💡 Tip: Kung hindi mo nakikita ang mga button, pindutin ang icon ng keyboard (⌨️) sa ibaba ng iyong screen.",
-        "invalid_code": "❌ Hindi wastong invitation code.\n\nPakiusap na hingin sa iyong contact ang bagong invitation link.",
-        "worker_already_connected": "❌ May nakakonektang worker na ang contact na ito.\nHingin sa kanila na gumamit ng /reset muna.",
-        "connection_success": "✅ Nakakonekta na sa iyong contact! Maaari ka nang magsimulang mag-chat.\n\nGamitin ang /help upang makita ang mga available na command.",
-        "manager_notification": "✅ Si {worker_name} ay nakakonekta na bilang iyong worker!",
-        "industry_question": "Saan industriya ka nagtatrabaho?\n\nTumutulong ito upang magbigay ng tumpak na pagsasalin ng mga teknikal na termino at wikang pang-trabaho.",
-        "share_invitation_text": "🌉 Sumali sa BridgeOS!\nMag-chat sa akin sa iyong wika:\n{deep_link}",
-        "share_invitation_button": "🚀 Ipadala ang Imbitasyon Ngayon",
-        "registration_complete": "✅ Tapos na ang registration!\n\n📋 Ang iyong invitation code: {code}\n🔗 Invitation link:\n{deep_link}\n\n👉 I-tap ang button sa ibaba upang ibahagi sa iyong contact:",
-        "ready_to_start": "Handa nang magsimula! Gamitin ang /help anumang oras.",
-        "cancelled": "Kinansela ang registration. Gamitin ang /start upang subukan muli.",
-        "worker_switched": "⚠️ {worker_name} ay kumonekta sa ibang manager.\n\nMaaari ka nang mag-imbita ng bagong manggagawa gamit ang /mycode"
+    "invalid_language": "⚠️ Mangyaring gamitin ang mga button sa ibaba upang pumili ng wika.\n\n💡 Tip: Kung hindi mo nakikita ang mga button, pindutin ang icon ng keyboard (⌨️) sa ibaba ng iyong screen.",
+    "invalid_gender": "⚠️ Mangyaring gamitin ang mga button sa ibaba upang piliin ang iyong kasarian.\n\n💡 Tip: Kung hindi mo nakikita ang mga button, pindutin ang icon ng keyboard (⌨️) sa ibaba ng iyong screen.",
+    "invalid_industry": "⚠️ Mangyaring gamitin ang mga button sa ibaba upang pumili ng industriya.\n\n💡 Tip: Kung hindi mo nakikita ang mga button, pindutin ang icon ng keyboard (⌨️) sa ibaba ng iyong screen.",
+    "invalid_code": "❌ Hindi wastong invitation code.\n\nPakiusap na hingin sa iyong contact ang bagong invitation link.",
+    "worker_already_connected": "❌ May nakakonektang worker na ang contact na ito.\nHingin sa kanila na gumamit ng /reset muna.",
+    "connection_success": "✅ Nakakonekta na sa iyong contact! Maaari ka nang magsimulang mag-chat.\n\nGamitin ang /help upang makita ang mga available na command.",
+    "manager_notification": "✅ Si {worker_name} ay nakakonekta na bilang iyong worker!",
+    "industry_question": "Saan industriya ka nagtatrabaho?\n\nTumutulong ito upang magbigay ng tumpak na pagsasalin ng mga teknikal na termino at wikang pang-trabaho.",
+    "share_invitation_text": "🌉 Sumali sa BridgeOS!\nMag-chat sa akin sa iyong wika:\n{deep_link}",
+    "share_invitation_button": "🚀 Ipadala ang Imbitasyon Ngayon",
+    "registration_complete": "✅ Tapos na ang registration!\n\n📋 Ang iyong invitation code: {code}\n🔗 Invitation link:\n{deep_link}\n\n👉 I-tap ang button sa ibaba upang ibahagi sa iyong contact:",
+    "ready_to_start": "Handa nang magsimula! Gamitin ang /help anumang oras.",
+    "cancelled": "Kinansela ang registration. Gamitin ang /start upang subukan muli.",
+    "worker_switched": "⚠️ {worker_name} ay kumonekta sa ibang manager.\n\nMaaari ka nang mag-imbita ng bagong manggagawa gamit ang /mycode"
+  },
+  "industries": {
+    "dairy_farm": "🐄 Dairy Farm",
+    "elderly_care": "👴 Pag-aalaga sa Matatanda",
+    "hospitality": "🏨 Hospitality / Hotel",
+    "farm": "🌾 Bukid / Agrikultura",
+    "construction": "🏗️ Konstruksiyon",
+    "restaurant": "🍽️ Restawran",
+    "warehouse": "📦 Bodega",
+    "other": "💼 Pangkalahatang Lugar ng Trabaho"
+  },
+  "help": {
+    "not_registered": "Pakiusap na gumamit ng /start upang magrehistro muna.",
+    "manager_commands": "📋 *Mga Available na Command:*\n\n/help - Ipakita ang mensaheng ito\n/tasks - Tingnan ang iyong listahan ng gawain\n/daily - Kunin ang mga pang-araw-araw na aksyon\n/subscription - Tingnan ang status ng subscription\n/reset - Burahin ang account at magsimula muli\n/mycode - Ipakita ang iyong connection code\n/refer - Irekomenda sa ibang mga manager\n/feedback - Magpadala ng feedback sa BridgeOS team\n\n💬 *Paano gamitin:*\nI-type lang ang iyong mensahe at awtomatikong isasalin at ipapadala sa iyong contact!",
+    "worker_commands": "📋 *Mga Available na Command:*\n\n/help - Ipakita ang mensaheng ito\n/tasks - Tingnan ang iyong listahan ng gawain\n/refer - Irekomenda sa ibang mga manager\n/feedback - Magpadala ng feedback sa BridgeOS team\n/reset - Burahin ang account\n\n💬 *Paano gamitin:*\nI-type lang ang iyong mensahe at awtomatikong isasalin at ipapadala sa iyong contact!"
+  },
+  "mycode": {
+    "not_registered": "Pakiusap na gumamit ng /start upang magrehistro muna.",
+    "not_manager": "Ang mga manager lang ang may connection code.",
+    "share_button": "📤 Ibahagi ang Imbitasyon",
+    "status": "👥 Nakakonektang worker: {status}\n\n📋 Ang iyong invitation code: {code}\n🔗 Invitation link:\n{deep_link}\n\n👉 I-tap ang button sa ibaba upang ibahagi sa iyong contact:",
+    "worker_status_yes": "Oo ✅",
+    "worker_status_no": "Hindi ❌"
+  },
+  "refer": {
+    "share_text": "🌉 Tingnan ang BridgeOS!\n\nGinagamit ko ito upang makipag-usap sa aking team nang real-time - magkakaibang wika kami pero natural na nag-chat!\n\n🌍 {language_count} na wika ang sinusuportahan\n✅ Instant na pagsasalin\n🏭 Mga termino na pang-industriya\n💬 Simple at epektibo\n\nSubukan nang libre: https://t.me/FarmTranslateBot",
+    "button": "📤 Irekomenda ang BridgeOS",
+    "message": "🌉 Gusto mo ang BridgeOS?\n\nTulungan ang ibang mga manager na lampasan ang mga hadlang sa wika!\n\nIrekomenda ang BridgeOS sa mga kasamahan, kaibigan, o kahit sino na namamahala ng mga team na nagsasalita ng iba't ibang wika.\n\n👉 I-tap ang button upang ibahagi:"
+  },
+  "reset": {
+    "no_account": "Wala kang account na mare-reset.",
+    "worker_notification": "⚠️ Nag-reset ng account ang iyong contact.\nNag-reset din ang iyong account.\n\nKailangan mo ng bagong imbitasyon upang muling makakonekta.",
+    "manager_notification": "ℹ️ Nag-reset ng account si {worker_name} at hindi na nakakonekta.",
+    "success": "✅ Nag-reset na ang iyong account!\n\nNabura na ang lahat ng iyong data at koneksyon.\nGamitin ang /start upang magrehistro muli."
+  },
+  "daily": {
+    "not_registered": "Pakiusap na gumamit ng /start upang magrehistro muna.",
+    "not_manager": "Ang mga manager lang ang makakagawa ng mga buod.\n\nTumutulong ang feature na ito sa mga manager na subaybayan ang mga aksyon at gawain.",
+    "no_worker": "Wala ka pang nakakonektang worker.\n\nMakakonekta muna sa worker upang makita ang mga buod ng pag-uusap.",
+    "generating": "⏳ Ginagawa ang Mga Pang-araw-araw na Aksyon (Nakaraang 24 Oras)...\n\nSinusuri ang nakaraang 24 oras ng pag-uusap.",
+    "result_header": "📋 *Mga Pang-araw-araw na Aksyon (Nakaraang 24 Oras)*\n\n{action_items}",
+    "message_count": "\n\n_Kabuuang mga mensahe: {count}_",
+    "error": "❌ Error sa paggawa ng mga pang-araw-araw na aksyon: {error}\n\nPakiusap na subukan muli mamaya o kontakin ang support."
+  },
+  "subscription": {
+    "not_registered": "Pakiusap na gumamit ng /start upang magrehistro muna.",
+    "worker_unlimited": "Ang mga worker ay may walang hanggang mga mensahe! 🎉\n\nAng mga manager lang ang kailangan ng subscription.",
+    "no_subscription": {
+      "title": "📋 *Status ng Subscription*\n\n",
+      "status": "Status: ❌ Walang Aktibong Subscription\n",
+      "usage": "Mga Mensaheng Ginamit: {messages_sent} / {free_limit} (Free Tier)\n\n",
+      "benefits_header": "💳 *Mag-subscribe sa BridgeOS:*\n",
+      "benefits": "• Walang hanggang mga mensahe\n• ${price}/buwan\n• Kanselahin anumang oras",
+      "button": "🏢 Mag-upgrade sa Business License (${price}/buwan)"
     },
-    "industries": {
-        "dairy_farm": "🐄 Dairy Farm",
-        "elderly_care": "👴 Pag-aalaga sa Matatanda",
-        "hospitality": "🏨 Hospitality / Hotel",
-        "farm": "🌾 Bukid / Agrikultura",
-        "construction": "🏗️ Konstruksiyon",
-        "restaurant": "🍽️ Restawran",
-        "warehouse": "📦 Bodega",
-        "other": "💼 Pangkalahatang Lugar ng Trabaho"
-    },
-    "help": {
-        "not_registered": "Pakiusap na gumamit ng /start upang magrehistro muna.",
-        "manager_commands": "📋 *Mga Available na Command:*\n\n/help - Ipakita ang mensaheng ito\n/tasks - Tingnan ang iyong listahan ng gawain\n/daily - Kunin ang mga pang-araw-araw na aksyon\n/subscription - Tingnan ang status ng subscription\n/reset - Burahin ang account at magsimula muli\n/mycode - Ipakita ang iyong connection code\n/refer - Irekomenda sa ibang mga manager\n/feedback - Magpadala ng feedback sa BridgeOS team\n\n💬 *Paano gamitin:*\nI-type lang ang iyong mensahe at awtomatikong isasalin at ipapadala sa iyong contact!",
-        "worker_commands": "📋 *Mga Available na Command:*\n\n/help - Ipakita ang mensaheng ito\n/tasks - Tingnan ang iyong listahan ng gawain\n/refer - Irekomenda sa ibang mga manager\n/feedback - Magpadala ng feedback sa BridgeOS team\n/reset - Burahin ang account\n\n💬 *Paano gamitin:*\nI-type lang ang iyong mensahe at awtomatikong isasalin at ipapadala sa iyong contact!"
-    },
-    "mycode": {
-        "not_registered": "Pakiusap na gumamit ng /start upang magrehistro muna.",
-        "not_manager": "Ang mga manager lang ang may connection code.",
-        "share_button": "📤 Ibahagi ang Imbitasyon",
-        "status": "👥 Nakakonektang worker: {status}\n\n📋 Ang iyong invitation code: {code}\n🔗 Invitation link:\n{deep_link}\n\n👉 I-tap ang button sa ibaba upang ibahagi sa iyong contact:",
-        "worker_status_yes": "Oo ✅",
-        "worker_status_no": "Hindi ❌"
-    },
-    "refer": {
-        "share_text": "🌉 Tingnan ang BridgeOS!\n\nGinagamit ko ito upang makipag-usap sa aking team nang real-time - magkakaibang wika kami pero natural na nag-chat!\n\n🌍 {language_count} na wika ang sinusuportahan\n✅ Instant na pagsasalin\n🏭 Mga termino na pang-industriya\n💬 Simple at epektibo\n\nSubukan nang libre: https://t.me/FarmTranslateBot",
-        "button": "📤 Irekomenda ang BridgeOS",
-        "message": "🌉 Gusto mo ang BridgeOS?\n\nTulungan ang ibang mga manager na lampasan ang mga hadlang sa wika!\n\nIrekomenda ang BridgeOS sa mga kasamahan, kaibigan, o kahit sino na namamahala ng mga team na nagsasalita ng iba't ibang wika.\n\n👉 I-tap ang button upang ibahagi:"
-    },
-    "reset": {
-        "no_account": "Wala kang account na mare-reset.",
-        "worker_notification": "⚠️ Nag-reset ng account ang iyong contact.\nNag-reset din ang iyong account.\n\nKailangan mo ng bagong imbitasyon upang muling makakonekta.",
-        "manager_notification": "ℹ️ Nag-reset ng account si {worker_name} at hindi na nakakonekta.",
-        "success": "✅ Nag-reset na ang iyong account!\n\nNabura na ang lahat ng iyong data at koneksyon.\nGamitin ang /start upang magrehistro muli."
-    },
-    "daily": {
-        "not_registered": "Pakiusap na gumamit ng /start upang magrehistro muna.",
-        "not_manager": "Ang mga manager lang ang makakagawa ng mga buod.\n\nTumutulong ang feature na ito sa mga manager na subaybayan ang mga aksyon at gawain.",
-        "no_worker": "Wala ka pang nakakonektang worker.\n\nMakakonekta muna sa worker upang makita ang mga buod ng pag-uusap.",
-        "generating": "⏳ Ginagawa ang Mga Pang-araw-araw na Aksyon (Nakaraang 24 Oras)...\n\nSinusuri ang nakaraang 24 oras ng pag-uusap.",
-        "result_header": "📋 *Mga Pang-araw-araw na Aksyon (Nakaraang 24 Oras)*\n\n{action_items}",
-        "message_count": "\n\n_Kabuuang mga mensahe: {count}_",
-        "error": "❌ Error sa paggawa ng mga pang-araw-araw na aksyon: {error}\n\nPakiusap na subukan muli mamaya o kontakin ang support."
-    },
-    "subscription": {
-        "not_registered": "Pakiusap na gumamit ng /start upang magrehistro muna.",
-        "worker_unlimited": "Ang mga worker ay may walang hanggang mga mensahe! 🎉\n\nAng mga manager lang ang kailangan ng subscription.",
-        "no_subscription": {
-            "title": "📋 *Status ng Subscription*\n\n",
-            "status": "Status: ❌ Walang Aktibong Subscription\n",
-            "usage": "Mga Mensaheng Ginamit: {messages_sent} / {free_limit} (Free Tier)\n\n",
-            "benefits_header": "💳 *Mag-subscribe sa BridgeOS:*\n",
-            "benefits": "• Walang hanggang mga mensahe\n• ${price}/buwan\n• Kanselahin anumang oras",
-            "button": "🏢 Mag-upgrade sa Business License (${price}/buwan)"
-        },
-        "active_subscription": {
-            "title": "📋 *Ang Iyong Subscription*\n\n",
-            "status": "{emoji} Status: {status}\n",
-            "plan": "💳 Plan: Walang Hanggang Mga Mensahe\n",
-            "price": "💵 Presyo: ${price}/buwan\n",
-            "renews": "📅 Mag-renew: {date}\n",
-            "access_until": "📅 Access Hanggang: {date}\n",
-            "footer": "\n_Pamahalaan o kanselahin anumang oras._",
-            "manage_button": "⚙️ Pamahalaan ang Business License"
-        }
-    },
-    "tasks": {
-        "not_registered": "Pakiusap na gumamit ng /start upang magrehistro muna.",
-        "manager": {
-            "title": "📋 *Ang Iyong Mga Gawain*\n\n",
-            "no_tasks": "Wala pang mga gawain.\n\nLikha ng gawain sa pamamagitan ng pagpapadala ng mensahe na nagsisimula sa \\*\\*\nHalimbawa: \\*\\* Suriin ang baka 115",
-            "pending_header": "⏳ *NAKABINBIN ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
-            "task_item": "• {description}\n  _Nilikha: Ngayon sa {time}_\n\n",
-            "completed_header": "\n✅ *NATAPOS NGAYONG ARAW ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
-            "completed_item": "• {description}\n  _Natapos sa {time}_\n\n"
-        },
-        "worker": {
-            "title": "📋 *Ang Iyong Mga Gawain*\n\n",
-            "no_tasks": "Walang naka-assign na gawain pa.\n\nMagpapadala ang iyong manager ng mga gawain kapag kailangan.",
-            "todo_header": "⏳ *GAGAWIN ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
-            "task_item": "• {description}\n\n",
-            "instruction": "_I-tap ang ✅ Mark Done button sa bawat mensahe ng gawain upang tapusin ito._\n\n",
-            "completed_header": "\n✅ *NATAPOS NGAYONG ARAW ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
-            "completed_item": "• {description} ✓\n"
-        }
-    },
-    "view_tasks_callback": {
-        "not_manager": "⚠️ Ang mga manager lang ang makakatingin ng mga gawain.",
-        "no_other_tasks": "📋 *Ang Iyong Mga Gawain*\n\nWalang ibang gawain pa.\n\nGumawa ng higit pang mga gawain sa pamamagitan ng pagpapadala ng mga mensaheng nagsisimula sa **"
-    },
-    "feedback": {
-        "prompt": "💡 *Magpadala ng Iyong Feedback*\n\nI-type ang iyong mensahe sa ibaba at ipapadala ko ito sa BridgeOS team.\n\nMagbahagi ng mga mungkahi, mag-report ng mga bug, o sabihin sa amin ang iyong iniisip!"
-    },
-    "feedback_handling": {
-        "admin_error": "⚠️ Error: Hindi naka-configure ang admin. Pakiusap na kontakin ang support.",
-        "success": "✅ *Naipadala ang Feedback!*\n\nSalamat sa pagbabahagi ng iyong mga saloobin sa amin. Binabasa namin ang bawat mensahe at lubos na pinahahalagahan ang iyong input!",
-        "error": "⚠️ Paumanhin, may error sa pagpapadala ng iyong feedback. Pakiusap na subukan muli mamaya."
-    },
-    "handle_message": {
-        "not_registered": "Pakiusap na gumamit ng /start upang magrehistro muna.",
-        "limit_reached": {
-            "title": "⚠️ *Naabot na ang Limitasyon ng Free Plan*\n\n",
-            "message": "Nagamit na ng iyong negosyo ang alokasyon nito na {free_limit} mga isinalin na mensahe.\nUpang magpatuloy ng mga operasyon nang walang sagabal, pakiusap na i-upgrade ang iyong account sa *Business License*.\n\n",
-            "benefits_header": "*BridgeOS Business License:*\n",
-            "benefits": "✅ Buong Business Access (Walang limitasyong paggamit)\n✅ Manager Dashboard\n✅ Priority Processing\n✅ Mga Pagsasaling Pang-industriya\n✅ Multi-Language Support (12 wika)\n• *Presyo:* ${price}/buwan (Kanselahin anumang oras)\n\n",
-            "cta": "I-tap sa ibaba upang mag-upgrade:",
-            "button": "💳 Mag-upgrade sa Business License (${price}/buwan)"
-        },
-        "manager": {
-            "no_worker": "⚠️ Wala ka pang nakakonektang contact.\nIbahagi ang iyong imbitasyon (gamitin ang /mycode) sa iyong contact.",
-            "worker_not_found": "⚠️ Wala na ang account ng iyong contact.\nGamitin ang /reset upang magsimula muli.",
-            "message_prefix": "🗣️ Mula kay {name}: {translated}",
-            "last_message": "⚠️ *Iyon ang iyong huling libreng mensahe!*\n\nNagamit mo na ang lahat ng {free_limit} libreng mensahe.\n\n💳 Mag-subscribe para sa walang hanggang mga mensahe (${price}/buwan):",
-            "last_message_button": "🏢 Mag-upgrade sa Business License (${price}/buwan)"
-        },
-        "worker": {
-            "no_manager": "⚠️ Hindi ka pa nakakonekta sa isang contact.\nHingin sa iyong contact ang kanilang invitation link.",
-            "manager_not_found": "⚠️ Wala na ang account ng iyong contact.\nGamitin ang /reset at maghintay ng bagong imbitasyon.",
-            "message_prefix": "🗣️ Mula kay {name}: {translated}"
-        }
-    },
-    "handle_task_creation": {
-        "not_manager": "⚠️ Ang mga manager lang ang makakagawa ng mga gawain.\nUpang magpadala ng regular na mensahe, huwag gumamit ng **",
-        "no_worker": "⚠️ Wala ka pang nakakonektang worker.\nIbahagi ang iyong imbitasyon (gamitin ang /mycode) sa iyong worker muna.",
-        "empty_description": "⚠️ Pakiusap na magbigay ng deskripsyon ng gawain pagkatapos ng **\n\nHalimbawa: ** Tingnan ang baka 115 kung nagbubuntis",
-        "worker_not_found": "⚠️ Wala na ang account ng iyong worker.\nGamitin ang /reset upang magsimula muli.",
-        "translation_error": "⚠️ Error sa pagsasalin ng gawain: {error}\nPakiusap na subukan muli.",
-        "creation_error": "⚠️ Error sa paggawa ng gawain: {error}\nPakiusap na subukan muli.",
-        "send_error": "⚠️ Error sa pagpapadala ng gawain sa worker: {error}",
-        "worker_task": "📋 *Gawain mula kay {manager_name}:*\n{task}",
-        "mark_done_button": "✅ Markahan na Tapos",
-        "manager_confirmation": "✅ *Naipadala ang gawain sa worker:*\n\"{task}\"",
-        "view_all_button": "📋 Tingnan ang Lahat ng Gawain"
-    },
-    "task_completion_callback": {
-        "invalid_task_id": "⚠️ Hindi wastong task ID",
-        "not_worker": "⚠️ Ang mga worker lang ang makakatatapos ng mga gawain",
-        "not_found": "⚠️ Hindi nahanap ang gawain o tapos na",
-        "not_assigned": "⚠️ Hindi naka-assign sa iyo ang gawaing ito",
-        "task_completed": "📋 *Gawain:*\n{task}\n\n✅ *Tapos na!*",
-        "completion_confirmation": "✅ Minarkahan ang gawain na tapos na",
-        "manager_notification": "✅ *Natapos ni {worker_name} ang gawain:*\n\"{task}\"\n\n🕐 Natapos sa: {time}"
-    },
-    "handle_media": {
-        "not_registered": "Pakiusap na gumamit ng /start upang magrehistro muna.",
-        "manager_no_worker": "⚠️ Wala ka pang nakakonektang contact.\nIbahagi ang iyong imbitasyon (gamitin ang /mycode) sa iyong contact.",
-        "worker_no_manager": "⚠️ Hindi ka pa nakakonekta sa isang contact.\nHingin sa iyong contact ang kanilang invitation link.",
-        "contact_not_found": "⚠️ Wala na ang account ng iyong contact.\nGamitin ang /reset upang magsimula muli.",
-        "media_prefix": "📎 Mula kay {sender_name}:"
-    },
-    "menu": {
-        "not_registered": "Mangyaring gumamit ng /start para magrehistro muna.",
-        "title": "📋 BridgeOS Menu\n\nPumili ng opsyon:",
-        "tasks": "📋 Aking Mga Gawain",
-        "daily": "📊 Arawang Mga Aksyon",
-        "mycode": "🔗 Aking Imbitasyon Code",
-        "subscription": "💳 Subscription",
-        "refer": "📤 Irekomenda ang BridgeOS",
-        "feedback": "💬 Magpadala ng Feedback",
-        "reset": "🗑️ I-reset ang Account"
-    },
-    "addworker": {
-        "not_registered": "Mangyaring gamitin ang /start para magrehistro muna.",
-        "not_manager": "⚠️ Ang mga manager lamang ang maaaring magdagdag ng mga manggagawa.\n\nAng mga manggagawa ay idinaragdag ng kanilang mga manager.",
-        "pending_invitation": "⏳ Mayroon kang nakabinbing imbitasyon sa {bot_name}.\n\nPakikumpletuhin muna ang imbitasyong iyon bago magdagdag ng isa pang manggagawa.\n\n🔗 Link ng imbitasyon:\n{invite_link}\n\n👉 I-tap ang button sa ibaba upang ibahagi:",
-        "pending_share_text": "🌉 Sumali sa BridgeOS!\nMakipag-chat sa akin sa iyong wika:\n{invite_link}",
-        "no_worker_on_current_bot": "⚠️ Mangyaring kumonekta muna ng manggagawa sa bot na ito.\n\nGamitin ang /workers upang makita ang iyong mga kasalukuyang manggagawa, o ibahagi ang iyong imbitasyon sa iyong unang manggagawa.",
-        "limit_reached": "⚠️ *Naabot ang Limitasyon ng Manggagawa*\n\nMayroon ka nang {count} manggagawa (maximum na pinapayagan).\n\nUpang magdagdag ng isa pang manggagawa, mangyaring makipag-ugnayan sa suporta para sa mga opsyon ng negosyo.",
-        "all_bots_used": "⚠️ Lahat ng bot slot ay ginagamit.\n\nMayroon kang mga manggagawa sa lahat ng 5 bot. Hindi ito dapat mangyari - mangyaring makipag-ugnayan sa suporta.",
-        "share_invitation_text": "🌉 Sumali sa BridgeOS!\nMakipag-chat sa akin sa iyong wika:\n{invite_link}",
-        "share_button": "📤 Ibahagi ang Imbitasyon",
-        "bot_greeting": "👋 *Handa nang magdagdag ng manggagawa!*\n\n📋 Ibahagi ang imbitasyong ito sa iyong manggagawa:\n\n👉 I-tap ang button sa ibaba upang ibahagi:",
-        "success": "✅ *Naitalaga ang Worker Slot sa {bot_name}*\n\n📱 Buksan ang bot na ito upang idagdag ang iyong manggagawa:\n{bot_link}\n\n💡 Ang imbitasyon ay naghihintay sa iyo doon!"
-    },
-    "workers": {
-        "not_registered": "Mangyaring gamitin ang /start para magrehistro muna.",
-        "not_manager": "Ang mga manager lamang ang maaaring makakita ng mga manggagawa.\n\nAng mga manggagawa ay pinamamahalaan ng kanilang mga manager.",
-        "title": "👥 *Ang Iyong Mga Manggagawa*\n\n",
-        "bot_connected": "{bot_name}: {worker_name} ✅\n",
-        "bot_pending": "{bot_name}: ⏳ Nakabinbing imbitasyon\n",
-        "bot_available": "{bot_name}: Available\n",
-        "footer": "\n💡 Upang magdagdag ng manggagawa: /addworker\n💡 Upang mag-message sa manggagawa: Buksan ang chat ng bot na iyon"
+    "active_subscription": {
+      "title": "📋 *Ang Iyong Subscription*\n\n",
+      "status": "{emoji} Status: {status}\n",
+      "plan": "💳 Plan: Walang Hanggang Mga Mensahe\n",
+      "price": "💵 Presyo: ${price}/buwan\n",
+      "renews": "📅 Mag-renew: {date}\n",
+      "access_until": "📅 Access Hanggang: {date}\n",
+      "footer": "\n_Pamahalaan o kanselahin anumang oras._",
+      "manage_button": "⚙️ Pamahalaan ang Business License"
     }
+  },
+  "tasks": {
+    "not_registered": "Pakiusap na gumamit ng /start upang magrehistro muna.",
+    "manager": {
+      "title": "📋 *Ang Iyong Mga Gawain*\n\n",
+      "no_tasks": "Wala pang mga gawain.\n\nLikha ng gawain sa pamamagitan ng pagpapadala ng mensahe na nagsisimula sa \\*\\*\nHalimbawa: \\*\\* Suriin ang baka 115",
+      "pending_header": "⏳ *NAKABINBIN ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
+      "task_item": "• {description}\n  _Nilikha: Ngayon sa {time}_\n\n",
+      "completed_header": "\n✅ *NATAPOS NGAYONG ARAW ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
+      "completed_item": "• {description}\n  _Natapos sa {time}_\n\n"
+    },
+    "worker": {
+      "title": "📋 *Ang Iyong Mga Gawain*\n\n",
+      "no_tasks": "Walang naka-assign na gawain pa.\n\nMagpapadala ang iyong manager ng mga gawain kapag kailangan.",
+      "todo_header": "⏳ *GAGAWIN ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
+      "task_item": "• {description}\n\n",
+      "instruction": "_I-tap ang ✅ Mark Done button sa bawat mensahe ng gawain upang tapusin ito._\n\n",
+      "completed_header": "\n✅ *NATAPOS NGAYONG ARAW ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
+      "completed_item": "• {description} ✓\n"
+    }
+  },
+  "view_tasks_callback": {
+    "not_manager": "⚠️ Ang mga manager lang ang makakatingin ng mga gawain.",
+    "no_other_tasks": "📋 *Ang Iyong Mga Gawain*\n\nWalang ibang gawain pa.\n\nGumawa ng higit pang mga gawain sa pamamagitan ng pagpapadala ng mga mensaheng nagsisimula sa **"
+  },
+  "feedback": {
+    "prompt": "💡 *Magpadala ng Iyong Feedback*\n\nI-type ang iyong mensahe sa ibaba at ipapadala ko ito sa BridgeOS team.\n\nMagbahagi ng mga mungkahi, mag-report ng mga bug, o sabihin sa amin ang iyong iniisip!"
+  },
+  "feedback_handling": {
+    "admin_error": "⚠️ Error: Hindi naka-configure ang admin. Pakiusap na kontakin ang support.",
+    "success": "✅ *Naipadala ang Feedback!*\n\nSalamat sa pagbabahagi ng iyong mga saloobin sa amin. Binabasa namin ang bawat mensahe at lubos na pinahahalagahan ang iyong input!",
+    "error": "⚠️ Paumanhin, may error sa pagpapadala ng iyong feedback. Pakiusap na subukan muli mamaya."
+  },
+  "handle_message": {
+    "not_registered": "Pakiusap na gumamit ng /start upang magrehistro muna.",
+    "limit_reached": {
+      "title": "⚠️ *Naabot na ang Limitasyon ng Free Plan*\n\n",
+      "message": "Nagamit na ng iyong negosyo ang alokasyon nito na {free_limit} mga isinalin na mensahe.\nUpang magpatuloy ng mga operasyon nang walang sagabal, pakiusap na i-upgrade ang iyong account sa *Business License*.\n\n",
+      "benefits_header": "*BridgeOS Business License:*\n",
+      "benefits": "✅ Buong Business Access (Walang limitasyong paggamit)\n✅ Manager Dashboard\n✅ Priority Processing\n✅ Mga Pagsasaling Pang-industriya\n✅ Multi-Language Support (12 wika)\n• *Presyo:* ${price}/buwan (Kanselahin anumang oras)\n\n",
+      "cta": "I-tap sa ibaba upang mag-upgrade:",
+      "button": "💳 Mag-upgrade sa Business License (${price}/buwan)"
+    },
+    "manager": {
+      "no_worker": "⚠️ Wala ka pang manggagawa na nakakonekta sa bot na ito.\n\nIbahagi ang iyong imbitasyon upang kumonekta ng manggagawa:\n\n📋 Code: {code}\n🔗 {invite_link}",
+      "worker_not_found": "⚠️ Wala na ang account ng iyong contact.\nGamitin ang /reset upang magsimula muli.",
+      "message_prefix": "🗣️ Mula kay {name}: {translated}",
+      "last_message": "⚠️ *Iyon ang iyong huling libreng mensahe!*\n\nNagamit mo na ang lahat ng {free_limit} libreng mensahe.\n\n💳 Mag-subscribe para sa walang hanggang mga mensahe (${price}/buwan):",
+      "last_message_button": "🏢 Mag-upgrade sa Business License (${price}/buwan)"
+    },
+    "worker": {
+      "no_manager": "⚠️ Hindi ka pa nakakonekta sa isang contact.\nHingin sa iyong contact ang kanilang invitation link.",
+      "manager_not_found": "⚠️ Wala na ang account ng iyong contact.\nGamitin ang /reset at maghintay ng bagong imbitasyon.",
+      "message_prefix": "🗣️ Mula kay {name}: {translated}"
+    }
+  },
+  "handle_task_creation": {
+    "not_manager": "⚠️ Ang mga manager lang ang makakagawa ng mga gawain.\nUpang magpadala ng regular na mensahe, huwag gumamit ng **",
+    "no_worker": "⚠️ Wala ka pang manggagawa na nakakonekta sa bot na ito.\n\nIbahagi ang iyong imbitasyon upang kumonekta ng manggagawa:\n\n📋 Code: {code}\n🔗 {invite_link}",
+    "empty_description": "⚠️ Pakiusap na magbigay ng deskripsyon ng gawain pagkatapos ng **\n\nHalimbawa: ** Tingnan ang baka 115 kung nagbubuntis",
+    "worker_not_found": "⚠️ Wala na ang account ng iyong worker.\nGamitin ang /reset upang magsimula muli.",
+    "translation_error": "⚠️ Error sa pagsasalin ng gawain: {error}\nPakiusap na subukan muli.",
+    "creation_error": "⚠️ Error sa paggawa ng gawain: {error}\nPakiusap na subukan muli.",
+    "send_error": "⚠️ Error sa pagpapadala ng gawain sa worker: {error}",
+    "worker_task": "📋 *Gawain mula kay {manager_name}:*\n{task}",
+    "mark_done_button": "✅ Markahan na Tapos",
+    "manager_confirmation": "✅ *Naipadala ang gawain sa worker:*\n\"{task}\"",
+    "view_all_button": "📋 Tingnan ang Lahat ng Gawain"
+  },
+  "task_completion_callback": {
+    "invalid_task_id": "⚠️ Hindi wastong task ID",
+    "not_worker": "⚠️ Ang mga worker lang ang makakatatapos ng mga gawain",
+    "not_found": "⚠️ Hindi nahanap ang gawain o tapos na",
+    "not_assigned": "⚠️ Hindi naka-assign sa iyo ang gawaing ito",
+    "task_completed": "📋 *Gawain:*\n{task}\n\n✅ *Tapos na!*",
+    "completion_confirmation": "✅ Minarkahan ang gawain na tapos na",
+    "manager_notification": "✅ *Natapos ni {worker_name} ang gawain:*\n\"{task}\"\n\n🕐 Natapos sa: {time}"
+  },
+  "handle_media": {
+    "not_registered": "Pakiusap na gumamit ng /start upang magrehistro muna.",
+    "manager_no_worker": "⚠️ Wala ka pang manggagawa na nakakonekta sa bot na ito.\n\nIbahagi ang iyong imbitasyon upang kumonekta ng manggagawa:\n\n📋 Code: {code}\n🔗 {invite_link}",
+    "worker_no_manager": "⚠️ Hindi ka pa nakakonekta sa isang contact.\nHingin sa iyong contact ang kanilang invitation link.",
+    "contact_not_found": "⚠️ Wala na ang account ng iyong contact.\nGamitin ang /reset upang magsimula muli.",
+    "media_prefix": "📎 Mula kay {sender_name}:"
+  },
+  "menu": {
+    "not_registered": "Mangyaring gumamit ng /start para magrehistro muna.",
+    "title": "📋 BridgeOS Menu\n\nPumili ng opsyon:",
+    "tasks": "📋 Aking Mga Gawain",
+    "daily": "📊 Arawang Mga Aksyon",
+    "mycode": "🔗 Aking Imbitasyon Code",
+    "subscription": "💳 Subscription",
+    "refer": "📤 Irekomenda ang BridgeOS",
+    "feedback": "💬 Magpadala ng Feedback",
+    "reset": "🗑️ I-reset ang Account"
+  },
+  "addworker": {
+    "not_registered": "Mangyaring gamitin ang /start para magrehistro muna.",
+    "not_manager": "⚠️ Ang mga manager lamang ang maaaring magdagdag ng mga manggagawa.\n\nAng mga manggagawa ay idinaragdag ng kanilang mga manager.",
+    "pending_invitation": "⏳ Mayroon kang nakabinbing imbitasyon sa {bot_name}.\n\nPakikumpletuhin muna ang imbitasyong iyon bago magdagdag ng isa pang manggagawa.\n\n🔗 Link ng imbitasyon:\n{invite_link}\n\n👉 I-tap ang button sa ibaba upang ibahagi:",
+    "pending_share_text": "🌉 Sumali sa BridgeOS!\nMakipag-chat sa akin sa iyong wika:\n{invite_link}",
+    "no_worker_on_current_bot": "⚠️ Mangyaring ikonekta muna ang isang manggagawa sa bot na ito.\n\nIbahagi ang iyong imbitasyon sa iyong unang manggagawa:\n\n📋 Code: {code}\n🔗 Link: {invite_link}",
+    "limit_reached": "⚠️ *Naabot ang Limitasyon ng Manggagawa*\n\nMayroon ka nang {count} manggagawa (maximum na pinapayagan).\n\nUpang magdagdag ng isa pang manggagawa, mangyaring makipag-ugnayan sa suporta para sa mga opsyon ng negosyo.",
+    "all_bots_used": "⚠️ Lahat ng bot slot ay ginagamit.\n\nMayroon kang mga manggagawa sa lahat ng 5 bot. Hindi ito dapat mangyari - mangyaring makipag-ugnayan sa suporta.",
+    "share_invitation_text": "🌉 Sumali sa BridgeOS!\nMakipag-chat sa akin sa iyong wika:\n{invite_link}",
+    "share_button": "📤 Ibahagi ang Imbitasyon",
+    "bot_greeting": "👋 *Handa nang magdagdag ng manggagawa!*\n\n📋 Ibahagi ang imbitasyong ito sa iyong manggagawa:\n\n👉 I-tap ang button sa ibaba upang ibahagi:",
+    "success": "✅ *Naitalaga ang Worker Slot sa {bot_name}*\n\n📱 Buksan ang bot na ito upang idagdag ang iyong manggagawa:\n{bot_link}\n\n💡 Ang imbitasyon ay naghihintay sa iyo doon!"
+  },
+  "workers": {
+    "not_registered": "Mangyaring gamitin ang /start para magrehistro muna.",
+    "not_manager": "Ang mga manager lamang ang maaaring makakita ng mga manggagawa.\n\nAng mga manggagawa ay pinamamahalaan ng kanilang mga manager.",
+    "title": "👥 *Ang Iyong Mga Manggagawa*\n\n",
+    "bot_connected": "{bot_name}: {worker_name} ✅\n",
+    "bot_pending": "{bot_name}: ⏳ Nakabinbing imbitasyon\n",
+    "bot_available": "{bot_name}: Available\n",
+    "footer": "\n💡 Upang magdagdag ng manggagawa: /addworker\n💡 Upang mag-message sa manggagawa: Buksan ang chat ng bot na iyon"
+  }
 }

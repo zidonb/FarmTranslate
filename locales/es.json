@@ -1,212 +1,212 @@
 {
-    "start": {
-        "welcome_back": "¡Bienvenido de nuevo! Estás registrado como {role}.\n\nUsa /help para ver los comandos disponibles.",
-        "welcome_new": "¡Bienvenido a BridgeOS! 🌉\n\n👇 Toca un botón abajo para seleccionar tu idioma:",
-        "already_manager_clicked_invite": "Ya estás registrado como gerente.\n\nUsa /reset primero si quieres unirte como trabajador de alguien.",
-        "already_worker_clicked_invite": "Ya estás registrado como trabajador.\n\nUsa /reset primero si quieres conectarte a un gerente diferente."
+  "start": {
+    "welcome_back": "¡Bienvenido de nuevo! Estás registrado como {role}.\n\nUsa /help para ver los comandos disponibles.",
+    "welcome_new": "¡Bienvenido a BridgeOS! 🌉\n\n👇 Toca un botón abajo para seleccionar tu idioma:",
+    "already_manager_clicked_invite": "Ya estás registrado como gerente.\n\nUsa /reset primero si quieres unirte como trabajador de alguien.",
+    "already_worker_clicked_invite": "Ya estás registrado como trabajador.\n\nUsa /reset primero si quieres conectarte a un gerente diferente."
+  },
+  "registration": {
+    "gender_question": "¿Cuál es tu género?\n(Esto ayuda con traducciones precisas)",
+    "gender_options": {
+      "male": "👨 Hombre",
+      "female": "👩 Mujer",
+      "prefer_not_to_say": "🤷 Prefiero no decir"
     },
-    "registration": {
-        "gender_question": "¿Cuál es tu género?\n(Esto ayuda con traducciones precisas)",
-        "gender_options": {
-            "male": "👨 Hombre",
-            "female": "👩 Mujer",
-            "prefer_not_to_say": "🤷 Prefiero no decir"
-        },
-        "invalid_language": "⚠️ Por favor usa los botones de abajo para seleccionar un idioma.\n\n💡 Consejo: Si no ves los botones, toca el ícono del teclado (⌨️) en la parte inferior de tu pantalla.",
-        "invalid_gender": "⚠️ Por favor usa los botones de abajo para seleccionar tu género.\n\n💡 Consejo: Si no ves los botones, toca el ícono del teclado (⌨️) en la parte inferior de tu pantalla.",
-        "invalid_industry": "⚠️ Por favor usa los botones de abajo para seleccionar una industria.\n\n💡 Consejo: Si no ves los botones, toca el ícono del teclado (⌨️) en la parte inferior de tu pantalla.",
-        "invalid_code": "❌ Código de invitación inválido.\n\nPor favor pide a tu contacto un nuevo enlace de invitación.",
-        "worker_already_connected": "❌ Este contacto ya tiene un trabajador conectado.\nPídele que use /reset primero.",
-        "connection_success": "✅ ¡Conectado a tu contacto! Puedes empezar a chatear ahora.\n\nUsa /help para ver los comandos disponibles.",
-        "manager_notification": "✅ ¡{worker_name} se conectó como tu trabajador!",
-        "industry_question": "¿En qué industria trabajas?\n\nEsto ayuda a proporcionar traducciones precisas de términos técnicos y lenguaje específico del lugar de trabajo.",
-        "share_invitation_text": "🌉 ¡Únete a BridgeOS!\nChatea conmigo en tu idioma:\n{deep_link}",
-        "share_invitation_button": "🚀 Enviar Invitación Ahora",
-        "registration_complete": "✅ ¡Registro completo!\n\n📋 Tu código de invitación: {code}\n🔗 Enlace de invitación:\n{deep_link}\n\n👉 Toca el botón de abajo para compartir con tu contacto:",
-        "ready_to_start": "¡Listo para empezar! Usa /help en cualquier momento.",
-        "cancelled": "Registro cancelado. Usa /start para intentar de nuevo.",
-        "worker_switched": "⚠️ {worker_name} se ha conectado a un gerente diferente.\n\nAhora puedes invitar a un nuevo trabajador usando /mycode"
+    "invalid_language": "⚠️ Por favor usa los botones de abajo para seleccionar un idioma.\n\n💡 Consejo: Si no ves los botones, toca el ícono del teclado (⌨️) en la parte inferior de tu pantalla.",
+    "invalid_gender": "⚠️ Por favor usa los botones de abajo para seleccionar tu género.\n\n💡 Consejo: Si no ves los botones, toca el ícono del teclado (⌨️) en la parte inferior de tu pantalla.",
+    "invalid_industry": "⚠️ Por favor usa los botones de abajo para seleccionar una industria.\n\n💡 Consejo: Si no ves los botones, toca el ícono del teclado (⌨️) en la parte inferior de tu pantalla.",
+    "invalid_code": "❌ Código de invitación inválido.\n\nPor favor pide a tu contacto un nuevo enlace de invitación.",
+    "worker_already_connected": "❌ Este contacto ya tiene un trabajador conectado.\nPídele que use /reset primero.",
+    "connection_success": "✅ ¡Conectado a tu contacto! Puedes empezar a chatear ahora.\n\nUsa /help para ver los comandos disponibles.",
+    "manager_notification": "✅ ¡{worker_name} se conectó como tu trabajador!",
+    "industry_question": "¿En qué industria trabajas?\n\nEsto ayuda a proporcionar traducciones precisas de términos técnicos y lenguaje específico del lugar de trabajo.",
+    "share_invitation_text": "🌉 ¡Únete a BridgeOS!\nChatea conmigo en tu idioma:\n{deep_link}",
+    "share_invitation_button": "🚀 Enviar Invitación Ahora",
+    "registration_complete": "✅ ¡Registro completo!\n\n📋 Tu código de invitación: {code}\n🔗 Enlace de invitación:\n{deep_link}\n\n👉 Toca el botón de abajo para compartir con tu contacto:",
+    "ready_to_start": "¡Listo para empezar! Usa /help en cualquier momento.",
+    "cancelled": "Registro cancelado. Usa /start para intentar de nuevo.",
+    "worker_switched": "⚠️ {worker_name} se ha conectado a un gerente diferente.\n\nAhora puedes invitar a un nuevo trabajador usando /mycode"
+  },
+  "industries": {
+    "dairy_farm": "🐄 Granja Lechera",
+    "elderly_care": "👴 Cuidado de Ancianos",
+    "hospitality": "🏨 Hospitalidad / Hoteles",
+    "farm": "🌾 Granja / Agricultura",
+    "construction": "🏗️ Construcción",
+    "restaurant": "🍽️ Restaurante",
+    "warehouse": "📦 Almacén",
+    "other": "💼 Lugar de Trabajo General"
+  },
+  "help": {
+    "not_registered": "Por favor usa /start para registrarte primero.",
+    "manager_commands": "📋 *Comandos Disponibles:*\n\n/help - Mostrar este mensaje de ayuda\n/tasks - Ver tu lista de tareas\n/daily - Obtener tareas diarias\n/subscription - Ver estado de suscripción\n/reset - Eliminar cuenta y empezar de nuevo\n/mycode - Mostrar tu código de conexión\n/refer - Recomendar a otros gerentes\n/feedback - Enviar comentarios al equipo de BridgeOS\n\n💬 *Cómo usar:*\n¡Solo escribe tu mensaje y será traducido automáticamente y enviado a tu contacto!",
+    "worker_commands": "📋 *Comandos Disponibles:*\n\n/help - Mostrar este mensaje de ayuda\n/tasks - Ver tu lista de tareas\n/refer - Recomendar a otros gerentes\n/feedback - Enviar comentarios al equipo de BridgeOS\n/reset - Eliminar cuenta\n\n💬 *Cómo usar:*\n¡Solo escribe tu mensaje y será traducido automáticamente y enviado a tu contacto!"
+  },
+  "mycode": {
+    "not_registered": "Por favor usa /start para registrarte primero.",
+    "not_manager": "Solo los gerentes tienen códigos de conexión.",
+    "share_button": "📤 Compartir Invitación",
+    "status": "👥 Trabajador conectado: {status}\n\n📋 Tu código de invitación: {code}\n🔗 Enlace de invitación:\n{deep_link}\n\n👉 Toca el botón de abajo para compartir con tu contacto:",
+    "worker_status_yes": "Sí ✅",
+    "worker_status_no": "No ❌"
+  },
+  "refer": {
+    "share_text": "🌉 ¡Conoce BridgeOS!\n\nLo uso para comunicarme con mi equipo en tiempo real - ¡hablamos diferentes idiomas pero chateamos naturalmente!\n\n🌍 {language_count} idiomas compatibles\n✅ Traducción instantánea\n🏭 Términos específicos de la industria\n💬 Simple y efectivo\n\nPruébalo gratis: https://t.me/FarmTranslateBot",
+    "button": "📤 Recomendar BridgeOS",
+    "message": "🌉 ¿Te gusta BridgeOS?\n\n¡Ayuda a otros gerentes a romper las barreras del idioma!\n\nRecomienda BridgeOS a colegas, amigos o cualquiera que administre equipos que hablen diferentes idiomas.\n\n👉 Toca el botón para compartir:"
+  },
+  "reset": {
+    "no_account": "No tienes una cuenta para restablecer.",
+    "worker_notification": "⚠️ Tu contacto ha restablecido su cuenta.\nTu cuenta también ha sido restablecida.\n\nNecesitarás una nueva invitación para reconectar.",
+    "manager_notification": "ℹ️ {worker_name} ha restablecido su cuenta y ya no está conectado.",
+    "success": "✅ ¡Tu cuenta ha sido restablecida!\n\nTodos tus datos y conexiones han sido eliminados.\nUsa /start para registrarte de nuevo."
+  },
+  "daily": {
+    "not_registered": "Por favor usa /start para registrarte primero.",
+    "not_manager": "Solo los gerentes pueden generar resúmenes.\n\nEsta función ayuda a los gerentes a rastrear tareas y acciones.",
+    "no_worker": "Aún no tienes un trabajador conectado.\n\nConecta con un trabajador primero para ver resúmenes de conversaciones.",
+    "generating": "⏳ Generando Tareas Diarias (Últimas 24 Horas)...\n\nAnalizando las últimas 24 horas de conversación.",
+    "result_header": "📋 *Tareas Diarias (Últimas 24 Horas)*\n\n{action_items}",
+    "message_count": "\n\n_Total de mensajes: {count}_",
+    "error": "❌ Error al generar tareas diarias: {error}\n\nPor favor inténtalo de nuevo más tarde o contacta a soporte."
+  },
+  "subscription": {
+    "not_registered": "Por favor usa /start para registrarte primero.",
+    "worker_unlimited": "¡Los trabajadores tienen mensajes ilimitados! 🎉\n\nSolo los gerentes necesitan suscripciones.",
+    "no_subscription": {
+      "title": "📋 *Estado de Suscripción*\n\n",
+      "status": "Estado: ❌ Sin Suscripción Activa\n",
+      "usage": "Mensajes Usados: {messages_sent} / {free_limit} (Plan Gratuito)\n\n",
+      "benefits_header": "💳 *Suscríbete a BridgeOS:*\n",
+      "benefits": "• Mensajes ilimitados\n• ${price}/mes\n• Cancela en cualquier momento",
+      "button": "🏢 Actualizar a Licencia Empresarial (${price}/mes)"
     },
-    "industries": {
-        "dairy_farm": "🐄 Granja Lechera",
-        "elderly_care": "👴 Cuidado de Ancianos",
-        "hospitality": "🏨 Hospitalidad / Hoteles",
-        "farm": "🌾 Granja / Agricultura",
-        "construction": "🏗️ Construcción",
-        "restaurant": "🍽️ Restaurante",
-        "warehouse": "📦 Almacén",
-        "other": "💼 Lugar de Trabajo General"
-    },
-    "help": {
-        "not_registered": "Por favor usa /start para registrarte primero.",
-        "manager_commands": "📋 *Comandos Disponibles:*\n\n/help - Mostrar este mensaje de ayuda\n/tasks - Ver tu lista de tareas\n/daily - Obtener tareas diarias\n/subscription - Ver estado de suscripción\n/reset - Eliminar cuenta y empezar de nuevo\n/mycode - Mostrar tu código de conexión\n/refer - Recomendar a otros gerentes\n/feedback - Enviar comentarios al equipo de BridgeOS\n\n💬 *Cómo usar:*\n¡Solo escribe tu mensaje y será traducido automáticamente y enviado a tu contacto!",
-        "worker_commands": "📋 *Comandos Disponibles:*\n\n/help - Mostrar este mensaje de ayuda\n/tasks - Ver tu lista de tareas\n/refer - Recomendar a otros gerentes\n/feedback - Enviar comentarios al equipo de BridgeOS\n/reset - Eliminar cuenta\n\n💬 *Cómo usar:*\n¡Solo escribe tu mensaje y será traducido automáticamente y enviado a tu contacto!"
-    },
-    "mycode": {
-        "not_registered": "Por favor usa /start para registrarte primero.",
-        "not_manager": "Solo los gerentes tienen códigos de conexión.",
-        "share_button": "📤 Compartir Invitación",
-        "status": "👥 Trabajador conectado: {status}\n\n📋 Tu código de invitación: {code}\n🔗 Enlace de invitación:\n{deep_link}\n\n👉 Toca el botón de abajo para compartir con tu contacto:",
-        "worker_status_yes": "Sí ✅",
-        "worker_status_no": "No ❌"
-    },
-    "refer": {
-        "share_text": "🌉 ¡Conoce BridgeOS!\n\nLo uso para comunicarme con mi equipo en tiempo real - ¡hablamos diferentes idiomas pero chateamos naturalmente!\n\n🌍 {language_count} idiomas compatibles\n✅ Traducción instantánea\n🏭 Términos específicos de la industria\n💬 Simple y efectivo\n\nPruébalo gratis: https://t.me/FarmTranslateBot",
-        "button": "📤 Recomendar BridgeOS",
-        "message": "🌉 ¿Te gusta BridgeOS?\n\n¡Ayuda a otros gerentes a romper las barreras del idioma!\n\nRecomienda BridgeOS a colegas, amigos o cualquiera que administre equipos que hablen diferentes idiomas.\n\n👉 Toca el botón para compartir:"
-    },
-    "reset": {
-        "no_account": "No tienes una cuenta para restablecer.",
-        "worker_notification": "⚠️ Tu contacto ha restablecido su cuenta.\nTu cuenta también ha sido restablecida.\n\nNecesitarás una nueva invitación para reconectar.",
-        "manager_notification": "ℹ️ {worker_name} ha restablecido su cuenta y ya no está conectado.",
-        "success": "✅ ¡Tu cuenta ha sido restablecida!\n\nTodos tus datos y conexiones han sido eliminados.\nUsa /start para registrarte de nuevo."
-    },
-    "daily": {
-        "not_registered": "Por favor usa /start para registrarte primero.",
-        "not_manager": "Solo los gerentes pueden generar resúmenes.\n\nEsta función ayuda a los gerentes a rastrear tareas y acciones.",
-        "no_worker": "Aún no tienes un trabajador conectado.\n\nConecta con un trabajador primero para ver resúmenes de conversaciones.",
-        "generating": "⏳ Generando Tareas Diarias (Últimas 24 Horas)...\n\nAnalizando las últimas 24 horas de conversación.",
-        "result_header": "📋 *Tareas Diarias (Últimas 24 Horas)*\n\n{action_items}",
-        "message_count": "\n\n_Total de mensajes: {count}_",
-        "error": "❌ Error al generar tareas diarias: {error}\n\nPor favor inténtalo de nuevo más tarde o contacta a soporte."
-    },
-    "subscription": {
-        "not_registered": "Por favor usa /start para registrarte primero.",
-        "worker_unlimited": "¡Los trabajadores tienen mensajes ilimitados! 🎉\n\nSolo los gerentes necesitan suscripciones.",
-        "no_subscription": {
-            "title": "📋 *Estado de Suscripción*\n\n",
-            "status": "Estado: ❌ Sin Suscripción Activa\n",
-            "usage": "Mensajes Usados: {messages_sent} / {free_limit} (Plan Gratuito)\n\n",
-            "benefits_header": "💳 *Suscríbete a BridgeOS:*\n",
-            "benefits": "• Mensajes ilimitados\n• ${price}/mes\n• Cancela en cualquier momento",
-            "button": "🏢 Actualizar a Licencia Empresarial (${price}/mes)"
-        },
-        "active_subscription": {
-            "title": "📋 *Tu Suscripción*\n\n",
-            "status": "{emoji} Estado: {status}\n",
-            "plan": "💳 Plan: Mensajes Ilimitados\n",
-            "price": "💵 Precio: ${price}/mes\n",
-            "renews": "📅 Se renueva: {date}\n",
-            "access_until": "📅 Acceso hasta: {date}\n",
-            "footer": "\n_Administra o cancela en cualquier momento._",
-            "manage_button": "⚙️ Administrar Licencia Empresarial"
-        }
-    },
-    "tasks": {
-        "not_registered": "Por favor usa /start para registrarte primero.",
-        "manager": {
-            "title": "📋 *Tus Tareas*\n\n",
-            "no_tasks": "Aún no hay tareas.\n\nCrea una tarea enviando un mensaje que comience con \\*\\*\nEjemplo: \\*\\* Revisar vaca 115",
-            "pending_header": "⏳ *PENDIENTES ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
-            "task_item": "• {description}\n  _Creada: Hoy a las {time}_\n\n",
-            "completed_header": "\n✅ *COMPLETADAS HOY ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
-            "completed_item": "• {description}\n  _Completada a las {time}_\n\n"
-        },
-        "worker": {
-            "title": "📋 *Tus Tareas*\n\n",
-            "no_tasks": "Aún no hay tareas asignadas.\n\nTu gerente te enviará tareas cuando sea necesario.",
-            "todo_header": "⏳ *POR HACER ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
-            "task_item": "• {description}\n\n",
-            "instruction": "_Toca el botón ✅ Marcar Como Hecho en cada mensaje de tarea para completarla._\n\n",
-            "completed_header": "\n✅ *COMPLETADAS HOY ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
-            "completed_item": "• {description} ✓\n"
-        }
-    },
-    "view_tasks_callback": {
-        "not_manager": "⚠️ Solo los gerentes pueden ver tareas.",
-        "no_other_tasks": "📋 *Tus Tareas*\n\nAún no hay otras tareas.\n\nCrea más tareas enviando mensajes que comiencen con **"
-    },
-    "feedback": {
-        "prompt": "💡 *Envía Tus Comentarios*\n\nEscribe tu mensaje abajo y lo enviaré al equipo de BridgeOS.\n\n¡Comparte sugerencias, reporta errores o dinos qué piensas!"
-    },
-    "feedback_handling": {
-        "admin_error": "⚠️ Error: Administrador no configurado. Por favor contacta a soporte.",
-        "success": "✅ *¡Comentarios Enviados!*\n\n¡Gracias por compartir tus ideas con nosotros. Leemos cada mensaje y realmente apreciamos tu aporte!",
-        "error": "⚠️ Lo sentimos, hubo un error al enviar tus comentarios. Por favor inténtalo de nuevo más tarde."
-    },
-    "handle_message": {
-        "not_registered": "Por favor usa /start para registrarte primero.",
-        "limit_reached": {
-            "title": "⚠️ *Límite del Plan Gratuito Alcanzado*\n\n",
-            "message": "Tu negocio ha usado su asignación de {free_limit} mensajes traducidos.\nPara continuar las operaciones sin interrupciones, por favor actualiza tu cuenta a la *Licencia Empresarial*.\n\n",
-            "benefits_header": "*Licencia Empresarial de BridgeOS:*\n",
-            "benefits": "✅ Acceso Empresarial Completo (Uso ilimitado)\n✅ Panel de Gerente\n✅ Procesamiento Prioritario\n✅ Traducciones Específicas de la Industria\n✅ Soporte Multiidioma (12 idiomas)\n• *Precio:* ${price}/mes (Cancela en cualquier momento)\n\n",
-            "cta": "Toca abajo para actualizar:",
-            "button": "💳 Actualizar a Licencia Empresarial (${price}/mes)"
-        },
-        "manager": {
-            "no_worker": "⚠️ Aún no tienes un contacto conectado.\nComparte tu invitación (usa /mycode) con tu contacto.",
-            "worker_not_found": "⚠️ La cuenta de tu contacto ya no existe.\nUsa /reset para empezar de nuevo.",
-            "message_prefix": "🗣️ De {name}: {translated}",
-            "last_message": "⚠️ *¡Ese fue tu último mensaje gratuito!*\n\nHas usado todos los {free_limit} mensajes gratuitos.\n\n💳 Suscríbete para mensajes ilimitados (${price}/mes):",
-            "last_message_button": "🏢 Actualizar a Licencia Empresarial (${price}/mes)"
-        },
-        "worker": {
-            "no_manager": "⚠️ No estás conectado a un contacto.\nPide a tu contacto su enlace de invitación.",
-            "manager_not_found": "⚠️ La cuenta de tu contacto ya no existe.\nUsa /reset y espera una nueva invitación.",
-            "message_prefix": "🗣️ De {name}: {translated}"
-        }
-    },
-    "handle_task_creation": {
-        "not_manager": "⚠️ Solo los gerentes pueden crear tareas.\nPara enviar un mensaje regular, no uses **",
-        "no_worker": "⚠️ Aún no tienes un trabajador conectado.\nComparte tu invitación (usa /mycode) con tu trabajador primero.",
-        "empty_description": "⚠️ Por favor proporciona una descripción de tarea después de **\n\nEjemplo: ** Revisar vaca 115 en celo",
-        "worker_not_found": "⚠️ La cuenta de tu trabajador ya no existe.\nUsa /reset para empezar de nuevo.",
-        "translation_error": "⚠️ Error al traducir tarea: {error}\nPor favor inténtalo de nuevo.",
-        "creation_error": "⚠️ Error al crear tarea: {error}\nPor favor inténtalo de nuevo.",
-        "send_error": "⚠️ Error al enviar tarea al trabajador: {error}",
-        "worker_task": "📋 *Tarea de {manager_name}:*\n{task}",
-        "mark_done_button": "✅ Marcar Como Hecho",
-        "manager_confirmation": "✅ *Tarea enviada al trabajador:*\n\"{task}\"",
-        "view_all_button": "📋 Ver Todas las Tareas"
-    },
-    "task_completion_callback": {
-        "invalid_task_id": "⚠️ ID de tarea inválido",
-        "not_worker": "⚠️ Solo los trabajadores pueden completar tareas",
-        "not_found": "⚠️ Tarea no encontrada o ya completada",
-        "not_assigned": "⚠️ Esta tarea no está asignada a ti",
-        "task_completed": "📋 *Tarea:*\n{task}\n\n✅ *¡Completada!*",
-        "completion_confirmation": "✅ Tarea marcada como completada",
-        "manager_notification": "✅ *Tarea completada por {worker_name}:*\n\"{task}\"\n\n🕐 Completada a las: {time}"
-    },
-    "handle_media": {
-        "not_registered": "Por favor usa /start para registrarte primero.",
-        "manager_no_worker": "⚠️ Aún no tienes un contacto conectado.\nComparte tu invitación (usa /mycode) con tu contacto.",
-        "worker_no_manager": "⚠️ No estás conectado a un contacto.\nPide a tu contacto su enlace de invitación.",
-        "contact_not_found": "⚠️ La cuenta de tu contacto ya no existe.\nUsa /reset para empezar de nuevo.",
-        "media_prefix": "📎 De {sender_name}:"
-    },
-    "menu": {
-        "not_registered": "Por favor usa /start para registrarte primero.",
-        "title": "📋 Menú de BridgeOS\n\nSelecciona una opción:",
-        "tasks": "📋 Mis Tareas",
-        "daily": "📊 Acciones Diarias",
-        "mycode": "🔗 Mi Código de Invitación",
-        "subscription": "💳 Suscripción",
-        "refer": "📤 Recomendar BridgeOS",
-        "feedback": "💬 Enviar Comentarios",
-        "reset": "🗑️ Restablecer Cuenta"
-    },
-    "addworker": {
-        "not_registered": "Por favor usa /start para registrarte primero.",
-        "not_manager": "⚠️ Solo los gerentes pueden añadir trabajadores.\n\nLos trabajadores son añadidos por sus gerentes.",
-        "pending_invitation": "⏳ Tienes una invitación pendiente en {bot_name}.\n\nPor favor completa esa invitación primero antes de añadir otro trabajador.\n\n🔗 Enlace de invitación:\n{invite_link}\n\n👉 Toca el botón de abajo para compartir:",
-        "pending_share_text": "🌉 ¡Únete a BridgeOS!\nChatea conmigo en tu idioma:\n{invite_link}",
-        "no_worker_on_current_bot": "⚠️ Por favor conecta un trabajador a este bot primero.\n\nUsa /workers para ver tus trabajadores actuales, o comparte tu invitación con tu primer trabajador.",
-        "limit_reached": "⚠️ *Límite de Trabajadores Alcanzado*\n\nYa tienes {count} trabajadores (máximo permitido).\n\nPara añadir otro trabajador, por favor contacta a soporte para opciones empresariales.",
-        "all_bots_used": "⚠️ Todos los espacios de bot están en uso.\n\nTienes trabajadores en los 5 bots. Esto no debería pasar - por favor contacta a soporte.",
-        "share_invitation_text": "🌉 ¡Únete a BridgeOS!\nChatea conmigo en tu idioma:\n{invite_link}",
-        "share_button": "📤 Compartir Invitación",
-        "bot_greeting": "👋 *¡Listo para añadir un trabajador!*\n\n📋 Comparte esta invitación con tu trabajador:\n\n👉 Toca el botón de abajo para compartir:",
-        "success": "✅ *Espacio de Trabajador Asignado en {bot_name}*\n\n📱 Abre este bot para añadir tu trabajador:\n{bot_link}\n\n💡 ¡La invitación te está esperando allí!"
-    },
-    "workers": {
-        "not_registered": "Por favor usa /start para registrarte primero.",
-        "not_manager": "Solo los gerentes pueden ver trabajadores.\n\nLos trabajadores son gestionados por sus gerentes.",
-        "title": "👥 *Tus Trabajadores*\n\n",
-        "bot_connected": "{bot_name}: {worker_name} ✅\n",
-        "bot_pending": "{bot_name}: ⏳ Invitación pendiente\n",
-        "bot_available": "{bot_name}: Disponible\n",
-        "footer": "\n💡 Para añadir un trabajador: /addworker\n💡 Para mensajear a un trabajador: Abre el chat de ese bot"
+    "active_subscription": {
+      "title": "📋 *Tu Suscripción*\n\n",
+      "status": "{emoji} Estado: {status}\n",
+      "plan": "💳 Plan: Mensajes Ilimitados\n",
+      "price": "💵 Precio: ${price}/mes\n",
+      "renews": "📅 Se renueva: {date}\n",
+      "access_until": "📅 Acceso hasta: {date}\n",
+      "footer": "\n_Administra o cancela en cualquier momento._",
+      "manage_button": "⚙️ Administrar Licencia Empresarial"
     }
+  },
+  "tasks": {
+    "not_registered": "Por favor usa /start para registrarte primero.",
+    "manager": {
+      "title": "📋 *Tus Tareas*\n\n",
+      "no_tasks": "Aún no hay tareas.\n\nCrea una tarea enviando un mensaje que comience con \\*\\*\nEjemplo: \\*\\* Revisar vaca 115",
+      "pending_header": "⏳ *PENDIENTES ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
+      "task_item": "• {description}\n  _Creada: Hoy a las {time}_\n\n",
+      "completed_header": "\n✅ *COMPLETADAS HOY ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
+      "completed_item": "• {description}\n  _Completada a las {time}_\n\n"
+    },
+    "worker": {
+      "title": "📋 *Tus Tareas*\n\n",
+      "no_tasks": "Aún no hay tareas asignadas.\n\nTu gerente te enviará tareas cuando sea necesario.",
+      "todo_header": "⏳ *POR HACER ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
+      "task_item": "• {description}\n\n",
+      "instruction": "_Toca el botón ✅ Marcar Como Hecho en cada mensaje de tarea para completarla._\n\n",
+      "completed_header": "\n✅ *COMPLETADAS HOY ({count})*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n",
+      "completed_item": "• {description} ✓\n"
+    }
+  },
+  "view_tasks_callback": {
+    "not_manager": "⚠️ Solo los gerentes pueden ver tareas.",
+    "no_other_tasks": "📋 *Tus Tareas*\n\nAún no hay otras tareas.\n\nCrea más tareas enviando mensajes que comiencen con **"
+  },
+  "feedback": {
+    "prompt": "💡 *Envía Tus Comentarios*\n\nEscribe tu mensaje abajo y lo enviaré al equipo de BridgeOS.\n\n¡Comparte sugerencias, reporta errores o dinos qué piensas!"
+  },
+  "feedback_handling": {
+    "admin_error": "⚠️ Error: Administrador no configurado. Por favor contacta a soporte.",
+    "success": "✅ *¡Comentarios Enviados!*\n\n¡Gracias por compartir tus ideas con nosotros. Leemos cada mensaje y realmente apreciamos tu aporte!",
+    "error": "⚠️ Lo sentimos, hubo un error al enviar tus comentarios. Por favor inténtalo de nuevo más tarde."
+  },
+  "handle_message": {
+    "not_registered": "Por favor usa /start para registrarte primero.",
+    "limit_reached": {
+      "title": "⚠️ *Límite del Plan Gratuito Alcanzado*\n\n",
+      "message": "Tu negocio ha usado su asignación de {free_limit} mensajes traducidos.\nPara continuar las operaciones sin interrupciones, por favor actualiza tu cuenta a la *Licencia Empresarial*.\n\n",
+      "benefits_header": "*Licencia Empresarial de BridgeOS:*\n",
+      "benefits": "✅ Acceso Empresarial Completo (Uso ilimitado)\n✅ Panel de Gerente\n✅ Procesamiento Prioritario\n✅ Traducciones Específicas de la Industria\n✅ Soporte Multiidioma (12 idiomas)\n• *Precio:* ${price}/mes (Cancela en cualquier momento)\n\n",
+      "cta": "Toca abajo para actualizar:",
+      "button": "💳 Actualizar a Licencia Empresarial (${price}/mes)"
+    },
+    "manager": {
+      "no_worker": "⚠️ Aún no tienes un trabajador conectado a este bot.\n\nComparte tu invitación para conectar un trabajador:\n\n📋 Código: {code}\n🔗 {invite_link}",
+      "worker_not_found": "⚠️ La cuenta de tu contacto ya no existe.\nUsa /reset para empezar de nuevo.",
+      "message_prefix": "🗣️ De {name}: {translated}",
+      "last_message": "⚠️ *¡Ese fue tu último mensaje gratuito!*\n\nHas usado todos los {free_limit} mensajes gratuitos.\n\n💳 Suscríbete para mensajes ilimitados (${price}/mes):",
+      "last_message_button": "🏢 Actualizar a Licencia Empresarial (${price}/mes)"
+    },
+    "worker": {
+      "no_manager": "⚠️ No estás conectado a un contacto.\nPide a tu contacto su enlace de invitación.",
+      "manager_not_found": "⚠️ La cuenta de tu contacto ya no existe.\nUsa /reset y espera una nueva invitación.",
+      "message_prefix": "🗣️ De {name}: {translated}"
+    }
+  },
+  "handle_task_creation": {
+    "not_manager": "⚠️ Solo los gerentes pueden crear tareas.\nPara enviar un mensaje regular, no uses **",
+    "no_worker": "⚠️ Aún no tienes un trabajador conectado a este bot.\n\nComparte tu invitación para conectar un trabajador:\n\n📋 Código: {code}\n🔗 {invite_link}",
+    "empty_description": "⚠️ Por favor proporciona una descripción de tarea después de **\n\nEjemplo: ** Revisar vaca 115 en celo",
+    "worker_not_found": "⚠️ La cuenta de tu trabajador ya no existe.\nUsa /reset para empezar de nuevo.",
+    "translation_error": "⚠️ Error al traducir tarea: {error}\nPor favor inténtalo de nuevo.",
+    "creation_error": "⚠️ Error al crear tarea: {error}\nPor favor inténtalo de nuevo.",
+    "send_error": "⚠️ Error al enviar tarea al trabajador: {error}",
+    "worker_task": "📋 *Tarea de {manager_name}:*\n{task}",
+    "mark_done_button": "✅ Marcar Como Hecho",
+    "manager_confirmation": "✅ *Tarea enviada al trabajador:*\n\"{task}\"",
+    "view_all_button": "📋 Ver Todas las Tareas"
+  },
+  "task_completion_callback": {
+    "invalid_task_id": "⚠️ ID de tarea inválido",
+    "not_worker": "⚠️ Solo los trabajadores pueden completar tareas",
+    "not_found": "⚠️ Tarea no encontrada o ya completada",
+    "not_assigned": "⚠️ Esta tarea no está asignada a ti",
+    "task_completed": "📋 *Tarea:*\n{task}\n\n✅ *¡Completada!*",
+    "completion_confirmation": "✅ Tarea marcada como completada",
+    "manager_notification": "✅ *Tarea completada por {worker_name}:*\n\"{task}\"\n\n🕐 Completada a las: {time}"
+  },
+  "handle_media": {
+    "not_registered": "Por favor usa /start para registrarte primero.",
+    "manager_no_worker": "⚠️ Aún no tienes un trabajador conectado a este bot.\n\nComparte tu invitación para conectar un trabajador:\n\n📋 Código: {code}\n🔗 {invite_link}",
+    "worker_no_manager": "⚠️ No estás conectado a un contacto.\nPide a tu contacto su enlace de invitación.",
+    "contact_not_found": "⚠️ La cuenta de tu contacto ya no existe.\nUsa /reset para empezar de nuevo.",
+    "media_prefix": "📎 De {sender_name}:"
+  },
+  "menu": {
+    "not_registered": "Por favor usa /start para registrarte primero.",
+    "title": "📋 Menú de BridgeOS\n\nSelecciona una opción:",
+    "tasks": "📋 Mis Tareas",
+    "daily": "📊 Acciones Diarias",
+    "mycode": "🔗 Mi Código de Invitación",
+    "subscription": "💳 Suscripción",
+    "refer": "📤 Recomendar BridgeOS",
+    "feedback": "💬 Enviar Comentarios",
+    "reset": "🗑️ Restablecer Cuenta"
+  },
+  "addworker": {
+    "not_registered": "Por favor usa /start para registrarte primero.",
+    "not_manager": "⚠️ Solo los gerentes pueden añadir trabajadores.\n\nLos trabajadores son añadidos por sus gerentes.",
+    "pending_invitation": "⏳ Tienes una invitación pendiente en {bot_name}.\n\nPor favor completa esa invitación primero antes de añadir otro trabajador.\n\n🔗 Enlace de invitación:\n{invite_link}\n\n👉 Toca el botón de abajo para compartir:",
+    "pending_share_text": "🌉 ¡Únete a BridgeOS!\nChatea conmigo en tu idioma:\n{invite_link}",
+    "no_worker_on_current_bot": "⚠️ Por favor conecta un trabajador a este bot primero.\n\nComparte tu invitación con tu primer trabajador:\n\n📋 Código: {code}\n🔗 Enlace: {invite_link}",
+    "limit_reached": "⚠️ *Límite de Trabajadores Alcanzado*\n\nYa tienes {count} trabajadores (máximo permitido).\n\nPara añadir otro trabajador, por favor contacta a soporte para opciones empresariales.",
+    "all_bots_used": "⚠️ Todos los espacios de bot están en uso.\n\nTienes trabajadores en los 5 bots. Esto no debería pasar - por favor contacta a soporte.",
+    "share_invitation_text": "🌉 ¡Únete a BridgeOS!\nChatea conmigo en tu idioma:\n{invite_link}",
+    "share_button": "📤 Compartir Invitación",
+    "bot_greeting": "👋 *¡Listo para añadir un trabajador!*\n\n📋 Comparte esta invitación con tu trabajador:\n\n👉 Toca el botón de abajo para compartir:",
+    "success": "✅ *Espacio de Trabajador Asignado en {bot_name}*\n\n📱 Abre este bot para añadir tu trabajador:\n{bot_link}\n\n💡 ¡La invitación te está esperando allí!"
+  },
+  "workers": {
+    "not_registered": "Por favor usa /start para registrarte primero.",
+    "not_manager": "Solo los gerentes pueden ver trabajadores.\n\nLos trabajadores son gestionados por sus gerentes.",
+    "title": "👥 *Tus Trabajadores*\n\n",
+    "bot_connected": "{bot_name}: {worker_name} ✅\n",
+    "bot_pending": "{bot_name}: ⏳ Invitación pendiente\n",
+    "bot_available": "{bot_name}: Disponible\n",
+    "footer": "\n💡 Para añadir un trabajador: /addworker\n💡 Para mensajear a un trabajador: Abre el chat de ese bot"
+  }
 }
