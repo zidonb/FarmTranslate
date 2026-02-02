@@ -5,6 +5,7 @@ Focus Areas:
 2. Edge Cases: 
    - Data: Null/empty inputs, boundary conditions, min/max values
    - Flow: Out-of-order operations, skipped steps, unexpected user paths
+   - Also, FLOW ISSUES. I mean, like (just an example, but look for any) if  a user (manager) clicked add worker before registering the first one or if a user got recommendation from bot 4 so his starting point is bot 4 and not bot 1. Or any edge cases. Not only in code but in the flow.
 3. Security: Injection risks, validation gaps, unsafe data handling
 4. Reliability: Unhandled exceptions, resource leaks, silent failures
 5. Performance: Time/space complexity issues (O(n) problems), memory bloat
@@ -14,9 +15,5 @@ Output Requirements:
 - Ignore style/linting unless it causes functional bugs
 Be critical, direct, and thorough. Focus on hardening the code against failure.
 
-Take as much time as you need!!
-
-
- RACE CONDITIONS
- FLOW ISSUES
- edge cases? I mean, like (just an example, but look for any) if  a user (manager) clicked add worker before registering the first one or if a user got recommendation from bot 4 so his starting point is bot 4 and not bot 1. or any, i mean edge cases not only in code but in the flow - hope you got what i mean
+Take as much time as you need!!!
+And if no bugs you dont have to make up ones just to please me. I want real bugs.

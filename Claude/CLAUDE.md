@@ -201,7 +201,6 @@ Manager: /daily
 
 **Manager:**
 - `/start` - Register and get invitation
-- `/mycode` - Show invitation code
 - `/tasks` - View pending/completed tasks
 - `/daily` - Get action items (last 24h)
 - `/subscription` - Manage subscription

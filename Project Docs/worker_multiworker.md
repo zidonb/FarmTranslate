@@ -60,7 +60,6 @@
 - Task database already supports multiple workers (has worker_id column)
 
 **4. Commands Updated:**
-- `/mycode`: Shows all workers across all bots
 - `/tasks`: Groups tasks by worker name (fetched from Telegram)
 - `/daily`: Aggregates messages from ALL workers, groups action items by worker name
 - `/reset`: Loops through all workers in array, cleans up each

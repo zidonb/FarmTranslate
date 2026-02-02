@@ -21,6 +21,27 @@ from collections import defaultdict
 # Conversation states
 LANGUAGE, GENDER, INDUSTRY = range(3)
 
+# Add this near the top of bot.py (after imports, before handlers)
+
+def get_current_bot_invite_link(code: str) -> tuple[str, str]:
+    """
+    Get current bot's username and invitation link
+    
+    Returns:
+        tuple: (bot_username, invite_link)
+    """
+    bot_usernames = {
+        'bot1': 'FarmTranslateBot',
+        'bot2': 'BridgeOS_2bot',
+        'bot3': 'BridgeOS_3bot',
+        'bot4': 'BridgeOS_4bot',
+        'bot5': 'BridgeOS_5bot'
+    }
+    current_bot_id = os.environ.get('BOT_ID', 'bot1')
+    bot_username = bot_usernames.get(current_bot_id, 'FarmTranslateBot')
+    invite_link = f"https://t.me/{bot_username}?start=invite_{code}"
+    return bot_username, invite_link
+
 def validate_invitation_code(code: str) -> bool:
     """
     Validate invitation code format
@@ -1465,10 +1486,15 @@ async def addworker_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     worker_on_current_bot = next((w for w in current_workers if w.get('bot_id') == current_bot_id), None)
     
     if not worker_on_current_bot:
+        code = user.get('code', '')
+        bot_username, invite_link = get_current_bot_invite_link(code)
+        
         no_worker_on_current_bot_text = get_text(
             language,
             'addworker.no_worker_on_current_bot',
-            default="⚠️ Please connect a worker to this bot first.\n\nUse /mycode to share your invitation with your first worker."
+            default="⚠️ Please connect a worker to this bot first.\n\nShare your invitation with your first worker:\n\n📋 Code: {code}\n🔗 Link: {invite_link}",
+            code=code,
+            invite_link=invite_link
         )
         await send_message(no_worker_on_current_bot_text)
         return
@@ -1870,10 +1896,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         worker_on_this_bot = next((w for w in workers if w.get('bot_id') == bot_id), None)
         
         if not worker_on_this_bot:
+            code = user.get('code', '')
+            bot_username, invite_link = get_current_bot_invite_link(code)
+            
             no_worker_text = get_text(
                 language,
                 'handle_message.manager.no_worker',
-                default="⚠️ You don't have a contact connected yet.\nShare your invitation (use /mycode) with your contact."
+                default="⚠️ You don't have a worker connected to this bot yet.\n\nShare your invitation to connect a worker:\n\n📋 Code: {code}\n🔗 {invite_link}",
+                code=code,
+                invite_link=invite_link
             )
             await update.message.reply_text(no_worker_text)
             return
@@ -2061,10 +2092,15 @@ async def handle_task_creation(update: Update, context: ContextTypes.DEFAULT_TYP
     worker_on_this_bot = next((w for w in workers if w.get('bot_id') == bot_id), None)
 
     if not worker_on_this_bot:
+        code = user.get('code', '')
+        bot_username, invite_link = get_current_bot_invite_link(code)
+        
         no_worker_text = get_text(
             language,
             'handle_task_creation.no_worker',
-            default="⚠️ You don't have a worker connected yet.\nShare your invitation (use /mycode) with your worker first."
+            default="⚠️ You don't have a worker connected to this bot yet.\n\nShare your invitation to connect a worker:\n\n📋 Code: {code}\n🔗 {invite_link}",
+            code=code,
+            invite_link=invite_link
         )
         await update.message.reply_text(no_worker_text)
         return
@@ -2342,10 +2378,15 @@ async def handle_media(update: Update, context: ContextTypes.DEFAULT_TYPE):
         worker_on_this_bot = next((w for w in workers if w.get('bot_id') == bot_id), None)
         
         if not worker_on_this_bot:
+            code = user.get('code', '')
+            bot_username, invite_link = get_current_bot_invite_link(code)
+            
             no_worker_text = get_text(
                 language,
                 'handle_media.manager_no_worker',
-                default="⚠️ You don't have a contact connected yet.\nShare your invitation (use /mycode) with your contact."
+                default="⚠️ You don't have a worker connected to this bot yet.\n\nShare your invitation to connect a worker:\n\n📋 Code: {code}\n🔗 {invite_link}",
+                code=code,
+                invite_link=invite_link
             )
             await update.message.reply_text(no_worker_text)
             return

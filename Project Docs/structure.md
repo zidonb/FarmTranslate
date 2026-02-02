@@ -427,7 +427,7 @@ bridgeos/
 - Subscribe button generation with Lemon Squeezy checkout URL
 - Usage limit enforcement (checks before sending, increments after)
 - Daily action items generation (`/daily` command)
-- Commands: `/start`, `/help`, `/mycode`, `/tasks`, `/subscription`, `/daily`, `/refer`, `/reset` ✅
+- Commands: `/start`, `/help`, `/tasks`, `/subscription`, `/daily`, `/refer`, `/reset` ✅
 - No translation, database, payment, or config logic
 
 ### **tasks.py** ✅ NEW MODULE
@@ -1216,7 +1216,6 @@ Manager Detail Page (/manager/{id})
 ### **Manager Commands:**
 - `/start` - Register and get invitation link
 - `/help` - Show available commands
-- `/mycode` - Show invitation code and link
 - `/tasks` - View pending and completed tasks ✅ NEW
 - `/daily` - Get daily action items (last 24 hours)
 - `/subscription` - Manage subscription (view status, subscribe, portal link)
@@ -1481,7 +1480,7 @@ worker: python bot.py
 - Deep-link invitation system with share button
 - 5-digit invitation codes (BRIDGE-12345)
 - One-to-one manager-worker model
-- Commands: `/start`, `/help`, `/mycode`, `/tasks`, `/subscription`, `/daily`, `/refer`, `/reset` ✅
+- Commands: `/start`, `/help`, `/tasks`, `/subscription`, `/daily`, `/refer`, `/reset` ✅
 - PostgreSQL database (scalable to 50k+ users)
 - Real-time admin dashboard (monitoring & management)
 - Media forwarding (photos, videos, voice, files, etc.)
