@@ -2,6 +2,7 @@
 
 
  # Bugs (21st conversation)
+  - what if manager on bot 1 adds worker and get invitation link on bot 2 to share, but instead of sharing he registares regular with /start
  2. SECURITY: XSS Vulnerability in Dashboard Templates
  12. PROMPT INJECTION VULNERABILITY
  13. MEMORY LEAK: I18n Translation Cache

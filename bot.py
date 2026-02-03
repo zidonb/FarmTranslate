@@ -245,7 +245,7 @@ async def gender_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 'registration.invalid_code_format',
                 default="❌ Invalid invitation code format.\n\nPlease ask your manager for a new invitation."
             )
-            await send_message(invalid_code_text, reply_markup=ReplyKeyboardRemove())
+            await update.message.reply_text(invalid_code_text, reply_markup=ReplyKeyboardRemove())
             return ConversationHandler.END
         
         user_id = str(update.effective_user.id)
@@ -503,7 +503,8 @@ async def industry_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     database.save_user(user_id, user_data)
     
     # Create deep-link for invitation
-    bot_username = "FarmTranslateBot"  # Your bot username
+    bot_info = await context.bot.get_me()
+    bot_username = bot_info.username
     deep_link = f"https://t.me/{bot_username}?start=invite_{code}"
     
     # Create share button with prefilled message
@@ -756,19 +757,20 @@ async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     if worker_id in all_users:
                         del all_users[worker_id]
                         database.save_data(all_users)
-                
-                try:
-                    worker_notification_text = get_text(
-                        worker['language'],  # Use worker's language
-                        'reset.worker_notification',
-                        default="⚠️ Your contact has reset their account.\nYour account has also been reset.\n\nYou'll need a new invitation to reconnect."
-                    )
-                    await context.bot.send_message(
-                        chat_id=worker_id,
-                        text=worker_notification_text
-                    )
-                except Exception:
-                    pass
+                    
+                    # ✅ Moved inside if worker: block
+                    try:
+                        worker_notification_text = get_text(
+                            worker['language'],
+                            'reset.worker_notification',
+                            default="⚠️ Your contact has reset their account.\nYour account has also been reset.\n\nYou'll need a new invitation to reconnect."
+                        )
+                        await context.bot.send_message(
+                            chat_id=worker_id,
+                            text=worker_notification_text
+                        )
+                    except Exception:
+                        pass
     
     elif user['role'] == 'worker':
         manager_id = user.get('manager')
@@ -1540,17 +1542,27 @@ async def addworker_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Get manager's code
     code = user.get('code', 'No code found')
     
-    # Bot username mapping
-    bot_usernames = {
-        'bot1': 'FarmTranslateBot',
-        'bot2': 'BridgeOS_2bot',
-        'bot3': 'BridgeOS_3bot',
-        'bot4': 'BridgeOS_4bot',
-        'bot5': 'BridgeOS_5bot'
+    # Get bot username dynamically for the next bot
+    bot_tokens = {
+        'bot1': os.environ.get('TELEGRAM_TOKEN_BOT1'),
+        'bot2': os.environ.get('TELEGRAM_TOKEN_BOT2'),
+        'bot3': os.environ.get('TELEGRAM_TOKEN_BOT3'),
+        'bot4': os.environ.get('TELEGRAM_TOKEN_BOT4'),
+        'bot5': os.environ.get('TELEGRAM_TOKEN_BOT5')
     }
-    
-    bot_username = bot_usernames.get(next_bot_id, 'FarmTranslateBot')
-    
+
+    next_bot_token = bot_tokens.get(next_bot_id)
+
+    # Get the actual username from the next bot
+    if next_bot_token:
+        from telegram import Bot
+        next_bot = Bot(token=next_bot_token)
+        next_bot_info = await next_bot.get_me()
+        bot_username = next_bot_info.username
+    else:
+        # Fallback if token not configured
+        bot_username = 'FarmTranslateBot'  # Default fallback
+
     # Create links
     bot_chat_link = f"https://t.me/{bot_username}"
     invite_link = f"https://t.me/{bot_username}?start=invite_{code}"
