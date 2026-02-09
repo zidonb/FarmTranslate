@@ -87,10 +87,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print(f"📥 /start command received from user {update.effective_user.id}")
     user_id = str(update.effective_user.id)
     user = database.get_user(user_id)
+    current_bot_id = os.environ.get('BOT_ID', 'bot1')
     
     # Check if user already registered
     if user:
-    # ✅ FIX: Check if already-registered user clicked an invite link
+        # Check if already-registered user clicked an invite link
         if context.args and len(context.args) > 0:
             param = context.args[0]
             if param.startswith('invite_'):
@@ -112,7 +113,46 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     await update.message.reply_text(already_worker_text)
                 return ConversationHandler.END
         
-        # Normal welcome back (no invite link clicked)
+        # MANAGER opening a NEW bot (no invite code) - show invite link for this bot
+        if user['role'] == 'manager':
+            workers = user.get('workers', [])
+            worker_on_this_bot = next((w for w in workers if w.get('bot_id') == current_bot_id), None)
+            
+            if not worker_on_this_bot:
+                # Manager opened this bot but has no worker here yet - show invite link
+                code = user.get('code', '')
+                language = user['language']
+                bot_username, invite_link = get_current_bot_invite_link(code)
+                
+                # Create share button
+                share_text = get_text(
+                    language,
+                    'addworker.share_invitation_text',
+                    default="🌉 Join BridgeOS!\nChat with me in your language:\n{invite_link}",
+                    invite_link=invite_link
+                )
+                
+                share_button_text = get_text(
+                    language,
+                    'addworker.share_button',
+                    default="🚀 Share Invitation"
+                )
+                
+                keyboard = InlineKeyboardMarkup([
+                    [InlineKeyboardButton(share_button_text, switch_inline_query=share_text)]
+                ])
+                
+                new_bot_text = get_text(
+                    language,
+                    'start.manager_new_bot',
+                    default="👋 *Ready to add a worker!*\n\nShare this invitation with your worker:\n\n📋 Code: {code}\n🔗 Link: {invite_link}\n\n👉 Tap the button below to share:",
+                    code=code,
+                    invite_link=invite_link
+                )
+                await update.message.reply_text(new_bot_text, reply_markup=keyboard, parse_mode='Markdown')
+                return ConversationHandler.END
+        
+        # Normal welcome back (has worker on this bot, or is a worker)
         welcome_text = get_text(
             user['language'],
             'start.welcome_back',
@@ -243,7 +283,7 @@ async def gender_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
             invalid_code_text = get_text(
                 language,
                 'registration.invalid_code_format',
-                default="❌ Invalid invitation code format.\n\nPlease ask your manager for a new invitation."
+                default="âŒ Invalid invitation code format.\n\nPlease ask your manager for a new invitation."
             )
             await update.message.reply_text(invalid_code_text, reply_markup=ReplyKeyboardRemove())
             return ConversationHandler.END
@@ -382,12 +422,6 @@ async def gender_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'registered_at': datetime.now(timezone.utc).isoformat()
         })
 
-        # ✅ Remove this bot from pending_bots (invitation fulfilled)
-        pending = manager.get('pending_bots', [])
-        if bot_id in pending:
-            pending.remove(bot_id)
-            manager['pending_bots'] = pending
-
         database.save_user(manager_id, manager)
         
         connection_success_text = get_text(
@@ -497,8 +531,7 @@ async def industry_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'role': 'manager',
         'industry': industry_key,
         'code': code,
-        'workers': [],
-        'pending_bots': []
+        'workers': []
     }
     database.save_user(user_id, user_data)
     
@@ -1403,7 +1436,7 @@ async def feedback_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def addworker_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Add a new worker - find free bot and send proactive invite"""
+    """Add a new worker - show link to next available bot"""
     # Handle both direct command AND callback from menu
     if update.callback_query:
         user_id = str(update.callback_query.from_user.id)
@@ -1435,54 +1468,7 @@ async def addworker_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await send_message(not_manager_text)
         return
     
-    # ✅ NEW: Check if manager has pending invitation
-    pending_bots = user.get('pending_bots', [])
-    if pending_bots:
-        pending_bot_id = pending_bots[0]  # Get first pending bot
-        code = user.get('code', 'No code found')
-        
-        # Get bot username (use global BOT_USERNAMES if we defined it, or inline)
-        bot_usernames = {
-            'bot1': 'FarmTranslateBot',
-            'bot2': 'BridgeOS_2bot',
-            'bot3': 'BridgeOS_3bot',
-            'bot4': 'BridgeOS_4bot',
-            'bot5': 'BridgeOS_5bot'
-        }
-        pending_bot_username = bot_usernames.get(pending_bot_id, 'FarmTranslateBot')
-        
-        # ✅ FIX: Generate FULL invitation link (with start parameter)
-        invite_link = f"https://t.me/{pending_bot_username}?start=invite_{code}"
-        
-        # Create share button
-        share_text = get_text(
-            language,
-            'addworker.pending_share_text',
-            default="🌉 Join BridgeOS!\nChat with me in your language:\n{invite_link}",
-            invite_link=invite_link
-        )
-        
-        share_button_text = get_text(
-            language,
-            'addworker.share_button',
-            default="📤 Share Invitation"
-        )
-        
-        keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton(share_button_text, switch_inline_query=share_text)]
-        ])
-        
-        pending_invitation_text = get_text(
-            language,
-            'addworker.pending_invitation',
-            default="⏳ You have a pending invitation on {bot_name}.\n\nPlease complete that invitation first before adding another worker.\n\n🔗 Invitation link:\n{invite_link}\n\n👉 Tap the button below to share:",
-            bot_name=pending_bot_id.upper(),
-            invite_link=invite_link
-        )
-        await send_message(pending_invitation_text, reply_markup=keyboard)
-        return
-    
-    # ✅ NEW: Check if current bot has a worker
+    # Check if current bot has a worker first
     current_bot_id = os.environ.get('BOT_ID', 'bot1')
     current_workers = user.get('workers', [])
     worker_on_current_bot = next((w for w in current_workers if w.get('bot_id') == current_bot_id), None)
@@ -1510,13 +1496,18 @@ async def addworker_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             default="⚠️ *Worker Limit Reached*\n\nYou already have {count} workers (maximum allowed).\n\nTo add another worker, please contact support for enterprise options.",
             count=len(current_workers)
         )
-        await send_message(
-            limit_reached_text,
-            parse_mode='Markdown'
-        )
+        await send_message(limit_reached_text, parse_mode='Markdown')
         return
     
     # Find which bots this manager already uses
+    bot_usernames = {
+        'bot1': 'FarmTranslateBot',
+        'bot2': 'BridgeOS_2bot',
+        'bot3': 'BridgeOS_3bot',
+        'bot4': 'BridgeOS_4bot',
+        'bot5': 'BridgeOS_5bot'
+    }
+    
     available_bot_ids = ['bot1', 'bot2', 'bot3', 'bot4', 'bot5']
     used_bot_ids = [w.get('bot_id') for w in current_workers]
     free_bot_ids = [b for b in available_bot_ids if b not in used_bot_ids]
@@ -1525,113 +1516,26 @@ async def addworker_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         all_bots_used_text = get_text(
             language,
             'addworker.all_bots_used',
-            default="⚠️ All bot slots are in use.\n\nYou have workers on all 5 bots. This shouldn't happen - please contact support."
+            default="⚠️ All bot slots are in use.\n\nYou have workers on all 5 bots."
         )
         await send_message(all_bots_used_text)
         return
     
     # Get the next free bot
     next_bot_id = free_bot_ids[0]
+    next_bot_username = bot_usernames.get(next_bot_id, 'FarmTranslateBot')
+    next_bot_link = f"https://t.me/{next_bot_username}"
     
-    # ✅ NEW: Add bot to pending_bots
-    if 'pending_bots' not in user:
-        user['pending_bots'] = []
-    user['pending_bots'].append(next_bot_id)
-    database.save_user(user_id, user)
-    
-    # Get manager's code
-    code = user.get('code', 'No code found')
-    
-    # Get bot username dynamically for the next bot
-    bot_tokens = {
-        'bot1': os.environ.get('TELEGRAM_TOKEN_BOT1'),
-        'bot2': os.environ.get('TELEGRAM_TOKEN_BOT2'),
-        'bot3': os.environ.get('TELEGRAM_TOKEN_BOT3'),
-        'bot4': os.environ.get('TELEGRAM_TOKEN_BOT4'),
-        'bot5': os.environ.get('TELEGRAM_TOKEN_BOT5')
-    }
-
-    next_bot_token = bot_tokens.get(next_bot_id)
-
-    # Get the actual username from the next bot
-    if next_bot_token:
-        from telegram import Bot
-        next_bot = Bot(token=next_bot_token)
-        next_bot_info = await next_bot.get_me()
-        bot_username = next_bot_info.username
-    else:
-        # Fallback if token not configured
-        bot_username = 'FarmTranslateBot'  # Default fallback
-
-    # Create links
-    bot_chat_link = f"https://t.me/{bot_username}"
-    invite_link = f"https://t.me/{bot_username}?start=invite_{code}"
-    
-    # Get bot token for the next bot (to send proactive message)
-    bot_tokens = {
-        'bot1': os.environ.get('TELEGRAM_TOKEN_BOT1'),
-        'bot2': os.environ.get('TELEGRAM_TOKEN_BOT2'),
-        'bot3': os.environ.get('TELEGRAM_TOKEN_BOT3'),
-        'bot4': os.environ.get('TELEGRAM_TOKEN_BOT4'),
-        'bot5': os.environ.get('TELEGRAM_TOKEN_BOT5')
-    }
-    
-    next_bot_token = bot_tokens.get(next_bot_id)
-    
-    # Send proactive message from the next bot
-    if next_bot_token:
-        try:
-            from telegram import Bot
-            next_bot = Bot(token=next_bot_token)
-            
-            # Create share button
-            share_text = get_text(
-                language,
-                'addworker.share_invitation_text',
-                default="🌉 Join BridgeOS!\nChat with me in your language:\n{invite_link}",
-                invite_link=invite_link
-            )
-            
-            share_button_text = get_text(
-                language,
-                'addworker.share_button',
-                default="🚀 Share Invitation"
-            )
-            
-            keyboard = InlineKeyboardMarkup([
-                [InlineKeyboardButton(share_button_text, switch_inline_query=share_text)]
-            ])
-            
-            # Greeting message
-            greeting_text = get_text(
-                language,
-                'addworker.bot_greeting',
-                default="👋 *Ready to add a worker!*\n\n📋 Share this invitation with your worker:\n\n👉 Tap the button below to share:"
-            )
-            
-            await next_bot.send_message(
-                chat_id=user_id,
-                text=greeting_text,
-                reply_markup=keyboard,
-                parse_mode='Markdown'
-            )
-            
-        except Exception as e:
-            print(f"Error sending proactive message from {next_bot_id}: {e}")
-    
-    # Send instructions in current bot
+    # Simple instruction: open the next bot and tap Start
     success_text = get_text(
         language,
         'addworker.success',
-        default="✅ *Worker Slot Assigned on {bot_name}*\n\n📱 Open this bot to add your worker:\n{bot_link}\n\n💡 The invitation is waiting for you there!",
-        bot_name=next_bot_id.upper(),
-        bot_link=bot_chat_link
+        default="✅ *To add another worker:*\n\n1️⃣Open this bot: {bot_link}\nTap *Start*\n3📱Share the invitation with your worker\n\n👉 Tap the link above to continue.",
+        bot_link=next_bot_link
     )
     
-    await send_message(
-        success_text,
-        parse_mode='Markdown'
-    )
+    await send_message(success_text, parse_mode='Markdown')
+
 
 async def workers_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show overview of all workers across all bots"""
@@ -1666,9 +1570,8 @@ async def workers_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await send_message(not_manager_text)
         return
     
-    # Get workers and pending bots
+    # Get workers
     workers = user.get('workers', [])
-    pending_bots = user.get('pending_bots', [])
     
     # Build overview message
     title = get_text(
@@ -1681,11 +1584,11 @@ async def workers_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Show all 5 bots with their status
     bot_names = {
-        'bot1': 'Bot 1',
-        'bot2': 'Bot 2',
-        'bot3': 'Bot 3',
-        'bot4': 'Bot 4',
-        'bot5': 'Bot 5'
+        'bot1': 'Bot 1 (FarmTranslateBot)',
+        'bot2': 'Bot 2 (BridgeOS_2bot)',
+        'bot3': 'Bot 3 (BridgeOS_3bot)',
+        'bot4': 'Bot 4 (BridgeOS_4bot)',
+        'bot5': 'Bot 5 (BridgeOS_5bot)'
     }
     
     for bot_id in ['bot1', 'bot2', 'bot3', 'bot4', 'bot5']:
@@ -1703,45 +1606,19 @@ async def workers_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             except Exception:
                 worker_name = f"Worker {worker_id}"
             
-            status_line = get_text(
-                language,
-                'workers.bot_connected',
-                default="{bot_name}: {worker_name} ✅\n",
-                bot_name=bot_name,
-                worker_name=worker_name
-            )
-            response += status_line
-            
-        elif bot_id in pending_bots:
-            # Pending invitation
-            status_line = get_text(
-                language,
-                'workers.bot_pending',
-                default="{bot_name}: ⏳ Pending invitation\n",
-                bot_name=bot_name
-            )
-            response += status_line
-            
+            response += f"✅ {bot_name}: {worker_name}\n"
         else:
-            # Available
-            status_line = get_text(
-                language,
-                'workers.bot_available',
-                default="{bot_name}: Available\n",
-                bot_name=bot_name
-            )
-            response += status_line
+            response += f"⬜ {bot_name}: Available\n"
     
     # Add help text
     footer = get_text(
         language,
         'workers.footer',
-        default="\n💡 To add a worker: /addworker\n💡 To message a worker: Open that bot's chat"
+        default="\n💡 To add a worker: /addworker"
     )
     response += footer
     
     await send_message(response, parse_mode='Markdown')
-
 
 # ============================================
 # MESSAGE HANDLING
