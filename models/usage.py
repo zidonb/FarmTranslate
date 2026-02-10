@@ -117,6 +117,28 @@ def reset(manager_id: int):
     logger.info(f"Usage reset: manager={manager_id}")
 
 
+def block(manager_id: int):
+    """Block a manager (mark as exceeding free tier)."""
+    with get_db_cursor() as cur:
+        cur.execute(
+            "UPDATE usage_tracking SET is_blocked = TRUE WHERE manager_id = %s",
+            (manager_id,)
+        )
+
+    logger.info(f"Usage blocked: manager={manager_id}")
+
+
+def unblock(manager_id: int):
+    """Unblock a manager (e.g. after subscribing)."""
+    with get_db_cursor() as cur:
+        cur.execute(
+            "UPDATE usage_tracking SET is_blocked = FALSE WHERE manager_id = %s",
+            (manager_id,)
+        )
+
+    logger.info(f"Usage unblocked: manager={manager_id}")
+
+
 def get_all() -> list:
     """Get all usage records (for dashboard)."""
     with get_db_cursor(commit=False) as cur:

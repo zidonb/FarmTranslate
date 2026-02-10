@@ -1,19 +1,21 @@
 from flask import Flask, render_template_string, request, redirect, session, jsonify
-import database
-import translation_msg_context
-import message_history
-import usage_tracker
-import subscription_manager
-import feedback
 from config import load_config
-from datetime import datetime
+from datetime import datetime, timezone
 import secrets
 import hmac
 import hashlib
 import requests
-import db_connection
 import os
-from datetime import datetime, timezone
+
+import models.user as user_model
+import models.manager as manager_model
+import models.worker as worker_model
+import models.connection as connection_model
+import models.message as message_model
+import models.subscription as subscription_model
+import models.usage as usage_model
+import models.feedback as feedback_model
+from utils.db_connection import init_connection_pool, close_all_connections
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
@@ -39,7 +41,6 @@ if not DASHBOARD_PASSWORD:
 # LEMON SQUEEZY WEBHOOK HANDLER
 # ============================================
 
-
 def verify_signature(payload_body, signature_header, secret):
     """Verify Lemon Squeezy webhook signature"""
     computed_signature = hmac.new(
@@ -47,25 +48,21 @@ def verify_signature(payload_body, signature_header, secret):
     ).hexdigest()
     return hmac.compare_digest(computed_signature, signature_header)
 
-
 def send_telegram_notification(chat_id, text):
     """Send Telegram message directly via Bot API"""
     try:
         config = load_config()
         token = config["telegram_token"]
-
         url = f"https://api.telegram.org/bot{token}/sendMessage"
         response = requests.post(
             url, json={"chat_id": chat_id, "text": text, "parse_mode": "Markdown"}
         )
-
         if response.status_code == 200:
-            print(f"✅ Notification sent to {chat_id}")
+            print(f"Notification sent to {chat_id}")
         else:
-            print(f"⚠️ Failed to send notification: {response.text}")
+            print(f"Failed to send notification: {response.text}")
     except Exception as e:
-        print(f"❌ Error sending notification: {e}")
-
+        print(f"Error sending notification: {e}")
 
 @app.route("/webhook/lemonsqueezy", methods=["POST"])
 def lemonsqueezy_webhook():
@@ -73,16 +70,12 @@ def lemonsqueezy_webhook():
     try:
         config = load_config()
         webhook_secret = config["lemonsqueezy"]["webhook_secret"]
-
         payload_body = request.get_data()
         signature_header = request.headers.get("X-Signature")
 
         if not signature_header:
-            print("ERROR: No signature header")
             return jsonify({"error": "No signature"}), 401
-
         if not verify_signature(payload_body, signature_header, webhook_secret):
-            print("ERROR: Invalid signature")
             return jsonify({"error": "Invalid signature"}), 401
 
         data = request.json
@@ -94,237 +87,112 @@ def lemonsqueezy_webhook():
             print(f"WARNING: No telegram_id in webhook for event {event_name}")
             return jsonify({"status": "success", "note": "no telegram_id"}), 200
 
+        telegram_id = int(telegram_id)
         print(f"Processing event: {event_name} for telegram_id: {telegram_id}")
 
-        # Handle different event types
-        if event_name == "subscription_created":
-            handle_subscription_created(telegram_id, data)
-        elif event_name == "subscription_updated":
-            handle_subscription_updated(telegram_id, data)
-        elif event_name == "subscription_cancelled":
-            handle_subscription_cancelled(telegram_id, data)
-        elif event_name == "subscription_resumed":
-            handle_subscription_resumed(telegram_id, data)
-        elif event_name == "subscription_expired":
-            handle_subscription_expired(telegram_id, data)
-        elif event_name == "subscription_paused":
-            handle_subscription_paused(telegram_id, data)
-        elif event_name == "subscription_unpaused":
-            handle_subscription_unpaused(telegram_id, data)
-        elif event_name == "subscription_payment_success":
-            handle_subscription_payment_success(telegram_id, data)
-        elif event_name == "subscription_payment_failed":
-            handle_subscription_payment_failed(telegram_id, data)
-        elif event_name == "subscription_payment_recovered":
-            handle_subscription_payment_recovered(telegram_id, data)
+        handler_map = {
+            "subscription_created": handle_subscription_created,
+            "subscription_updated": handle_subscription_updated,
+            "subscription_cancelled": handle_subscription_cancelled,
+            "subscription_resumed": handle_subscription_resumed,
+            "subscription_expired": handle_subscription_expired,
+            "subscription_paused": handle_subscription_paused,
+            "subscription_unpaused": handle_subscription_unpaused,
+            "subscription_payment_success": handle_subscription_payment_success,
+            "subscription_payment_failed": handle_subscription_payment_failed,
+            "subscription_payment_recovered": handle_subscription_payment_recovered,
+        }
+        handler = handler_map.get(event_name)
+        if handler:
+            handler(telegram_id, data)
         else:
             print(f"Unhandled event: {event_name}")
 
         return jsonify({"status": "success"}), 200
-
     except Exception as e:
         print(f"ERROR processing webhook: {e}")
         return jsonify({"status": "error", "message": str(e)}), 200
 
-
-def handle_subscription_created(telegram_id: str, data: dict):
-    """Handle subscription_created event"""
+def handle_subscription_created(telegram_id: int, data: dict):
     attrs = data["data"]["attributes"]
-    subscription_data = {
-        "status": "active",
-        "lemon_subscription_id": data["data"]["id"],
-        "lemon_customer_id": str(attrs["customer_id"]),
-        "started_at": attrs["created_at"],
-        "renews_at": attrs["renews_at"],
-        "ends_at": attrs.get("ends_at"),
-        "cancelled_at": None,
-        "plan": "monthly",
-        "customer_portal_url": attrs["urls"]["customer_portal"],
-    }
-    subscription_manager.save_subscription(telegram_id, subscription_data)
-    print(
-        f"✅ Subscription created for {telegram_id}: {subscription_data['lemon_subscription_id']}"
+    subscription_model.save(
+        manager_id=telegram_id,
+        external_id=str(data["data"]["id"]),
+        status="active",
+        customer_portal_url=attrs["urls"]["customer_portal"],
+        renews_at=attrs["renews_at"],
+        ends_at=attrs.get("ends_at"),
     )
+    usage_model.reset(telegram_id)
+    send_telegram_notification(telegram_id,
+        "✅ *Subscription Active!*\n\nYou now have unlimited messages.\nThank you for subscribing to BridgeOS! 🎉")
 
-    # Unblock user and reset usage counter
-    usage_tracker.unblock_user(telegram_id)
-    usage_tracker.reset_user_usage(telegram_id)
-    print(f"✅ User {telegram_id} unblocked and usage reset")
-
-    # Send notification to user
-    send_telegram_notification(
-        telegram_id,
-        "✅ *Subscription Active!*\n\n"
-        "You now have unlimited messages.\n"
-        "Thank you for subscribing to BridgeOS! 🎉",
-    )
-
-
-def handle_subscription_updated(telegram_id: str, data: dict):
-    """Handle subscription_updated event"""
+def handle_subscription_updated(telegram_id: int, data: dict):
     attrs = data["data"]["attributes"]
-    subscription = subscription_manager.get_subscription(telegram_id)
+    subscription = subscription_model.get_by_manager(telegram_id)
     if not subscription:
-        print(f"WARNING: Subscription not found for {telegram_id}, creating new")
         handle_subscription_created(telegram_id, data)
         return
-    subscription["renews_at"] = attrs["renews_at"]
-    subscription["ends_at"] = attrs.get("ends_at")
-    subscription["customer_portal_url"] = attrs["urls"]["customer_portal"]
-    if attrs["cancelled"]:
-        subscription["status"] = "cancelled"
-        if not subscription.get("cancelled_at"):
-            subscription["cancelled_at"] = datetime.now(timezone.utc).isoformat()
-    subscription_manager.save_subscription(telegram_id, subscription)
-    print(f"✅ Subscription updated for {telegram_id}")
+    status = "cancelled" if attrs["cancelled"] else subscription['status']
+    subscription_model.save(
+        manager_id=telegram_id,
+        external_id=subscription.get('external_id'),
+        status=status,
+        customer_portal_url=attrs["urls"]["customer_portal"],
+        renews_at=attrs["renews_at"],
+        ends_at=attrs.get("ends_at"),
+    )
 
-
-def handle_subscription_cancelled(telegram_id: str, data: dict):
-    """Handle subscription_cancelled event"""
+def handle_subscription_cancelled(telegram_id: int, data: dict):
     attrs = data["data"]["attributes"]
-    subscription = subscription_manager.get_subscription(telegram_id)
-    if not subscription:
-        print(f"WARNING: Subscription not found for {telegram_id}")
-        return
-    subscription["status"] = "cancelled"
-    subscription["cancelled_at"] = datetime.now(timezone.utc).isoformat()
-    subscription["ends_at"] = attrs.get("ends_at")
-    subscription_manager.save_subscription(telegram_id, subscription)
-    print(
-        f"⚠️ Subscription cancelled for {telegram_id}, access until: {attrs.get('ends_at')}"
-    )
+    subscription_model.update_status(manager_id=telegram_id, status="cancelled", ends_at=attrs.get("ends_at"))
+    ends_at_display = (attrs.get("ends_at", "end of billing period")[:10]
+                       if attrs.get("ends_at") else "end of billing period")
+    send_telegram_notification(telegram_id,
+        f"⚠️ *Subscription Cancelled*\n\nYou'll keep access until {ends_at_display}.\nYou can resubscribe anytime.")
 
-    # Send notification to user
-    ends_at_display = (
-        attrs.get("ends_at", "end of billing period")[:10]
-        if attrs.get("ends_at")
-        else "end of billing period"
-    )
-    send_telegram_notification(
-        telegram_id,
-        f"⚠️ *Subscription Cancelled*\n\n"
-        f"You'll keep access until {ends_at_display}.\n"
-        f"You can resubscribe anytime.",
-    )
+def handle_subscription_resumed(telegram_id: int, data: dict):
+    subscription_model.update_status(manager_id=telegram_id, status="active", ends_at=None)
+    usage_model.unblock(telegram_id)
+    send_telegram_notification(telegram_id,
+        "✅ *Subscription Resumed!*\n\nYour subscription is active again.\nWelcome back! 🎉")
 
-
-def handle_subscription_resumed(telegram_id: str, data: dict):
-    """Handle subscription_resumed event"""
-    subscription = subscription_manager.get_subscription(telegram_id)
-    if not subscription:
-        print(f"WARNING: Subscription not found for {telegram_id}")
-        return
-    subscription["status"] = "active"
-    subscription["cancelled_at"] = None
-    subscription["ends_at"] = None
-    subscription_manager.save_subscription(telegram_id, subscription)
-    print(f"✅ Subscription resumed for {telegram_id}")
-    # Unblock user
-    usage_tracker.unblock_user(telegram_id)
-    print(f"✅ User {telegram_id} unblocked")
-
-    # Send notification to user
-    send_telegram_notification(
-        telegram_id,
-        "✅ *Subscription Resumed!*\n\n"
-        "Your subscription is active again.\n"
-        "Welcome back! 🎉",
-    )
-
-
-def handle_subscription_expired(telegram_id: str, data: dict):
-    """Handle subscription_expired event"""
-    subscription = subscription_manager.get_subscription(telegram_id)
-    if not subscription:
-        print(f"WARNING: Subscription not found for {telegram_id}")
-        return
-    subscription["status"] = "expired"
-    subscription_manager.save_subscription(telegram_id, subscription)
-    print(f"❌ Subscription expired for {telegram_id}")
-
-    # Block user if they previously hit the free limit
-    usage = usage_tracker.get_usage(telegram_id)
+def handle_subscription_expired(telegram_id: int, data: dict):
+    subscription_model.update_status(manager_id=telegram_id, status="expired")
+    usage = usage_model.get(telegram_id)
     config = load_config()
     free_limit = config.get('free_message_limit', 50)
+    if usage and usage.get('messages_sent', 0) >= free_limit:
+        usage_model.block(telegram_id)
+    send_telegram_notification(telegram_id,
+        "❌ *Subscription Expired*\n\nYour subscription has ended.\nYou're back on the free tier (50 messages).\n\nSubscribe again to continue unlimited messaging.")
 
-    if usage.get('messages_sent', 0) >= free_limit:
-        usage_tracker.block_user(telegram_id)
-        print(f"🚫 User {telegram_id} blocked (exceeded free limit)")
+def handle_subscription_paused(telegram_id: int, data: dict):
+    subscription_model.update_status(manager_id=telegram_id, status="paused")
 
-    # Send notification to user
-    send_telegram_notification(
-        telegram_id,
-        "❌ *Subscription Expired*\n\n"
-        "Your subscription has ended.\n"
-        "You're back on the free tier (50 messages).\n\n"
-        "Subscribe again to continue unlimited messaging.",
-    )
+def handle_subscription_unpaused(telegram_id: int, data: dict):
+    subscription_model.update_status(manager_id=telegram_id, status="active")
 
+def handle_subscription_payment_success(telegram_id: int, data: dict):
+    print(f"Payment successful for {telegram_id}")
 
-def handle_subscription_paused(telegram_id: str, data: dict):
-    """Handle subscription_paused event"""
-    subscription = subscription_manager.get_subscription(telegram_id)
-    if not subscription:
-        print(f"WARNING: Subscription not found for {telegram_id}")
-        return
-    subscription["status"] = "paused"
-    subscription_manager.save_subscription(telegram_id, subscription)
-    print(f"⏸️ Subscription paused for {telegram_id}")
-
-
-def handle_subscription_unpaused(telegram_id: str, data: dict):
-    """Handle subscription_unpaused event"""
-    subscription = subscription_manager.get_subscription(telegram_id)
-    if not subscription:
-        print(f"WARNING: Subscription not found for {telegram_id}")
-        return
-    subscription["status"] = "active"
-    subscription_manager.save_subscription(telegram_id, subscription)
-    print(f"▶️ Subscription unpaused for {telegram_id}")
-
-
-def handle_subscription_payment_success(telegram_id: str, data: dict):
-    """Handle subscription_payment_success event"""
-    print(f"✅ Payment successful for {telegram_id}")
-
-
-def handle_subscription_payment_failed(telegram_id: str, data: dict):
-    """Handle subscription_payment_failed event"""
-    print(f"⚠️ Payment failed for {telegram_id}")
-
-    # Send notification to user
-    subscription = subscription_manager.get_subscription(telegram_id)
+def handle_subscription_payment_failed(telegram_id: int, data: dict):
+    subscription = subscription_model.get_by_manager(telegram_id)
     portal_url = subscription.get("customer_portal_url") if subscription else None
-
-    message = (
-        "⚠️ *Payment Failed*\n\n"
-        "Your last payment didn't go through.\n"
-        "We'll retry automatically in 3 days.\n\n"
-    )
-
+    message = "⚠️ *Payment Failed*\n\nYour last payment didn't go through.\nWe'll retry automatically in 3 days.\n\n"
     if portal_url:
         message += f"Update your payment method: {portal_url}"
-
     send_telegram_notification(telegram_id, message)
 
-
-def handle_subscription_payment_recovered(telegram_id: str, data: dict):
-    """Handle subscription_payment_recovered event"""
-    subscription = subscription_manager.get_subscription(telegram_id)
+def handle_subscription_payment_recovered(telegram_id: int, data: dict):
+    subscription = subscription_model.get_by_manager(telegram_id)
     if subscription and subscription["status"] == "paused":
-        subscription["status"] = "active"
-        subscription_manager.save_subscription(telegram_id, subscription)
-    print(f"✅ Payment recovered for {telegram_id}")
-    # Unblock user
-    usage_tracker.unblock_user(telegram_id)
-    print(f"✅ User {telegram_id} unblocked")
-
+        subscription_model.update_status(manager_id=telegram_id, status="active")
+    usage_model.unblock(telegram_id)
 
 # ============================================
-# DASHBOARD (Original Code)
+# HTML TEMPLATES
 # ============================================
-
-# HTML Template
 DASHBOARD_HTML = """
 <!DOCTYPE html>
 <html>
@@ -491,9 +359,9 @@ DASHBOARD_HTML = """
 <body>
     <div class="container">
         <div class="header">
-            <a href="/logout" class="logout">🚪 Logout</a>
-            <h1>🌉 BridgeOS Dashboard</h1>
-            <p>Real-time monitoring • Auto-refresh every 30 seconds • Last updated: {{ now }}</p>
+            <a href="/logout" class="logout">ðŸšª Logout</a>
+            <h1>ðŸŒ‰ BridgeOS Dashboard</h1>
+            <p>Real-time monitoring â€¢ Auto-refresh every 30 seconds â€¢ Last updated: {{ now }}</p>
         </div>
 
         <div class="stats">
@@ -520,7 +388,7 @@ DASHBOARD_HTML = """
         </div>
 
         <div class="section">
-            <h2>👔 Managers</h2>
+            <h2>ðŸ‘” Managers</h2>
             {% if managers %}
                 {% for manager in managers %}
                 <div class="user-card">
@@ -534,36 +402,36 @@ DASHBOARD_HTML = """
                         <div>
                             <strong>Status:</strong>
                             {% if manager.blocked %}
-                                <span class="badge disconnected">🚫 Blocked</span>
+                                <span class="badge disconnected">ðŸš« Blocked</span>
                             {% else %}
-                                <span class="badge connected">✓ Active</span>
+                                <span class="badge connected">âœ“ Active</span>
                             {% endif %}
                         </div>
                         <div>
                             <strong>Subscription:</strong>
                             {% if manager.subscription %}
-                                <span class="badge subscribed">💳 {{ manager.subscription.status|title }}</span>
+                                <span class="badge subscribed">ðŸ’³ {{ manager.subscription.status|title }}</span>
                             {% else %}
                                 <span class="badge disconnected">Free Tier</span>
                             {% endif %}
                         </div>
                     </div>
                     
-                    <!-- ✅ NEW: Multi-Worker Display -->
+                    <!-- âœ… NEW: Multi-Worker Display -->
                     <div style="margin-top: 15px;">
                         <strong>Workers ({{ manager.worker_count }} connected{% if manager.pending_count > 0 %}, {{ manager.pending_count }} pending{% endif %}):</strong>
                         {% if manager.workers_display %}
                             <div class="workers-list">
                                 {% for worker_info in manager.workers_display %}
                                 <div class="worker-item">
-                                    • Bot {{ worker_info.bot_id|upper }}: Worker {{ worker_info.worker_id }} 
+                                    â€¢ Bot {{ worker_info.bot_id|upper }}: Worker {{ worker_info.worker_id }} 
                                     <span class="badge connected">{{ worker_info.status|title }}</span>
                                 </div>
                                 {% endfor %}
                                 {% if manager.pending_bots %}
                                     {% for bot_id in manager.pending_bots %}
                                     <div class="worker-item">
-                                        • Bot {{ bot_id|upper }}: <span class="badge pending">⏳ Pending Invitation</span>
+                                        â€¢ Bot {{ bot_id|upper }}: <span class="badge pending">â³ Pending Invitation</span>
                                     </div>
                                     {% endfor %}
                                 {% endif %}
@@ -576,16 +444,16 @@ DASHBOARD_HTML = """
                     </div>
                     
                     <div class="actions">
-                        <a href="/manager/{{ manager.id }}" class="btn">👁️ View Details</a>
+                        <a href="/manager/{{ manager.id }}" class="btn">ðŸ‘ï¸ View Details</a>
                         <form method="POST" action="/delete_user/{{ manager.id }}" style="display:inline;" 
                               onsubmit="return confirm('Delete this manager and all their data?');">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn danger">🗑️ Delete Manager</button>
+                            <button type="submit" class="btn danger">ðŸ—‘ï¸ Delete Manager</button>
                         </form>
                         {% if manager.blocked %}
                         <form method="POST" action="/reset_usage/{{ manager.id }}" style="display:inline;">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn">🔄 Reset Usage</button>
+                            <button type="submit" class="btn">ðŸ”„ Reset Usage</button>
                         </form>
                         {% endif %}
                     </div>
@@ -597,7 +465,7 @@ DASHBOARD_HTML = """
         </div>
 
         <div class="section">
-            <h2>👷Workers</h2>
+            <h2>ðŸ‘·Workers</h2>
             {% if workers %}
                 {% for worker in workers %}
                 <div class="user-card worker">
@@ -612,7 +480,7 @@ DASHBOARD_HTML = """
                         <form method="POST" action="/delete_user/{{ worker.id }}" style="display:inline;"
                             onsubmit="return confirm('Delete this worker?');">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn danger">🗑️ Delete Worker</button>
+                            <button type="submit" class="btn danger">ðŸ—‘ï¸ Delete Worker</button>
                         </form>
                     </div>
                 </div>
@@ -623,7 +491,7 @@ DASHBOARD_HTML = """
         </div>
 
         <div class="section">
-            <h2>💳 Subscriptions</h2>
+            <h2>ðŸ’³ Subscriptions</h2>
             {% if subscriptions_list %}
                 {% for sub in subscriptions_list %}
                 <div class="user-card">
@@ -631,13 +499,13 @@ DASHBOARD_HTML = """
                     <div class="user-info">
                         <div><strong>Status:</strong> 
                             {% if sub.status == 'active' %}
-                                <span class="badge subscribed">✓ Active</span>
+                                <span class="badge subscribed">âœ“ Active</span>
                             {% elif sub.status == 'cancelled' %}
-                                <span class="badge disconnected">⚠️ Cancelled</span>
+                                <span class="badge disconnected">âš ï¸ Cancelled</span>
                             {% elif sub.status == 'expired' %}
-                                <span class="badge disconnected">❌ Expired</span>
+                                <span class="badge disconnected">âŒ Expired</span>
                             {% elif sub.status == 'paused' %}
-                                <span class="badge disconnected">⏸️ Paused</span>
+                                <span class="badge disconnected">â¸ï¸ Paused</span>
                             {% endif %}
                         </div>
                         <div><strong>Plan:</strong> {{ sub.plan|title }}</div>
@@ -653,7 +521,7 @@ DASHBOARD_HTML = """
                     </div>
                     <div class="actions">
                         {% if sub.customer_portal_url %}
-                        <a href="{{ sub.customer_portal_url }}" target="_blank" class="btn">🔗 Customer Portal</a>
+                        <a href="{{ sub.customer_portal_url }}" target="_blank" class="btn">ðŸ”— Customer Portal</a>
                         {% endif %}
                     </div>
                 </div>
@@ -664,11 +532,11 @@ DASHBOARD_HTML = """
         </div>
 
         <div class="section">
-            <h2>💬 Recent Conversations</h2>
+            <h2>ðŸ’¬ Recent Conversations</h2>
             {% if conversations_list %}
                 {% for conv in conversations_list %}
                 <div class="conversation">
-                    <h3>{{ conv.user1 }} ↔ {{ conv.user2 }}</h3>
+                    <h3>{{ conv.user1 }} â†” {{ conv.user2 }}</h3>
                     {% for msg in conv.messages %}
                     <div class="message {{ 'from-manager' if msg.is_manager else 'from-worker' }}">
                         <span class="message-time">{{ msg.time }}</span>
@@ -679,7 +547,7 @@ DASHBOARD_HTML = """
                         <form method="POST" action="/clear_conversation/{{ conv.key }}" style="display:inline;"
                               onsubmit="return confirm('Clear this conversation history?');">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn danger">🧹 Clear History</button>
+                            <button type="submit" class="btn danger">ðŸ§¹ Clear History</button>
                         </form>
                     </div>
                 </div>
@@ -689,7 +557,7 @@ DASHBOARD_HTML = """
             {% endif %}
         </div>
         <div class="section">
-            <h2>💬 User Feedback</h2>
+            <h2>ðŸ’¬ User Feedback</h2>
             {% if feedback_list %}
                 {% for fb in feedback_list %}
                 <div class="user-card">
@@ -700,9 +568,9 @@ DASHBOARD_HTML = """
                         <div>
                             <strong>Status:</strong>
                             {% if fb.status == 'read' %}
-                                <span class="badge connected">✅ Read</span>
+                                <span class="badge connected">âœ… Read</span>
                             {% else %}
-                                <span class="badge disconnected">⭕ Unread</span>
+                                <span class="badge disconnected">â­• Unread</span>
                             {% endif %}
                         </div>
                     </div>
@@ -714,7 +582,7 @@ DASHBOARD_HTML = """
                         {% if fb.status == 'unread' %}
                         <form method="POST" action="/mark_feedback_read/{{ fb.id }}" style="display:inline;">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn">✅ Mark as Read</button>
+                            <button type="submit" class="btn">âœ… Mark as Read</button>
                         </form>
                         {% endif %}
                     </div>
@@ -806,7 +674,7 @@ LOGIN_HTML = """
 </head>
 <body>
     <div class="login-box">
-        <h1>🌉 BridgeOS</h1>
+        <h1>ðŸŒ‰ BridgeOS</h1>
         <p>Dashboard Login</p>
         {% if error %}
         <div class="error">{{ error }}</div>
@@ -825,6 +693,10 @@ LOGIN_HTML = """
 """
 
 
+# ============================================
+# ROUTES
+# ============================================
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -836,225 +708,170 @@ def login():
             return render_template_string(LOGIN_HTML, error="Invalid password")
     return render_template_string(LOGIN_HTML)
 
-
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/login")
-
 
 @app.route("/")
 def dashboard():
     if not session.get("authenticated"):
         return redirect("/login")
 
-    all_users = database.get_all_users()
     config = load_config()
     message_limit = config.get("free_message_limit", 50)
 
+    # ---- Managers ----
+    all_managers = manager_model.get_all_active()
     managers = []
-    workers = []
+    for mgr in all_managers:
+        manager_id = mgr['manager_id']
+        user = user_model.get_by_id(manager_id)
+        manager_data = {
+            'id': manager_id,
+            'code': mgr['code'],
+            'language': mgr.get('language', user['language'] if user else 'Unknown'),
+            'gender': user.get('gender', 'N/A') if user else 'N/A',
+            'industry': mgr['industry'],
+            'message_limit': message_limit,
+        }
+        usage = usage_model.get(manager_id)
+        manager_data['messages_sent'] = usage['messages_sent'] if usage else 0
+        subscription = subscription_model.get_by_manager(manager_id)
+        manager_data['subscription'] = subscription
+        if subscription and subscription.get('status') in ['active', 'cancelled']:
+            manager_data['blocked'] = False
+        else:
+            manager_data['blocked'] = usage.get('is_blocked', False) if usage else False
+        connections = connection_model.get_active_for_manager(manager_id)
+        workers_display = [
+            {'worker_id': c['worker_id'], 'bot_id': f"bot{c['bot_slot']}", 'status': 'active'}
+            for c in connections
+        ]
+        manager_data['workers_display'] = workers_display
+        manager_data['worker_count'] = len(workers_display)
+        manager_data['pending_bots'] = []
+        manager_data['pending_count'] = 0
+        managers.append(manager_data)
 
-    for user_id, user_data in all_users.items():
-        user_data["id"] = user_id
-        if user_data.get("role") == "manager":
-            usage = usage_tracker.get_usage(user_id)
-            user_data["messages_sent"] = usage.get("messages_sent", 0)
+    # ---- Workers ----
+    all_workers = worker_model.get_all_active()
+    workers = [
+        {'id': w['worker_id'], 'language': w.get('language', 'Unknown'),
+         'gender': w.get('gender', 'N/A'), 'manager': w.get('manager_id', 'N/A'),
+         'bot_id': f"bot{w['bot_slot']}" if w.get('bot_slot') else 'N/A'}
+        for w in all_workers
+    ]
 
-            # Get subscription status
-            subscription = subscription_manager.get_subscription(user_id)
-            user_data["subscription"] = subscription
-
-            # Only show blocked if NOT subscribed
-            if subscription and subscription.get('status') in ['active', 'cancelled']:
-                user_data["blocked"] = False  # Subscribed = never blocked
-            else:
-                user_data["blocked"] = usage.get("blocked", False)  # Check usage tracker
-
-            user_data["message_limit"] = message_limit
-
-            # ✅ NEW: Multi-worker display
-            workers_array = user_data.get('workers', [])
-            pending_bots = user_data.get('pending_bots', [])
-            
-            user_data["worker_count"] = len(workers_array)
-            user_data["pending_count"] = len(pending_bots)
-            user_data["workers_display"] = workers_array
-            user_data["pending_bots"] = pending_bots
-
-            managers.append(user_data)
-        elif user_data.get("role") == "worker":
-            workers.append(user_data)
-
-    all_conversations = translation_msg_context.load_conversations()
+    # ---- Conversations ----
+    recent_conversations = message_model.get_recent_across_connections(limit_per_connection=10)
     conversations_list = []
-
-    for conv_key, messages in all_conversations.items():
-        user1, user2 = conv_key.split("_")
-        user1_data = database.get_user(user1)
-        user2_data = database.get_user(user2)
-
+    for conv in recent_conversations:
         formatted_messages = []
-        for msg in messages[-10:]:
-            msg_time = datetime.fromisoformat(msg["timestamp"]).strftime("%H:%M")
-            is_manager = False
-            from_role = "User"
-            if (
-                user1_data
-                and user1_data.get("role") == "manager"
-                and msg["from"] == user1
-            ):
-                is_manager = True
-                from_role = "Manager"
-            elif (
-                user2_data
-                and user2_data.get("role") == "manager"
-                and msg["from"] == user2
-            ):
-                is_manager = True
-                from_role = "Manager"
-            else:
-                from_role = "Worker"
+        for msg in conv['messages']:
+            msg_time = msg['sent_at'].strftime("%H:%M") if msg['sent_at'] else "??:??"
+            is_manager = msg['sender_id'] == conv['manager_id']
+            formatted_messages.append({
+                'time': msg_time,
+                'text': msg['original_text'],
+                'lang': '',
+                'is_manager': is_manager,
+                'from_role': 'Manager' if is_manager else 'Worker',
+            })
+        conversations_list.append({
+            'key': f"{conv['connection_id']}",
+            'user1': f"{conv['manager_name'] or conv['manager_id']}",
+            'user2': f"{conv['worker_name'] or conv['worker_id']}",
+            'messages': formatted_messages,
+        })
 
-            formatted_messages.append(
-                {
-                    "time": msg_time,
-                    "text": msg["text"],
-                    "lang": msg["lang"],
-                    "is_manager": is_manager,
-                    "from_role": from_role,
-                }
-            )
-
-        conversations_list.append(
-            {
-                "key": conv_key,
-                "user1": user1,
-                "user2": user2,
-                "messages": formatted_messages,
-            }
-        )
-
-    # Get subscription stats
-    all_subscriptions = subscription_manager.get_all_subscriptions()
-    active_subscriptions = sum(
-        1
-        for s in all_subscriptions.values()
-        if s.get("status") in ["active", "cancelled"]
-    )
-
-    # Format subscriptions for display
+    # ---- Subscriptions ----
+    all_subscriptions = subscription_model.get_all()
+    active_subscriptions = sum(1 for s in all_subscriptions if s.get('status') in ['active', 'cancelled'])
     subscriptions_list = []
-    for telegram_id, sub_data in all_subscriptions.items():
-        sub_data["telegram_id"] = telegram_id
-        subscriptions_list.append(sub_data)
+    for sub in all_subscriptions:
+        renews_str = sub['renews_at'].isoformat() if sub.get('renews_at') else None
+        ends_str = sub['ends_at'].isoformat() if sub.get('ends_at') else None
+        created_str = sub['created_at'].isoformat() if sub.get('created_at') else ''
+        subscriptions_list.append({
+            'telegram_id': sub['manager_id'], 'status': sub['status'], 'plan': 'monthly',
+            'started_at': created_str, 'renews_at': renews_str, 'ends_at': ends_str,
+            'cancelled_at': None, 'lemon_subscription_id': sub.get('external_id', 'N/A'),
+            'customer_portal_url': sub.get('customer_portal_url'),
+        })
 
-    # Get feedback
-    feedback_list = feedback.get_all_feedback(limit=50)
+    # ---- Feedback ----
+    feedback_list = [
+        {'id': fb['feedback_id'], 'telegram_user_id': fb['user_id'],
+         'user_name': fb.get('telegram_name', 'Unknown'), 'username': fb.get('username'),
+         'message': fb.get('message', ''), 'created_at': fb.get('created_at'),
+         'status': fb.get('status', 'unread')}
+        for fb in feedback_model.get_all(limit=50)
+    ]
 
-    # ✅ NEW: Calculate active connections (total connected workers across all managers)
-    total_connected_workers = sum(len(m.get('workers', [])) for m in managers)
-
+    # ---- Stats ----
+    all_active_connections = connection_model.get_all_active()
     stats = {
-        "total_managers": len(managers),
-        "total_workers": len(workers),
-        "active_connections": total_connected_workers,
-        "total_messages": sum(len(msgs) for msgs in all_conversations.values()),
-        "total_subscriptions": active_subscriptions,
+        'total_managers': len(managers), 'total_workers': len(workers),
+        'active_connections': len(all_active_connections),
+        'total_messages': message_model.get_total_count(),
+        'total_subscriptions': active_subscriptions,
     }
 
     return render_template_string(
-        DASHBOARD_HTML,
-        managers=managers,
-        workers=workers,
-        conversations_list=conversations_list,
-        subscriptions_list=subscriptions_list,
-        feedback_list=feedback_list,
-        stats=stats,
+        DASHBOARD_HTML, managers=managers, workers=workers,
+        conversations_list=conversations_list, subscriptions_list=subscriptions_list,
+        feedback_list=feedback_list, stats=stats,
         now=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     )
 
-
-@app.route("/delete_user/<user_id>", methods=["POST"])
+@app.route("/delete_user/<int:user_id>", methods=["POST"])
 def delete_user(user_id):
     if not session.get("authenticated"):
         return redirect("/login")
-    
-    # ✅ CSRF Protection
     csrf_token = request.form.get('csrf_token')
     if not verify_csrf_token(csrf_token):
         return "Invalid CSRF token", 403
 
-    user = database.get_user(user_id)
+    user = user_model.get_by_id(user_id)
     if not user:
         return redirect("/")
 
-    if user.get("role") == "manager":
-        # ✅ UPDATED: Delete all workers in array
-        workers_array = user.get("workers", [])
-        for worker_data in workers_array:
-            worker_id = worker_data.get('worker_id')
-            if worker_id:
-                translation_msg_context.clear_conversation(user_id, worker_id)
-                all_users = database.get_all_users()
-                if worker_id in all_users:
-                    del all_users[worker_id]
-                    database.save_data(all_users)
+    role = manager_model.get_role(user_id)
+    if role == 'manager':
+        connections = connection_model.get_active_for_manager(user_id)
+        for conn in connections:
+            connection_model.disconnect(conn['connection_id'])
+            worker_model.soft_delete(conn['worker_id'])
+        manager_model.soft_delete(user_id)
+    elif role == 'worker':
+        conn = connection_model.get_active_for_worker(user_id)
+        if conn:
+            connection_model.disconnect(conn['connection_id'])
+        worker_model.soft_delete(user_id)
 
-    elif user.get("role") == "worker":
-        manager_id = user.get("manager")
-        if manager_id:
-            manager = database.get_user(manager_id)
-            if manager:
-                # ✅ UPDATED: Remove from workers array
-                workers_array = manager.get('workers', [])
-                manager['workers'] = [w for w in workers_array if w.get('worker_id') != user_id]
-                database.save_user(manager_id, manager)
-            translation_msg_context.clear_conversation(user_id, manager_id)
-
-    all_users = database.get_all_users()
-    if user_id in all_users:
-        del all_users[user_id]
-        database.save_data(all_users)
-
+    user_model.delete(user_id)
     return redirect("/")
 
-
-@app.route("/clear_conversation/<conv_key>", methods=["POST"])
-def clear_conversation_route(conv_key):
+@app.route("/clear_conversation/<int:connection_id>", methods=["POST"])
+def clear_conversation_route(connection_id):
     if not session.get("authenticated"):
         return redirect("/login")
-    
-    # ✅ CSRF Protection
     csrf_token = request.form.get('csrf_token')
     if not verify_csrf_token(csrf_token):
         return "Invalid CSRF token", 403
-    
-    # ✅ FIX: Validate conversation key format
-    parts = conv_key.split("_")
-    if len(parts) != 2:
-        return redirect("/")
-    user1, user2 = parts
-    
-    translation_msg_context.clear_conversation(user1, user2)
-
+    message_model.delete_for_connection(connection_id)
     return redirect("/")
 
-
-@app.route("/reset_usage/<user_id>", methods=["POST"])
+@app.route("/reset_usage/<int:user_id>", methods=["POST"])
 def reset_usage_route(user_id):
     if not session.get("authenticated"):
         return redirect("/login")
-    
-    # ✅ CSRF Protection
     csrf_token = request.form.get('csrf_token')
     if not verify_csrf_token(csrf_token):
         return "Invalid CSRF token", 403
-
-    usage_tracker.reset_user_usage(user_id)
-
+    usage_model.reset(user_id)
     return redirect("/")
-
 
 @app.route("/health", methods=["GET"])
 def health_check():
@@ -1065,20 +882,15 @@ def health_check():
 def mark_feedback_read_route(feedback_id):
     if not session.get("authenticated"):
         return redirect("/login")
-    
-    # ✅ CSRF Protection
     csrf_token = request.form.get('csrf_token')
     if not verify_csrf_token(csrf_token):
         return "Invalid CSRF token", 403
-    
-    feedback.mark_as_read(feedback_id)
+    feedback_model.mark_as_read(feedback_id)
     return redirect("/")
 
 # ============================================
 # MANAGER DETAIL PAGE
 # ============================================
-
-# HTML Template for Manager Detail Page
 MANAGER_DETAIL_HTML = """
 <!DOCTYPE html>
 <html>
@@ -1363,18 +1175,18 @@ MANAGER_DETAIL_HTML = """
     <div class="container">
         <div class="header">
             <div class="header-left">
-                <h1>👤 Manager Details</h1>
+                <h1>ðŸ‘¤ Manager Details</h1>
                 <p>Manager ID: {{ manager.id }}</p>
             </div>
             <div class="header-right">
-                <a href="/" class="back-btn">← Back to Dashboard</a>
-                <a href="/logout" class="logout">🚪 Logout</a>
+                <a href="/" class="back-btn">â† Back to Dashboard</a>
+                <a href="/logout" class="logout">ðŸšª Logout</a>
             </div>
         </div>
 
         <!-- Section 1: Manager Info -->
         <div class="section">
-            <h2>📋 Manager Information</h2>
+            <h2>ðŸ“‹ Manager Information</h2>
             <div class="info-grid">
                 <div class="info-item">
                     <label>Manager ID</label>
@@ -1401,7 +1213,7 @@ MANAGER_DETAIL_HTML = """
 
         <!-- Section 2: Connection & Subscription -->
         <div class="section">
-            <h2>🔗 Connection & Subscription</h2>
+            <h2>ðŸ”— Connection & Subscription</h2>
             <div class="info-grid">
                 <div class="info-item">
                     <label>Workers Status</label>
@@ -1409,7 +1221,7 @@ MANAGER_DETAIL_HTML = """
                         {% if workers_list %}
                             {{ workers_list|length }} Connected
                         {% else %}
-                            <span class="badge disconnected">❌ No Workers</span>
+                            <span class="badge disconnected">âŒ No Workers</span>
                         {% endif %}
                     </value>
                 </div>
@@ -1421,7 +1233,7 @@ MANAGER_DETAIL_HTML = """
                         {% else %}
                             {{ manager.messages_sent }} / {{ manager.message_limit }}
                             {% if manager.blocked %}
-                                <span class="badge disconnected">🚫 Blocked</span>
+                                <span class="badge disconnected">ðŸš« Blocked</span>
                             {% endif %}
                         {% endif %}
                     </value>
@@ -1430,7 +1242,7 @@ MANAGER_DETAIL_HTML = """
                     <label>Subscription</label>
                     <value>
                         {% if manager.subscription %}
-                            <span class="badge subscribed">💳 {{ manager.subscription.status|title }}</span>
+                            <span class="badge subscribed">ðŸ’³ {{ manager.subscription.status|title }}</span>
                         {% else %}
                             <span class="badge disconnected">Free Tier</span>
                         {% endif %}
@@ -1444,7 +1256,7 @@ MANAGER_DETAIL_HTML = """
                 {% endif %}
             </div>
             
-            <!-- ✅ NEW: Workers List -->
+            <!-- âœ… NEW: Workers List -->
             {% if workers_list or pending_bots %}
             <div style="margin-top: 20px;">
                 <label style="font-size: 14px; color: #666; text-transform: uppercase; margin-bottom: 10px; display: block;">
@@ -1464,7 +1276,7 @@ MANAGER_DETAIL_HTML = """
                     {% for bot_id in pending_bots %}
                     <div class="worker-item">
                         <strong>Bot {{ bot_id|upper }}:</strong> 
-                        <span class="badge pending">⏳ Pending Invitation</span>
+                        <span class="badge pending">â³ Pending Invitation</span>
                     </div>
                     {% endfor %}
                 </div>
@@ -1473,14 +1285,14 @@ MANAGER_DETAIL_HTML = """
             
             {% if manager.subscription and manager.subscription.customer_portal_url %}
             <div style="margin-top: 15px;">
-                <a href="{{ manager.subscription.customer_portal_url }}" target="_blank" class="btn">🔗 Customer Portal</a>
+                <a href="{{ manager.subscription.customer_portal_url }}" target="_blank" class="btn">ðŸ”— Customer Portal</a>
             </div>
             {% endif %}
         </div>
 
         <!-- Section 3: Translation Context (Per Worker) -->
         <div class="section">
-            <h2>💬 Translation Context (Last 6 Messages Per Worker)</h2>
+            <h2>ðŸ’¬ Translation Context (Last 6 Messages Per Worker)</h2>
             <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
                 These are the messages the bot uses for contextual translation.
             </p>
@@ -1502,7 +1314,7 @@ MANAGER_DETAIL_HTML = """
                         {% for msg in worker.translation_context %}
                         <div class="message {{ 'from-manager' if msg.is_manager else 'from-worker' }}">
                             <div class="message-meta">
-                                <strong>{{ msg.from_role }}</strong> • {{ msg.time }} • {{ msg.lang }}
+                                <strong>{{ msg.from_role }}</strong> â€¢ {{ msg.time }} â€¢ {{ msg.lang }}
                             </div>
                             <div class="message-text">{{ msg.text }}</div>
                         </div>
@@ -1525,8 +1337,8 @@ MANAGER_DETAIL_HTML = """
         <!-- Section 4: Full Message History (Per Worker) -->
         <div class="section">
             <div class="collapsible-header" onclick="toggleCollapsible('full-history')">
-                <h2>📜 Full Message History ({{ total_message_count }} messages total)</h2>
-                <span class="toggle-icon" id="full-history-icon">▼</span>
+                <h2>ðŸ“œ Full Message History ({{ total_message_count }} messages total)</h2>
+                <span class="toggle-icon" id="full-history-icon">â–¼</span>
             </div>
             <div id="full-history" class="collapsible-content">
                 <p style="font-size: 13px; color: #666; margin-bottom: 15px; margin-top: 15px;">
@@ -1551,7 +1363,7 @@ MANAGER_DETAIL_HTML = """
                             {% for msg in worker.full_history %}
                             <div class="message {{ 'from-manager' if msg.is_manager else 'from-worker' }}">
                                 <div class="message-meta">
-                                    <strong>{{ msg.from_role }}</strong> • {{ msg.timestamp }} • {{ msg.lang }}
+                                    <strong>{{ msg.from_role }}</strong> â€¢ {{ msg.timestamp }} â€¢ {{ msg.lang }}
                                 </div>
                                 <div class="message-text">{{ msg.text }}</div>
                             </div>
@@ -1574,7 +1386,7 @@ MANAGER_DETAIL_HTML = """
 
         <!-- Section 5: Admin Actions -->
         <div class="section">
-            <h2>⚙️ Admin Actions</h2>
+            <h2>âš™ï¸ Admin Actions</h2>
             <p style="font-size: 13px; color: #666; margin-bottom: 20px;">
                 Manage this manager's account and data.
             </p>
@@ -1582,22 +1394,22 @@ MANAGER_DETAIL_HTML = """
             {% if manager.blocked %}
             <form method="POST" action="/reset_usage/{{ manager.id }}" style="display:inline;">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn">🔓 Reset Usage Limit</button>
+                <button type="submit" class="btn">ðŸ”“ Reset Usage Limit</button>
             </form>
             {% endif %}
             
             {% if workers_list %}
                 {% for worker in workers_list %}
-                <form method="POST" action="/clear_translation_context/{{ manager.id }}/{{ worker.worker_id }}" style="display:inline;"
+                <form method="POST" action="/clear_translation_context/{{ manager.id }}/{{ worker.connection_id }}" style="display:inline;"
                       onsubmit="return confirm('Clear translation context for Bot {{ worker.bot_id|upper }}?');">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="btn secondary">🧹 Clear Context (Bot {{ worker.bot_id|upper }})</button>
+                    <button type="submit" class="btn secondary">ðŸ§¹ Clear Context (Bot {{ worker.bot_id|upper }})</button>
                 </form>
                 
-                <form method="POST" action="/clear_full_history/{{ manager.id }}/{{ worker.worker_id }}" style="display:inline;"
+                <form method="POST" action="/clear_full_history/{{ manager.id }}/{{ worker.connection_id }}" style="display:inline;"
                       onsubmit="return confirm('Clear full history for Bot {{ worker.bot_id|upper }}?');">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="btn secondary">🗑️ Clear History (Bot {{ worker.bot_id|upper }})</button>
+                    <button type="submit" class="btn secondary">ðŸ—‘ï¸ Clear History (Bot {{ worker.bot_id|upper }})</button>
                 </form>
                 {% endfor %}
             {% endif %}
@@ -1605,7 +1417,7 @@ MANAGER_DETAIL_HTML = """
             <form method="POST" action="/delete_user/{{ manager.id }}" style="display:inline;" 
                   onsubmit="return confirm('Delete this manager and ALL their data? This cannot be undone!');">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn danger">❌ Delete Manager Account</button>
+                <button type="submit" class="btn danger">âŒ Delete Manager Account</button>
             </form>
         </div>
     </div>
@@ -1614,147 +1426,121 @@ MANAGER_DETAIL_HTML = """
 """
 
 
-# Route for Manager Detail Page
-@app.route("/manager/<user_id>")
+@app.route("/manager/<int:user_id>")
 def manager_detail(user_id):
     if not session.get("authenticated"):
         return redirect("/login")
-    
-    manager = database.get_user(user_id)
-    if not manager or manager.get('role') != 'manager':
+
+    mgr = manager_model.get_by_id(user_id)
+    if not mgr:
         return redirect("/")
-    
-    manager["id"] = user_id
-    
-    # Get config
+    user = user_model.get_by_id(user_id)
+    if not user:
+        return redirect("/")
+
     config = load_config()
     message_limit = config.get("free_message_limit", 50)
-    
-    # Get usage stats
-    usage = usage_tracker.get_usage(user_id)
-    manager["messages_sent"] = usage.get("messages_sent", 0)
-    
-    # Get subscription status
-    subscription = subscription_manager.get_subscription(user_id)
-    manager["subscription"] = subscription
-    
-    # Only show blocked if NOT subscribed
+    manager = {
+        'id': user_id, 'code': mgr['code'], 'language': user['language'],
+        'gender': user.get('gender', 'N/A'), 'industry': mgr['industry'],
+        'message_limit': message_limit,
+    }
+
+    usage = usage_model.get(user_id)
+    manager['messages_sent'] = usage['messages_sent'] if usage else 0
+    subscription = subscription_model.get_by_manager(user_id)
+    manager['subscription'] = subscription
     if subscription and subscription.get('status') in ['active', 'cancelled']:
-        manager["blocked"] = False
+        manager['blocked'] = False
     else:
-        manager["blocked"] = usage.get("blocked", False)
-    
-    manager["message_limit"] = message_limit
-    
-    # ✅ NEW: Get all workers data
-    workers_array = manager.get('workers', [])
-    pending_bots = manager.get('pending_bots', [])
-    
+        manager['blocked'] = usage.get('is_blocked', False) if usage else False
+
+    connections = connection_model.get_active_for_manager(user_id)
+    pending_bots = []
     workers_list = []
     total_message_count = 0
-    
-    for worker_data in workers_array:
-        worker_id = worker_data.get('worker_id')
-        bot_id = worker_data.get('bot_id')
-        
-        if worker_id:
-            worker = database.get_user(worker_id)
-            if worker:
-                worker["worker_id"] = worker_id
-                worker["bot_id"] = bot_id
-                worker["status"] = worker_data.get('status', 'active')
-                
-                # Get translation context (last 6 messages)
-                context_messages = translation_msg_context.get_conversation_history(
-                    user_id, worker_id, max_messages=6
-                )
-                translation_context = []
-                for msg in context_messages:
-                    is_manager = msg["from"] == user_id
-                    translation_context.append({
-                        "time": datetime.fromisoformat(msg["timestamp"]).strftime("%Y-%m-%d %H:%M"),
-                        "text": msg["text"],
-                        "lang": msg["lang"],
-                        "is_manager": is_manager,
-                        "from_role": "Manager" if is_manager else "Worker",
-                    })
-                worker["translation_context"] = translation_context
-                
-                # Get full message history (last 30 days)
-                history_messages = message_history.get_messages(user_id, worker_id)
-                worker["message_count"] = len(history_messages)
-                total_message_count += len(history_messages)
-                
-                full_history = []
-                for msg in history_messages:
-                    is_manager = msg["from"] == user_id
-                    full_history.append({
-                        "timestamp": datetime.fromisoformat(msg["timestamp"]).strftime("%Y-%m-%d %H:%M:%S"),
-                        "text": msg["text"],
-                        "lang": msg["lang"],
-                        "is_manager": is_manager,
-                        "from_role": "Manager" if is_manager else "Worker",
-                    })
-                worker["full_history"] = full_history
-                
-                workers_list.append(worker)
-    
+
+    for conn in connections:
+        worker_user = user_model.get_by_id(conn['worker_id'])
+        if not worker_user:
+            continue
+        worker_data = {
+            'worker_id': conn['worker_id'], 'bot_id': f"bot{conn['bot_slot']}",
+            'status': 'active', 'language': worker_user.get('language', 'Unknown'),
+            'gender': worker_user.get('gender', 'N/A'), 'connection_id': conn['connection_id'],
+        }
+
+        # Translation context (last 6 messages)
+        context_messages = message_model.get_translation_context(conn['connection_id'], limit=6)
+        translation_context = []
+        for msg in context_messages:
+            is_manager = str(msg['from']) == str(user_id)
+            sent_at = msg.get('timestamp')
+            time_str = ''
+            if sent_at:
+                try:
+                    dt = datetime.fromisoformat(sent_at) if isinstance(sent_at, str) else sent_at
+                    time_str = dt.strftime("%Y-%m-%d %H:%M")
+                except (ValueError, AttributeError):
+                    time_str = str(sent_at)
+            translation_context.append({
+                'time': time_str, 'text': msg['text'], 'lang': '',
+                'is_manager': is_manager, 'from_role': 'Manager' if is_manager else 'Worker',
+            })
+        worker_data['translation_context'] = translation_context
+
+        # Full message history
+        all_messages = message_model.get_for_connection(conn['connection_id'])
+        worker_data['message_count'] = len(all_messages)
+        total_message_count += len(all_messages)
+        full_history = []
+        for msg in all_messages:
+            is_manager = msg['sender_id'] == user_id
+            sent_at = msg.get('sent_at')
+            time_str = sent_at.strftime("%Y-%m-%d %H:%M:%S") if sent_at else ''
+            full_history.append({
+                'timestamp': time_str, 'text': msg['original_text'], 'lang': '',
+                'is_manager': is_manager, 'from_role': 'Manager' if is_manager else 'Worker',
+            })
+        worker_data['full_history'] = full_history
+        workers_list.append(worker_data)
+
     return render_template_string(
-        MANAGER_DETAIL_HTML,
-        manager=manager,
-        workers_list=workers_list,
-        pending_bots=pending_bots,
-        total_message_count=total_message_count
+        MANAGER_DETAIL_HTML, manager=manager, workers_list=workers_list,
+        pending_bots=pending_bots, total_message_count=total_message_count,
     )
 
-
-# Additional admin action routes
-@app.route("/clear_translation_context/<user_id>/<worker_id>", methods=["POST"])
-def clear_translation_context_route(user_id, worker_id):
-    """Clear translation context for a specific manager-worker pair"""
+@app.route("/clear_translation_context/<int:user_id>/<int:connection_id>", methods=["POST"])
+def clear_translation_context_route(user_id, connection_id):
+    """Clear translation context for a specific connection"""
     if not session.get("authenticated"):
         return redirect("/login")
-    
-    # ✅ CSRF Protection
     csrf_token = request.form.get('csrf_token')
     if not verify_csrf_token(csrf_token):
         return "Invalid CSRF token", 403
-    
-    # ✅ FIX: Validate user exists before clearing
-    if not database.get_user(user_id):
+    if not manager_model.get_by_id(user_id):
         return redirect("/")
-
-    translation_msg_context.clear_conversation(user_id, worker_id)
+    message_model.delete_for_connection(connection_id)
     return redirect(f"/manager/{user_id}")
 
-@app.route("/clear_full_history/<user_id>/<worker_id>", methods=["POST"])
-def clear_full_history_route(user_id, worker_id):
-    """Clear full message history for a specific manager-worker pair"""
+@app.route("/clear_full_history/<int:user_id>/<int:connection_id>", methods=["POST"])
+def clear_full_history_route(user_id, connection_id):
+    """Clear full message history for a specific connection"""
     if not session.get("authenticated"):
         return redirect("/login")
-    
-    # ✅ CSRF Protection
     csrf_token = request.form.get('csrf_token')
     if not verify_csrf_token(csrf_token):
         return "Invalid CSRF token", 403
-    
-    # ✅ FIX: Validate user exists before clearing
-    if not database.get_user(user_id):
+    if not manager_model.get_by_id(user_id):
         return redirect("/")
-
-    message_history.clear_history(user_id, worker_id)
+    message_model.delete_for_connection(connection_id)
     return redirect(f"/manager/{user_id}")
 
 
 if __name__ == "__main__":
-    import os
-    
-    # ✅ Initialize connection pool before starting Flask
-    db_connection.init_connection_pool(min_conn=5, max_conn=20)
-    
+    init_connection_pool(min_conn=5, max_conn=20)
     try:
         port = int(os.environ.get("PORT", 5000))
         app.run(host="0.0.0.0", port=port, debug=False)
     finally:
-        # ✅ Clean shutdown: close all database connections
-        db_connection.close_all_connections()
+        close_all_connections()

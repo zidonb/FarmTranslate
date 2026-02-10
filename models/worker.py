@@ -39,6 +39,34 @@ def create(worker_id: int):
     logger.info(f"Worker created: worker_id={worker_id}")
 
 
+def get_all_active() -> list:
+    """Get all active workers with their connection info (for dashboard)."""
+    with get_db_cursor(commit=False) as cur:
+        cur.execute(
+            "SELECT w.worker_id, u.telegram_name, u.language, u.gender, w.created_at, "
+            "c.manager_id, c.bot_slot "
+            "FROM workers w "
+            "JOIN users u ON w.worker_id = u.user_id "
+            "LEFT JOIN connections c ON w.worker_id = c.worker_id AND c.status = 'active' "
+            "WHERE w.deleted_at IS NULL "
+            "ORDER BY w.created_at DESC"
+        )
+        rows = cur.fetchall()
+
+    return [
+        {
+            'worker_id': r[0],
+            'telegram_name': r[1],
+            'language': r[2],
+            'gender': r[3],
+            'created_at': r[4],
+            'manager_id': r[5],
+            'bot_slot': r[6],
+        }
+        for r in rows
+    ]
+
+
 def soft_delete(worker_id: int):
     """Soft-delete a worker (preserves history)."""
     with get_db_cursor() as cur:
