@@ -1,11 +1,14 @@
 {
   "start": {
+    "already_registered_clicked_invite": "Sie sind bereits registriert.\n\nVerwenden Sie zuerst /reset, wenn Sie Ihre Rolle ändern möchten.",
     "welcome_back": "Willkommen zurück! Sie sind als {role} registriert.\n\nVerwenden Sie /help, um verfügbare Befehle anzuzeigen.",
     "welcome_new": "Willkommen bei BridgeOS! 🌉\n\n👇 Tippen Sie auf eine Schaltfläche unten, um Ihre Sprache auszuwählen:",
     "already_manager_clicked_invite": "Sie sind bereits als Manager registriert.\n\nVerwenden Sie zuerst /reset, wenn Sie als Arbeiter von jemandem beitreten möchten.",
     "already_worker_clicked_invite": "Sie sind bereits als Arbeiter registriert.\n\nVerwenden Sie zuerst /reset, wenn Sie sich mit einem anderen Manager verbinden möchten."
   },
   "registration": {
+    "invalid_code_format": "❌ Ungültiges Einladungscode-Format.\n\nBitten Sie Ihren Kontakt um einen gültigen Einladungslink.",
+    "worker_already_has_manager": "❌ Sie sind bereits mit einem Manager verbunden.\nVerwenden Sie zuerst /reset, wenn Sie sich mit einem anderen verbinden möchten.",
     "gender_question": "Was ist Ihr Geschlecht?\n(Dies hilft bei präzisen Übersetzungen)",
     "gender_options": {
       "male": "👨 Männlich",
@@ -93,6 +96,7 @@
     }
   },
   "tasks": {
+    "no_role": "⚠️ Ihre Rolle konnte nicht bestimmt werden. Verwenden Sie /reset und registrieren Sie sich erneut.",
     "not_registered": "Bitte verwenden Sie zuerst /start zur Registrierung.",
     "manager": {
       "title": "📋 *Ihre Aufgaben*\n\n",
@@ -125,6 +129,7 @@
     "error": "⚠️ Entschuldigung, beim Senden Ihres Feedbacks ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut."
   },
   "handle_message": {
+    "no_role": "⚠️ Ihre Rolle konnte nicht bestimmt werden. Verwenden Sie /reset und registrieren Sie sich erneut.",
     "not_registered": "Bitte verwenden Sie zuerst /start zur Registrierung.",
     "limit_reached": {
       "title": "⚠️ *Limit des kostenlosen Plans erreicht*\n\n",
@@ -170,6 +175,7 @@
     "manager_notification": "✅ *Aufgabe von {worker_name} erledigt:*\n\"{task}\"\n\n🕐 Erledigt um: {time}"
   },
   "handle_media": {
+    "invalid_role": "⚠️ Ihr Konto hat eine ungültige Rolle.\nBitte verwenden Sie /reset und registrieren Sie sich erneut.",
     "not_registered": "Bitte verwenden Sie zuerst /start zur Registrierung.",
     "manager_no_worker": "⚠️ Sie haben noch keinen Arbeiter mit diesem Bot verbunden.\n\nTeilen Sie Ihre Einladung, um einen Arbeiter zu verbinden:\n\n📋 Code: {code}\n🔗 {invite_link}",
     "worker_no_manager": "⚠️ Sie sind mit keinem Kontakt verbunden.\nFragen Sie Ihren Kontakt nach seinem Einladungslink.",
@@ -185,7 +191,9 @@
     "subscription": "💳 Abonnement",
     "refer": "📤 BridgeOS empfehlen",
     "feedback": "💬 Feedback senden",
-    "reset": "🗑️ Konto zurücksetzen"
+    "reset": "🗑️ Konto zurücksetzen",
+    "addworker": "➕ Arbeiter hinzufügen",
+    "workers": "👥 Meine Arbeiter"
   },
   "addworker": {
     "not_registered": "Bitte verwenden Sie zuerst /start zur Registrierung.",

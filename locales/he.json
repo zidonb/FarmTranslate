@@ -1,11 +1,14 @@
 {
   "start": {
+    "already_registered_clicked_invite": "אתה כבר רשום.\n\nהשתמש ב-/reset קודם אם ברצונך לשנות את התפקיד שלך.",
     "welcome_back": "ברוך שובך! אתה רשום כ-{role}.\n\nהשתמש ב-/help כדי לראות פקודות זמינות.",
     "welcome_new": "ברוכים הבאים ל-BridgeOS! 🌉\n\n👇 הקש על כפתור למטה כדי לבחור את השפה שלך:",
     "already_manager_clicked_invite": "אתה כבר רשום כמנהל.\n\nהשתמש ב-/reset תחילה אם אתה רוצה להצטרף כעובד של מישהו.",
     "already_worker_clicked_invite": "אתה כבר רשום כעובד.\n\nהשתמש ב-/reset תחילה אם אתה רוצה להתחבר למנהל אחר."
   },
   "registration": {
+    "invalid_code_format": "❌ פורמט קוד הזמנה לא תקין.\n\nבקש מאיש הקשר שלך קישור הזמנה חדש.",
+    "worker_already_has_manager": "❌ אתה כבר מחובר למנהל.\nהשתמש ב-/reset קודם אם ברצונך להתחבר למנהל אחר.",
     "gender_question": "מה המגדר שלך?\n(זה עוזר לתרגומים מדויקים)",
     "gender_options": {
       "male": "זכר 👨",
@@ -93,6 +96,7 @@
     }
   },
   "tasks": {
+    "no_role": "⚠️ לא ניתן לקבוע את התפקיד שלך. השתמש ב-/reset והירשם מחדש.",
     "not_registered": "אנא השתמש ב-/start כדי להירשם תחילה.",
     "manager": {
       "title": "📋 *המשימות שלך*\n\n",
@@ -125,6 +129,7 @@
     "error": "⚠️ סליחה, הייתה שגיאה בשליחת המשוב שלך. נסה שוב מאוחר יותר."
   },
   "handle_message": {
+    "no_role": "⚠️ לא ניתן לקבוע את התפקיד שלך. השתמש ב-/reset והירשם מחדש.",
     "not_registered": "אנא השתמש ב-/start כדי להירשם תחילה.",
     "limit_reached": {
       "title": "⚠️ *הגעת למגבלת התוכנית החינמית*\n\n",
@@ -170,6 +175,7 @@
     "manager_notification": "✅ *משימה הושלמה על ידי {worker_name}:*\n\"{task}\"\n\n🕐 הושלם בשעה: {time}"
   },
   "handle_media": {
+    "invalid_role": "⚠️ לחשבון שלך תפקיד לא תקין.\nאנא השתמש ב-/reset והירשם מחדש.",
     "not_registered": "אנא השתמש ב-/start כדי להירשם תחילה.",
     "manager_no_worker": "⚠️ עדיין אין לך עובד מחובר לבוט הזה.\n\nשתף את ההזמנה שלך כדי לחבר עובד:\n\n📋 קוד: {code}\n🔗 {invite_link}",
     "worker_no_manager": "⚠️ אתה לא מחובר לאיש קשר.\nבקש מאיש הקשר שלך את קישור ההזמנה.",
@@ -185,7 +191,9 @@
     "subscription": "💳 מנוי",
     "refer": "📤 המלץ עלינו",
     "feedback": "💬 משוב",
-    "reset": "🗑️ איפוס חשבון"
+    "reset": "🗑️ איפוס חשבון",
+    "addworker": "➕ הוסף עובד",
+    "workers": "👥 העובדים שלי"
   },
   "addworker": {
     "not_registered": "אנא השתמש ב-/start כדי להירשם תחילה.",

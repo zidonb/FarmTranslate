@@ -3,7 +3,8 @@
     "welcome_back": "¡Bienvenido de nuevo! Estás registrado como {role}.\n\nUsa /help para ver los comandos disponibles.",
     "welcome_new": "¡Bienvenido a BridgeOS! 🌉\n\n👇 Toca un botón abajo para seleccionar tu idioma:",
     "already_manager_clicked_invite": "Ya estás registrado como gerente.\n\nUsa /reset primero si quieres unirte como trabajador de alguien.",
-    "already_worker_clicked_invite": "Ya estás registrado como trabajador.\n\nUsa /reset primero si quieres conectarte a un gerente diferente."
+    "already_worker_clicked_invite": "Ya estás registrado como trabajador.\n\nUsa /reset primero si quieres conectarte a un gerente diferente.",
+    "already_registered_clicked_invite": "Ya estás registrado.\n\nUsa /reset primero si quieres cambiar tu rol."
   },
   "registration": {
     "gender_question": "¿Cuál es tu género?\n(Esto ayuda con traducciones precisas)",
@@ -25,7 +26,9 @@
     "registration_complete": "✅ ¡Registro completo!\n\n📋 Tu código de invitación: {code}\n🔗 Enlace de invitación:\n{deep_link}\n\n👉 Toca el botón de abajo para compartir con tu contacto:",
     "ready_to_start": "¡Listo para empezar! Usa /help en cualquier momento.",
     "cancelled": "Registro cancelado. Usa /start para intentar de nuevo.",
-    "worker_switched": "⚠️ {worker_name} se ha conectado a un gerente diferente.\n\nAhora puedes invitar a un nuevo trabajador usando /mycode"
+    "worker_switched": "⚠️ {worker_name} se ha conectado a un gerente diferente.\n\nAhora puedes invitar a un nuevo trabajador usando /mycode",
+    "invalid_code_format": "❌ Formato de código de invitación inválido.\n\nPor favor pide a tu contacto un enlace de invitación válido.",
+    "worker_already_has_manager": "❌ Ya estás conectado a un gerente.\nUsa /reset primero si quieres conectarte a uno diferente."
   },
   "industries": {
     "dairy_farm": "🐄 Granja Lechera",
@@ -93,6 +96,7 @@
     }
   },
   "tasks": {
+    "no_role": "⚠️ No se pudo determinar tu rol. Usa /reset y regístrate de nuevo.",
     "not_registered": "Por favor usa /start para registrarte primero.",
     "manager": {
       "title": "📋 *Tus Tareas*\n\n",
@@ -125,6 +129,7 @@
     "error": "⚠️ Lo sentimos, hubo un error al enviar tus comentarios. Por favor inténtalo de nuevo más tarde."
   },
   "handle_message": {
+    "no_role": "⚠️ No se pudo determinar tu rol. Usa /reset y regístrate de nuevo.",
     "not_registered": "Por favor usa /start para registrarte primero.",
     "limit_reached": {
       "title": "⚠️ *Límite del Plan Gratuito Alcanzado*\n\n",
@@ -174,7 +179,8 @@
     "manager_no_worker": "⚠️ Aún no tienes un trabajador conectado a este bot.\n\nComparte tu invitación para conectar un trabajador:\n\n📋 Código: {code}\n🔗 {invite_link}",
     "worker_no_manager": "⚠️ No estás conectado a un contacto.\nPide a tu contacto su enlace de invitación.",
     "contact_not_found": "⚠️ La cuenta de tu contacto ya no existe.\nUsa /reset para empezar de nuevo.",
-    "media_prefix": "📎 De {sender_name}:"
+    "media_prefix": "📎 De {sender_name}:",
+    "invalid_role": "⚠️ Tu cuenta tiene un rol inválido.\nPor favor usa /reset y regístrate de nuevo."
   },
   "menu": {
     "not_registered": "Por favor usa /start para registrarte primero.",
@@ -185,7 +191,9 @@
     "subscription": "💳 Suscripción",
     "refer": "📤 Recomendar BridgeOS",
     "feedback": "💬 Enviar Comentarios",
-    "reset": "🗑️ Restablecer Cuenta"
+    "reset": "🗑️ Restablecer Cuenta",
+    "addworker": "➕ Añadir Trabajador",
+    "workers": "👥 Mis Trabajadores"
   },
   "addworker": {
     "not_registered": "Por favor usa /start para registrarte primero.",

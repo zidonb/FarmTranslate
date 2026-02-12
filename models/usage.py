@@ -183,3 +183,4 @@ def get_stats() -> Dict:
         'blocked_users': row[2],
         'active_users': row[3],
     }
+

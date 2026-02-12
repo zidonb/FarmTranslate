@@ -1,11 +1,14 @@
 {
   "start": {
+    "already_registered_clicked_invite": "Vous êtes déjà inscrit.\n\nUtilisez /reset d'abord si vous souhaitez changer votre rôle.",
     "welcome_back": "Bon retour! Vous êtes enregistré en tant que {role}.\n\nUtilisez /help pour voir les commandes disponibles.",
     "welcome_new": "Bienvenue sur BridgeOS ! 🌉\n\n👇 Appuyez sur un bouton ci-dessous pour sélectionner votre langue :",
     "already_manager_clicked_invite": "Vous êtes déjà enregistré en tant que gestionnaire.\n\nUtilisez /reset d'abord si vous voulez rejoindre en tant que travailleur de quelqu'un.",
     "already_worker_clicked_invite": "Vous êtes déjà enregistré en tant que travailleur.\n\nUtilisez /reset d'abord si vous voulez vous connecter à un gestionnaire différent."
   },
   "registration": {
+    "invalid_code_format": "❌ Format de code d'invitation invalide.\n\nVeuillez demander à votre contact un lien d'invitation valide.",
+    "worker_already_has_manager": "❌ Vous êtes déjà connecté à un responsable.\nUtilisez /reset d'abord si vous souhaitez vous connecter à un autre.",
     "gender_question": "Quel est votre genre ?\n(Cela aide à obtenir des traductions précises)",
     "gender_options": {
       "male": "👨 Homme",
@@ -93,6 +96,7 @@
     }
   },
   "tasks": {
+    "no_role": "⚠️ Impossible de déterminer votre rôle. Utilisez /reset et inscrivez-vous à nouveau.",
     "not_registered": "Veuillez utiliser /start pour vous inscrire d'abord.",
     "manager": {
       "title": "📋 *Vos tâches*\n\n",
@@ -125,6 +129,7 @@
     "error": "⚠️ Désolé, une erreur s'est produite lors de l'envoi de vos commentaires. Veuillez réessayer plus tard."
   },
   "handle_message": {
+    "no_role": "⚠️ Impossible de déterminer votre rôle. Utilisez /reset et inscrivez-vous à nouveau.",
     "not_registered": "Veuillez utiliser /start pour vous inscrire d'abord.",
     "limit_reached": {
       "title": "⚠️ *Limite du forfait gratuit atteinte*\n\n",
@@ -170,6 +175,7 @@
     "manager_notification": "✅ *Tâche terminée par {worker_name} :*\n\"{task}\"\n\n🕐 Terminée à : {time}"
   },
   "handle_media": {
+    "invalid_role": "⚠️ Votre compte a un rôle invalide.\nVeuillez utiliser /reset et vous inscrire à nouveau.",
     "not_registered": "Veuillez utiliser /start pour vous inscrire d'abord.",
     "manager_no_worker": "⚠️ Vous n'avez pas encore de travailleur connecté à ce bot.\n\nPartagez votre invitation pour connecter un travailleur:\n\n📋 Code: {code}\n🔗 {invite_link}",
     "worker_no_manager": "⚠️ Vous n'êtes pas connecté à un contact.\nDemandez à votre contact son lien d'invitation.",
@@ -185,7 +191,9 @@
     "subscription": "💳 Abonnement",
     "refer": "📤 Recommander BridgeOS",
     "feedback": "💬 Envoyer des Commentaires",
-    "reset": "🗑️ Réinitialiser le Compte"
+    "reset": "🗑️ Réinitialiser le Compte",
+    "addworker": "➕ Ajouter un Travailleur",
+    "workers": "👥 Mes Travailleurs"
   },
   "addworker": {
     "not_registered": "Veuillez utiliser /start pour vous inscrire d'abord.",

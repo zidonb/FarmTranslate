@@ -1,11 +1,14 @@
 {
   "start": {
+    "already_registered_clicked_invite": "Zaten kayıtlısınız.\n\nRolünüzü değiştirmek istiyorsanız önce /reset kullanın.",
     "welcome_back": "Tekrar hoş geldin! {role} olarak kayıtlısın.\n\nMevcut komutları görmek için /help kullan.",
     "welcome_new": "BridgeOS'a hoş geldiniz! 🌉\n\n👇 Dilinizi seçmek için aşağıdaki bir düğmeye dokunun:",
     "already_manager_clicked_invite": "Zaten yönetici olarak kayıtlısınız.\n\nBirinin işçisi olarak katılmak istiyorsanız önce /reset kullanın.",
     "already_worker_clicked_invite": "Zaten işçi olarak kayıtlısınız.\n\nFarklı bir yöneticiye bağlanmak istiyorsanız önce /reset kullanın."
   },
   "registration": {
+    "invalid_code_format": "❌ Geçersiz davet kodu formatı.\n\nLütfen kişinizden geçerli bir davet bağlantısı isteyin.",
+    "worker_already_has_manager": "❌ Zaten bir yöneticiye bağlısınız.\nFarklı birine bağlanmak istiyorsanız önce /reset kullanın.",
     "gender_question": "Cinsiyetiniz nedir?\n(Bu, doğru çeviriler için yardımcı olur)",
     "gender_options": {
       "male": "👨 Erkek",
@@ -93,6 +96,7 @@
     }
   },
   "tasks": {
+    "no_role": "⚠️ Rolünüz belirlenemedi. /reset kullanın ve tekrar kayıt olun.",
     "not_registered": "Lütfen önce kayıt olmak için /start yazın.",
     "manager": {
       "title": "📋 *Görevleriniz*\n\n",
@@ -125,6 +129,7 @@
     "error": "⚠️ Üzgünüz, geri bildiriminiz gönderilirken bir hata oluştu. Lütfen daha sonra tekrar deneyin."
   },
   "handle_message": {
+    "no_role": "⚠️ Rolünüz belirlenemedi. /reset kullanın ve tekrar kayıt olun.",
     "not_registered": "Lütfen önce kayıt olmak için /start yazın.",
     "limit_reached": {
       "title": "⚠️ *Ücretsiz Plan Limiti Doldu*\n\n",
@@ -170,6 +175,7 @@
     "manager_notification": "✅ *{worker_name} tarafından tamamlanan görev:*\n\"{task}\"\n\n🕐 Tamamlanma saati: {time}"
   },
   "handle_media": {
+    "invalid_role": "⚠️ Hesabınızda geçersiz bir rol var.\nLütfen /reset kullanın ve tekrar kayıt olun.",
     "not_registered": "Lütfen önce kayıt olmak için /start yazın.",
     "manager_no_worker": "⚠️ Bu bota henüz bağlı çalışanınız yok.\n\nBir çalışan bağlamak için davetinizi paylaşın:\n\n📋 Kod: {code}\n🔗 {invite_link}",
     "worker_no_manager": "⚠️ Bir iletişim kişisine bağlı değilsiniz.\nİletişim kişinizden davet bağlantısını isteyin.",
@@ -185,7 +191,9 @@
     "subscription": "💳 Abonelik",
     "refer": "📤 BridgeOS'u Öner",
     "feedback": "💬 Geri Bildirim Gönder",
-    "reset": "🗑️ Hesabı Sıfırla"
+    "reset": "🗑️ Hesabı Sıfırla",
+    "addworker": "➕ İşçi Ekle",
+    "workers": "👥 İşçilerim"
   },
   "addworker": {
     "not_registered": "Lütfen önce kayıt olmak için /start kullanın.",

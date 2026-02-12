@@ -1,11 +1,14 @@
 {
   "start": {
+    "already_registered_clicked_invite": "Nakarehistro ka na.\n\nGumamit ng /reset muna kung gusto mong baguhin ang iyong tungkulin.",
     "welcome_back": "Maligayang pagbabalik! Nakarehistro ka bilang {role}.\n\nGamitin ang /help upang makita ang mga available na command.",
     "welcome_new": "Maligayang pagdating sa BridgeOS! 🌉\n\n👇 Pindutin ang isang button sa ibaba upang piliin ang iyong wika:",
     "already_manager_clicked_invite": "Nakarehistro ka na bilang manager.\n\nGamitin muna ang /reset kung gusto mong sumali bilang manggagawa ng iba.",
     "already_worker_clicked_invite": "Nakarehistro ka na bilang manggagawa.\n\nGamitin muna ang /reset kung gusto mong kumonekta sa ibang manager."
   },
   "registration": {
+    "invalid_code_format": "❌ Hindi wastong format ng invitation code.\n\nPakihingi sa iyong contact ng wastong invitation link.",
+    "worker_already_has_manager": "❌ Nakakonekta ka na sa isang manager.\nGumamit ng /reset muna kung gusto mong kumonekta sa iba.",
     "gender_question": "Ano ang iyong kasarian?\n(Tumutulong ito para sa tumpak na pagsasalin)",
     "gender_options": {
       "male": "👨 Lalaki",
@@ -93,6 +96,7 @@
     }
   },
   "tasks": {
+    "no_role": "⚠️ Hindi matukoy ang iyong tungkulin. Gumamit ng /reset at magparehistro ulit.",
     "not_registered": "Pakiusap na gumamit ng /start upang magrehistro muna.",
     "manager": {
       "title": "📋 *Ang Iyong Mga Gawain*\n\n",
@@ -125,6 +129,7 @@
     "error": "⚠️ Paumanhin, may error sa pagpapadala ng iyong feedback. Pakiusap na subukan muli mamaya."
   },
   "handle_message": {
+    "no_role": "⚠️ Hindi matukoy ang iyong tungkulin. Gumamit ng /reset at magparehistro ulit.",
     "not_registered": "Pakiusap na gumamit ng /start upang magrehistro muna.",
     "limit_reached": {
       "title": "⚠️ *Naabot na ang Limitasyon ng Free Plan*\n\n",
@@ -170,6 +175,7 @@
     "manager_notification": "✅ *Natapos ni {worker_name} ang gawain:*\n\"{task}\"\n\n🕐 Natapos sa: {time}"
   },
   "handle_media": {
+    "invalid_role": "⚠️ May hindi wastong tungkulin ang iyong account.\nPakigamit ng /reset at magparehistro ulit.",
     "not_registered": "Pakiusap na gumamit ng /start upang magrehistro muna.",
     "manager_no_worker": "⚠️ Wala ka pang manggagawa na nakakonekta sa bot na ito.\n\nIbahagi ang iyong imbitasyon upang kumonekta ng manggagawa:\n\n📋 Code: {code}\n🔗 {invite_link}",
     "worker_no_manager": "⚠️ Hindi ka pa nakakonekta sa isang contact.\nHingin sa iyong contact ang kanilang invitation link.",
@@ -185,7 +191,9 @@
     "subscription": "💳 Subscription",
     "refer": "📤 Irekomenda ang BridgeOS",
     "feedback": "💬 Magpadala ng Feedback",
-    "reset": "🗑️ I-reset ang Account"
+    "reset": "🗑️ I-reset ang Account",
+    "addworker": "➕ Magdagdag ng Manggagawa",
+    "workers": "👥 Mga Manggagawa Ko"
   },
   "addworker": {
     "not_registered": "Mangyaring gamitin ang /start para magrehistro muna.",

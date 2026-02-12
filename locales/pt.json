@@ -1,11 +1,14 @@
 {
   "start": {
+    "already_registered_clicked_invite": "Você já está registrado.\n\nUse /reset primeiro se quiser mudar seu papel.",
     "welcome_back": "Bem-vindo de volta! Você está registrado como {role}.\n\nUse /help para ver os comandos disponíveis.",
     "welcome_new": "Bem-vindo ao BridgeOS! 🌉\n\n👇 Toque em um botão abaixo para selecionar seu idioma:",
     "already_manager_clicked_invite": "Você já está registrado como gerente.\n\nUse /reset primeiro se quiser se juntar como trabalhador de alguém.",
     "already_worker_clicked_invite": "Você já está registrado como trabalhador.\n\nUse /reset primeiro se quiser se conectar a um gerente diferente."
   },
   "registration": {
+    "invalid_code_format": "❌ Formato de código de convite inválido.\n\nPeça ao seu contato um link de convite válido.",
+    "worker_already_has_manager": "❌ Você já está conectado a um gerente.\nUse /reset primeiro se quiser se conectar a outro.",
     "gender_question": "Qual é o seu gênero?\n(Isso ajuda com traduções mais precisas)",
     "gender_options": {
       "male": "👨 Masculino",
@@ -93,6 +96,7 @@
     }
   },
   "tasks": {
+    "no_role": "⚠️ Não foi possível determinar seu papel. Use /reset e registre-se novamente.",
     "not_registered": "Por favor, use /start para se registrar primeiro.",
     "manager": {
       "title": "📋 *Suas Tarefas*\n\n",
@@ -125,6 +129,7 @@
     "error": "⚠️ Desculpe, houve um erro ao enviar seu feedback. Por favor, tente novamente mais tarde."
   },
   "handle_message": {
+    "no_role": "⚠️ Não foi possível determinar seu papel. Use /reset e registre-se novamente.",
     "not_registered": "Por favor, use /start para se registrar primeiro.",
     "limit_reached": {
       "title": "⚠️ *Limite do Plano Gratuito Atingido*\n\n",
@@ -170,6 +175,7 @@
     "manager_notification": "✅ *Tarefa concluída por {worker_name}:*\n\"{task}\"\n\n🕐 Concluída às: {time}"
   },
   "handle_media": {
+    "invalid_role": "⚠️ Sua conta tem um papel inválido.\nPor favor, use /reset e registre-se novamente.",
     "not_registered": "Por favor, use /start para se registrar primeiro.",
     "manager_no_worker": "⚠️ Você ainda não tem um trabalhador conectado a este bot.\n\nCompartilhe seu convite para conectar um trabalhador:\n\n📋 Código: {code}\n🔗 {invite_link}",
     "worker_no_manager": "⚠️ Você não está conectado a um contato.\nPeça ao seu contato o link de convite.",
@@ -185,7 +191,9 @@
     "subscription": "💳 Assinatura",
     "refer": "📤 Recomendar BridgeOS",
     "feedback": "💬 Enviar Feedback",
-    "reset": "🗑️ Redefinir Conta"
+    "reset": "🗑️ Redefinir Conta",
+    "addworker": "➕ Adicionar Trabalhador",
+    "workers": "👥 Meus Trabalhadores"
   },
   "addworker": {
     "not_registered": "Por favor use /start para se registrar primeiro.",
