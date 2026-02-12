@@ -77,7 +77,7 @@
     "Filipino": "tl"
   },
 
-  "translation_provider": "claude",
+  "translation_provider": "gemini",
   "claude": {
     "model": "claude-sonnet-4-20250514"
   },
