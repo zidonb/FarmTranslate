@@ -2,6 +2,20 @@
 BridgeOS — Multi-bot translation system.
 Slim entry point: logging, DB pool, handler registration, run.
 """
+# bot.py - very top, before any other imports
+import os
+import time
+import sys
+
+# Stagger bot startup to prevent DB connection exhaustion
+bot_id = int(os.getenv("BOT_ID", "0"))
+delay_seconds = bot_id * 10
+
+if delay_seconds > 0:
+    print(f"🕐 Bot {bot_id}: Waiting {delay_seconds}s before starting (deployment stagger)...", flush=True)
+    time.sleep(delay_seconds)
+    print(f"✅ Bot {bot_id}: Delay complete, proceeding with startup", flush=True)
+
 import logging
 from telegram.ext import (
     Application,
