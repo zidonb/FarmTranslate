@@ -53,7 +53,7 @@ def build_translation_prompt(text: str, from_lang: str, to_lang: str, target_gen
     if conversation_history and len(conversation_history) > 0:
         history_context = "\n\nRecent conversation for context:\n"
         for msg in conversation_history:
-            history_context += f"- {msg['text']} ({msg['lang']})\n"
+            history_context += f"- {msg['text']}\n"
         history_context += "\nUse this context to understand pronouns, references, and topic continuity.\n"
     
     prompt = f"""You are a specialized translator for {industry_name} communications.
@@ -105,42 +105,29 @@ def translate_with_claude(text: str, from_lang: str, to_lang: str, target_gender
     return response.content[0].text.strip()
 
 def translate_with_gemini(text: str, from_lang: str, to_lang: str, target_gender: str = None, conversation_history: list = None, industry: str = None) -> str:
-    """Translate using Google Gemini 2.5 Flash Lite"""
+    """Translate using Google Gemini"""
     try:
-        import google.generativeai as genai
-        import typing_extensions as typing
+        from google import genai
+        from google.genai import types
     except ImportError:
-        raise ImportError("Please install: pip install google-generativeai>=0.8.0 typing-extensions")
+        raise ImportError("Please install: pip install google-genai")
     
     config = load_config()
     gemini_config = config['gemini']
     
-    # Define strict schema
-    class TranslationResponse(typing.TypedDict):
-        original_text: str
-        translated_text: str
-        detected_language: str
+    client = genai.Client(api_key=gemini_config['api_key'])
     
-    # Configure Gemini
-    genai.configure(api_key=gemini_config['api_key'])
+    prompt = build_translation_prompt(text, from_lang, to_lang, target_gender, conversation_history, industry)
     
-    system_instruction = build_translation_prompt("", from_lang, to_lang, target_gender, conversation_history, industry).split("Text to translate:")[0]
-    
-    model = genai.GenerativeModel(
-        model_name=gemini_config['model'],
-        system_instruction=system_instruction,
-        generation_config={
-            "response_mime_type": "application/json",
-            "response_schema": TranslationResponse,
-            "temperature": 0.3 # Lower temperature is better for translation accuracy
-        }
+    response = client.models.generate_content(
+        model=gemini_config['model'],
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            temperature=0.3,
+        )
     )
     
-    response = model.generate_content(f"Translate: {text}")
-    
-    # Parse JSON response
-    result = json.loads(response.text)
-    return result['translated_text']
+    return response.text.strip()
 
 def translate_with_openai(text: str, from_lang: str, to_lang: str, target_gender: str = None, conversation_history: list = None, industry: str = None) -> str:
     """Translate using OpenAI API"""

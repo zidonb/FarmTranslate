@@ -1,6 +1,6 @@
 python-telegram-bot==20.7
 anthropic
-google-generativeai
+google-genai
 typing-extensions
 flask
 psycopg2-binary
