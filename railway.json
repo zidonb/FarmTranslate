@@ -1,5 +1,5 @@
 {
   "deploy": {
-    "startCommand": "sleep $(($BOT_ID * 10)) && python bot.py"
+    "startCommand": "sleep $(($BOT_ID * 20)) && python bot.py"
   }
 }
