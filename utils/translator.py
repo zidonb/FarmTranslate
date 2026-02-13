@@ -208,7 +208,7 @@ def generate_daily_actionitems(messages: list, industry: str = None, manager_lan
             else:
                 time_str = "Unknown time"
             
-            conversation_text += f"[{time_str}] {msg['text']} ({msg['lang']})\n"
+            conversation_text += f"[{time_str}] {msg['text']}\n"
     
     # Build prompt - VERY SPECIFIC to avoid summarization
     prompt = f"""You are extracting ACTION ITEMS from a {industry_name} workplace conversation.

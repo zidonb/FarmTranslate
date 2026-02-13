@@ -1,7 +1,12 @@
 import json
 import os
 
+_config_cache = None
+
 def load_config():
+    global _config_cache
+    if _config_cache is not None:
+        return _config_cache
     """
     Load configuration from config.json + secrets
     
@@ -35,4 +40,5 @@ def load_config():
         except FileNotFoundError:
             raise Exception("secrets.json not found! Create it with your API keys.")
     
+    _config_cache = config
     return config

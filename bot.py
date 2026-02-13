@@ -35,7 +35,7 @@ def main():
     logger.info("Starting BridgeOS...")
 
     # 2. Database connection pool
-    init_connection_pool(min_conn=5, max_conn=20)
+    init_connection_pool(min_conn=1, max_conn=3)
 
     # 3. Telegram application
     config = load_config()

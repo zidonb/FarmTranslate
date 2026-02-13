@@ -1538,7 +1538,7 @@ def clear_full_history_route(user_id, connection_id):
 
 
 if __name__ == "__main__":
-    init_connection_pool(min_conn=5, max_conn=20)
+    init_connection_pool(min_conn=1, max_conn=3)
     try:
         port = int(os.environ.get("PORT", 5000))
         app.run(host="0.0.0.0", port=port, debug=False)
