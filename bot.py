@@ -92,7 +92,7 @@ def main():
     logger.info("BridgeOS bot is running...")
 
     try:
-        app.run_polling()
+        app.run_polling(drop_pending_updates=True)
     finally:
         close_all_connections()
         logger.info("BridgeOS bot stopped.")
