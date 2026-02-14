@@ -2,6 +2,38 @@ import json
 from anthropic import Anthropic
 from config import load_config
 
+_claude_client = None
+_gemini_client = None
+
+
+def _get_gemini_client():
+    global _gemini_client
+    if _gemini_client is None:
+        try:
+            from google import genai
+        except ImportError:
+            raise ImportError("Please install: pip install google-genai")
+        config = load_config()
+        api_key = config['gemini'].get('api_key')
+        if not api_key:
+            raise ValueError("Gemini API key not configured.")
+        _gemini_client = genai.Client(api_key=api_key)
+    return _gemini_client
+
+
+def _get_claude_client():
+    global _claude_client
+    if _claude_client is None:
+        config = load_config()
+        api_key = config['claude'].get('api_key')
+        if not api_key:
+            raise ValueError(
+                "Claude API key not configured. "
+                "Please set CLAUDE_API_KEY in Railway environment variables or secrets.json"
+            )
+        _claude_client = Anthropic(api_key=api_key)
+    return _claude_client
+
 
 def translate(text: str, from_lang: str, to_lang: str, target_gender: str = None, conversation_history: list = None, industry: str = None) -> str:
     """
@@ -81,15 +113,7 @@ def translate_with_claude(text: str, from_lang: str, to_lang: str, target_gender
     config = load_config()
     claude_config = config['claude']
     
-    # ✅ FIX: Validate API key exists before creating client
-    api_key = claude_config.get('api_key')
-    if not api_key:
-        raise ValueError(
-            "Claude API key not configured. "
-            "Please set CLAUDE_API_KEY in Railway environment variables or secrets.json"
-        )
-    
-    client = Anthropic(api_key=api_key)
+    client = _get_claude_client()
     
     prompt = build_translation_prompt(text, from_lang, to_lang, target_gender, conversation_history, industry)
     
@@ -106,16 +130,12 @@ def translate_with_claude(text: str, from_lang: str, to_lang: str, target_gender
 
 def translate_with_gemini(text: str, from_lang: str, to_lang: str, target_gender: str = None, conversation_history: list = None, industry: str = None) -> str:
     """Translate using Google Gemini"""
-    try:
-        from google import genai
-        from google.genai import types
-    except ImportError:
-        raise ImportError("Please install: pip install google-genai")
+    from google.genai import types
     
     config = load_config()
     gemini_config = config['gemini']
     
-    client = genai.Client(api_key=gemini_config['api_key'])
+    client = _get_gemini_client()
     
     prompt = build_translation_prompt(text, from_lang, to_lang, target_gender, conversation_history, industry)
     
@@ -274,12 +294,11 @@ REMEMBER:
 
     # Use Claude for action items generation (best quality)
     claude_config = config.get('claude', {})
-    api_key = claude_config.get('api_key')
     
-    if not api_key:
+    try:
+        client = _get_claude_client()
+    except ValueError:
         return "Error: Claude API key not configured for action items generation."
-    
-    client = Anthropic(api_key=api_key)
     
     try:
         response = client.messages.create(

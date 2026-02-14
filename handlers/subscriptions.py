@@ -213,7 +213,7 @@ async def _handle_feedback_response(update: Update, context: ContextTypes.DEFAUL
     feedback_msg += f"(ID: {user_id})\n\n{text}"
 
     try:
-        await context.bot.send_message(chat_id=admin_id, text=feedback_msg, parse_mode='Markdown')
+        await context.bot.send_message(chat_id=admin_id, text=feedback_msg)
         feedback_model.save(user_id=user_id, telegram_name=user_name, username=username, message=text)
 
         await update.message.reply_text(

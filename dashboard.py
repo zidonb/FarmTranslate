@@ -701,7 +701,7 @@ LOGIN_HTML = """
 def login():
     if request.method == "POST":
         password = request.form.get("password", "")
-        if password == DASHBOARD_PASSWORD:
+        if hmac.compare_digest(password.encode(), DASHBOARD_PASSWORD.encode()):
             session["authenticated"] = True
             return redirect("/")
         else:

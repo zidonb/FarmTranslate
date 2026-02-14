@@ -16,7 +16,7 @@ def load_config():
     """
     
     # Load non-secret configuration
-    with open('config.json', 'r') as f:
+    with open('config.json', 'r', encoding='utf-8') as f:
         config = json.load(f)
     
     # Add secrets from environment (Railway) or secrets.json (local)

@@ -206,6 +206,8 @@ async def daily_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             messages = message_model.get_recent(conn['connection_id'], hours=24)
             for msg in messages:
                 msg['worker_name'] = worker_name
+                msg['timestamp'] = msg['sent_at'].isoformat() if msg.get('sent_at') else ''
+                msg['lang'] = ''
             all_messages.extend(messages)
 
         industry_key = manager.get('industry', 'other') if manager else 'other'

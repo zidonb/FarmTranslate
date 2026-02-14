@@ -71,7 +71,8 @@ async def _handle_manager_message(update, context, user, bot_slot, config):
     text = update.message.text
 
     # Check subscription / usage limits
-    if not subscription_model.is_active(user_id):
+    has_subscription = subscription_model.is_active(user_id)
+    if not has_subscription:
         if usage_model.is_blocked(user_id):
             await _send_limit_reached(update, user_id, language, config)
             return
@@ -106,14 +107,20 @@ async def _handle_manager_message(update, context, user, bot_slot, config):
     history = message_model.get_translation_context(conn['connection_id'], limit=context_size)
 
     # Translate
-    translated = translate(
-        text=text,
-        from_lang=language,
-        to_lang=worker['language'],
-        target_gender=worker.get('gender'),
-        conversation_history=history,
-        industry=industry_key
-    )
+    translation_failed = False
+    try:
+        translated = translate(
+            text=text,
+            from_lang=language,
+            to_lang=worker['language'],
+            target_gender=worker.get('gender'),
+            conversation_history=history,
+            industry=industry_key
+        )
+    except Exception as e:
+        logger.error(f"Translation failed for manager={user_id}: {e}")
+        translated = text
+        translation_failed = True
 
     # Save message
     message_model.save(
@@ -125,15 +132,23 @@ async def _handle_manager_message(update, context, user, bot_slot, config):
 
     # Forward to worker
     manager_name = update.effective_user.first_name or "Manager"
-    await context.bot.send_message(
-        chat_id=worker_id,
-        text=get_text(worker['language'], 'handle_message.manager.message_prefix',
-                      default="🗣️ From {name}: {translated}",
-                      name=manager_name, translated=translated)
-    )
+    forward_text = get_text(worker['language'], 'handle_message.manager.message_prefix',
+                            default="🗣️ From {name}: {translated}",
+                            name=manager_name, translated=translated)
+    if translation_failed:
+        warning = get_text(worker['language'], 'handle_message.translation_unavailable',
+                           default="⚠️ Translation temporarily unavailable. Original message:")
+        forward_text = f"{warning}\n\n🗣️ {manager_name}: {text}"
+    await context.bot.send_message(chat_id=worker_id, text=forward_text)
+
+    # Notify sender
+    if translation_failed:
+        await update.message.reply_text(
+            get_text(language, 'handle_message.translation_error',
+                     default="⚠️ Translation temporarily unavailable. Your message was forwarded as-is."))
 
     # Increment usage (only if no subscription)
-    if not subscription_model.is_active(user_id):
+    if not has_subscription:
         allowed = usage_model.increment(user_id)
         if not allowed:
             await _send_last_message_warning(update, user_id, language, config)
@@ -169,14 +184,20 @@ async def _handle_worker_message(update, context, user, config):
     history = message_model.get_translation_context(conn['connection_id'], limit=context_size)
 
     # Translate
-    translated = translate(
-        text=text,
-        from_lang=language,
-        to_lang=manager_user['language'],
-        target_gender=manager_user.get('gender'),
-        conversation_history=history,
-        industry=industry_key
-    )
+    translation_failed = False
+    try:
+        translated = translate(
+            text=text,
+            from_lang=language,
+            to_lang=manager_user['language'],
+            target_gender=manager_user.get('gender'),
+            conversation_history=history,
+            industry=industry_key
+        )
+    except Exception as e:
+        logger.error(f"Translation failed for worker={user_id}: {e}")
+        translated = text
+        translation_failed = True
 
     # Save message
     message_model.save(
@@ -188,12 +209,20 @@ async def _handle_worker_message(update, context, user, config):
 
     # Forward to manager
     sender_name = update.effective_user.first_name or "Worker"
-    await context.bot.send_message(
-        chat_id=manager_id,
-        text=get_text(manager_user['language'], 'handle_message.worker.message_prefix',
-                      default="🗣️ From {name}: {translated}",
-                      name=sender_name, translated=translated)
-    )
+    forward_text = get_text(manager_user['language'], 'handle_message.worker.message_prefix',
+                            default="🗣️ From {name}: {translated}",
+                            name=sender_name, translated=translated)
+    if translation_failed:
+        warning = get_text(manager_user['language'], 'handle_message.translation_unavailable',
+                           default="⚠️ Translation temporarily unavailable. Original message:")
+        forward_text = f"{warning}\n\n🗣️ {sender_name}: {text}"
+    await context.bot.send_message(chat_id=manager_id, text=forward_text)
+
+    # Notify sender
+    if translation_failed:
+        await update.message.reply_text(
+            get_text(language, 'handle_message.translation_error',
+                     default="⚠️ Translation temporarily unavailable. Your message was forwarded as-is."))
 
     logger.info(f"Message: worker={user_id} → manager={manager_id}")
 
