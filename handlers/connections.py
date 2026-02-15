@@ -115,7 +115,7 @@ async def addworker_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                  default="✅ *Worker Slot Assigned on Bot {slot}*\n\n"
                          "📱 Open this bot to add your worker:\n{bot_link}\n\n"
                          "💡 The invitation is waiting for you there!",
-                 slot=next_slot, bot_link=bot_chat_link),
+                 bot_name=f"Bot {next_slot}", slot=next_slot, bot_link=bot_chat_link),
         parse_mode='Markdown'
     )
 
