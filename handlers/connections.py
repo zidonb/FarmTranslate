@@ -109,8 +109,25 @@ async def addworker_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception as e:
             logger.warning(f"Could not send proactive message from bot slot {next_slot}: {e}")
 
-    # Confirm in current bot (no Markdown to avoid underscore issues in bot links)
-    msg = get_text(language, 'addworker.success',
+    # Build worker summary
+    summary = get_text(language, 'workers.title', default="👥 Your Workers\n\n")
+    for slot in range(1, 6):
+        conn = {c['bot_slot']: c for c in active_connections}.get(slot)
+        bot_username = get_bot_username_for_slot(slot)
+        bot_link = f"https://t.me/{bot_username}"
+        if conn:
+            try:
+                worker_chat = await context.bot.get_chat(conn['worker_id'])
+                worker_name = worker_chat.first_name or f"Worker {conn['worker_id']}"
+            except Exception:
+                worker_name = f"Worker {conn['worker_id']}"
+            summary += f"Bot {slot}: {worker_name} ✅\n"
+        elif slot == next_slot:
+            summary += f"Bot {slot}: ⬅️ New slot\n"
+        else:
+            summary += f"Bot {slot}: Available\n"
+
+    msg = summary + "\n" + get_text(language, 'addworker.success',
                    default="✅ Worker Slot Assigned on Bot {slot}\n\n"
                            "📱 Open this bot to add your worker:\n{bot_link}\n\n"
                            "💡 The invitation is waiting for you there!",
