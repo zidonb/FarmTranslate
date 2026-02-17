@@ -129,6 +129,8 @@
     "error": "⚠️ Lo sentimos, hubo un error al enviar tus comentarios. Por favor inténtalo de nuevo más tarde."
   },
   "handle_message": {
+    "translation_unavailable": "⚠️ Traducción temporalmente no disponible. Mensaje original:",
+    "translation_error": "⚠️ Traducción temporalmente no disponible. Tu mensaje fue enviado tal cual.",
     "no_role": "⚠️ No se pudo determinar tu rol. Usa /reset y regístrate de nuevo.",
     "not_registered": "Por favor usa /start para registrarte primero.",
     "limit_reached": {

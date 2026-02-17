@@ -129,6 +129,8 @@
     "error": "⚠️ Entschuldigung, beim Senden Ihres Feedbacks ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut."
   },
   "handle_message": {
+    "translation_unavailable": "⚠️ Übersetzung vorübergehend nicht verfügbar. Originalnachricht:",
+    "translation_error": "⚠️ Übersetzung vorübergehend nicht verfügbar. Ihre Nachricht wurde unverändert weitergeleitet.",
     "no_role": "⚠️ Ihre Rolle konnte nicht bestimmt werden. Verwenden Sie /reset und registrieren Sie sich erneut.",
     "not_registered": "Bitte verwenden Sie zuerst /start zur Registrierung.",
     "limit_reached": {

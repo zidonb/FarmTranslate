@@ -129,6 +129,8 @@
     "error": "⚠️ Paumanhin, may error sa pagpapadala ng iyong feedback. Pakiusap na subukan muli mamaya."
   },
   "handle_message": {
+    "translation_unavailable": "⚠️ Pansamantalang hindi available ang pagsasalin. Orihinal na mensahe:",
+    "translation_error": "⚠️ Pansamantalang hindi available ang pagsasalin. Ang iyong mensahe ay naipadala nang walang pagbabago.",
     "no_role": "⚠️ Hindi matukoy ang iyong tungkulin. Gumamit ng /reset at magparehistro ulit.",
     "not_registered": "Pakiusap na gumamit ng /start upang magrehistro muna.",
     "limit_reached": {

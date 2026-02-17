@@ -129,6 +129,8 @@
     "error": "⚠️ Desculpe, houve um erro ao enviar seu feedback. Por favor, tente novamente mais tarde."
   },
   "handle_message": {
+    "translation_unavailable": "⚠️ Tradução temporariamente indisponível. Mensagem original:",
+    "translation_error": "⚠️ Tradução temporariamente indisponível. Sua mensagem foi encaminhada como está.",
     "no_role": "⚠️ Não foi possível determinar seu papel. Use /reset e registre-se novamente.",
     "not_registered": "Por favor, use /start para se registrar primeiro.",
     "limit_reached": {

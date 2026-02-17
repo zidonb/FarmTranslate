@@ -129,6 +129,8 @@
     "error": "⚠️ Désolé, une erreur s'est produite lors de l'envoi de vos commentaires. Veuillez réessayer plus tard."
   },
   "handle_message": {
+    "translation_unavailable": "⚠️ Traduction temporairement indisponible. Message original :",
+    "translation_error": "⚠️ Traduction temporairement indisponible. Votre message a été transmis tel quel.",
     "no_role": "⚠️ Impossible de déterminer votre rôle. Utilisez /reset et inscrivez-vous à nouveau.",
     "not_registered": "Veuillez utiliser /start pour vous inscrire d'abord.",
     "limit_reached": {

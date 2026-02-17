@@ -129,6 +129,8 @@
     "error": "⚠️ Üzgünüz, geri bildiriminiz gönderilirken bir hata oluştu. Lütfen daha sonra tekrar deneyin."
   },
   "handle_message": {
+    "translation_unavailable": "⚠️ Çeviri geçici olarak kullanılamıyor. Orijinal mesaj:",
+    "translation_error": "⚠️ Çeviri geçici olarak kullanılamıyor. Mesajınız olduğu gibi iletildi.",
     "no_role": "⚠️ Rolünüz belirlenemedi. /reset kullanın ve tekrar kayıt olun.",
     "not_registered": "Lütfen önce kayıt olmak için /start yazın.",
     "limit_reached": {

@@ -5,7 +5,6 @@
     "already_manager_clicked_invite": "You're already registered as a manager.\n\nUse /reset first if you want to join as someone's worker.",
     "already_worker_clicked_invite": "You're already registered as a worker.\n\nUse /reset first if you want to connect to a different manager.",
     "already_registered_clicked_invite": "You're already registered.\n\nUse /reset first if you want to change your role."
-
   },
   "registration": {
     "gender_question": "What is your gender?\n(This helps with accurate translations)",
@@ -130,6 +129,8 @@
     "error": "⚠️ Sorry, there was an error sending your feedback. Please try again later."
   },
   "handle_message": {
+    "translation_unavailable": "⚠️ Translation temporarily unavailable. Original message:",
+    "translation_error": "⚠️ Translation temporarily unavailable. Your message was forwarded as-is.",
     "no_role": "⚠️ Could not determine your role. Use /reset and register again.",
     "not_registered": "Please use /start to register first.",
     "limit_reached": {
@@ -139,7 +140,6 @@
       "benefits": "✅ Full Business Access (Unlimited usage)\n✅ Manager Dashboard\n✅ Priority Processing\n✅ Industry-Specific Translations\n✅ Multi-Language Support (12 languages)\n• *Price:* ${price}/month (Cancel anytime)\n\n",
       "cta": "Tap below to upgrade:",
       "button": "💳 Upgrade to Business License (${price}/month)"
-
     },
     "manager": {
       "no_worker": "⚠️ You don't have a worker connected to this bot yet.\n\nShare your invitation to connect a worker:\n\n📋 Code: {code}\n🔗 {invite_link}",

@@ -79,7 +79,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         get_text('English', 'start.welcome_new',
                  default="Welcome to BridgeOS! 🌉\n\nSelect your language:"),
-        reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
+        reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
     )
     return LANGUAGE
 
@@ -99,7 +99,7 @@ async def language_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             get_text('English', 'registration.invalid_language',
                      default="⚠️ Please select a language from the keyboard below."),
-            reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
+            reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
         )
         return LANGUAGE
 
@@ -114,7 +114,7 @@ async def language_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         get_text(language, 'registration.gender_question',
                  default="What is your gender?\n(This helps with accurate translations)"),
-        reply_markup=ReplyKeyboardMarkup([[male, female], [prefer_not]], one_time_keyboard=True)
+        reply_markup=ReplyKeyboardMarkup([[male, female], [prefer_not]], one_time_keyboard=True, resize_keyboard=True)
     )
     return GENDER
 
@@ -137,7 +137,7 @@ async def gender_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             get_text(language, 'registration.invalid_gender',
                      default="⚠️ Please select your gender from the keyboard below."),
-            reply_markup=ReplyKeyboardMarkup([[male, female], [prefer_not]], one_time_keyboard=True)
+            reply_markup=ReplyKeyboardMarkup([[male, female], [prefer_not]], one_time_keyboard=True, resize_keyboard=True)
         )
         return GENDER
 
@@ -159,7 +159,7 @@ async def gender_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         get_text(language, 'registration.industry_question',
                  default="What industry do you work in?\n\nThis helps provide accurate translations of technical terms and workplace-specific language."),
-        reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
+        reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
     )
     return INDUSTRY
 
@@ -190,7 +190,7 @@ async def industry_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             get_text(language, 'registration.invalid_industry',
                      default="⚠️ Please select an industry from the keyboard below."),
-            reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
+            reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
         )
         return INDUSTRY
 
