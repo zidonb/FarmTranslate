@@ -18,7 +18,7 @@ from utils.db_connection import init_connection_pool, close_all_connections
 
 from handlers import LANGUAGE, GENDER, INDUSTRY
 from handlers.registration import start, language_selected, gender_selected, industry_selected, cancel
-from handlers.commands import help_command, menu_command, menu_callback_handler, reset_command
+from handlers.commands import help_command, menu_command, menu_callback_handler, resetall_command
 from handlers.connections import addworker_command, workers_command
 from handlers.tasks import tasks_command, daily_command, task_completion_callback, view_tasks_callback
 from handlers.messages import handle_message, handle_media
@@ -64,7 +64,7 @@ def main():
     # Commands
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("menu", menu_command))
-    app.add_handler(CommandHandler("reset", reset_command))
+    app.add_handler(CommandHandler("resetall", resetall_command))
     app.add_handler(CommandHandler("workers", workers_command))
     app.add_handler(CommandHandler("addworker", addworker_command))
     app.add_handler(CommandHandler("tasks", tasks_command))

@@ -58,7 +58,7 @@
     "button": "📤 BridgeOS'u Öner",
     "message": "🌉 BridgeOS'u sevdiniz mi?\n\nDiğer yöneticilerin dil engellerini aşmasına yardımcı olun!\n\nBridgeOS'u farklı diller konuşan ekipleri yöneten meslektaşlarınıza, arkadaşlarınıza veya herkese önerin.\n\n👉 Paylaşmak için düğmeye dokunun:"
   },
-  "reset": {
+  "resetall": {
     "no_account": "Sıfırlanacak bir hesabınız yok.",
     "worker_notification": "⚠️ İletişim kişiniz hesabını sıfırladı.\nHesabınız da sıfırlandı.\n\nYeniden bağlanmak için yeni bir davet gerekecek.",
     "manager_notification": "ℹ️ {worker_name} hesabını sıfırladı ve artık bağlı değil.",
@@ -193,7 +193,7 @@
     "subscription": "💳 Abonelik",
     "refer": "📤 BridgeOS'u Öner",
     "feedback": "💬 Geri Bildirim Gönder",
-    "reset": "🗑️ Hesabı Sıfırla",
+    "resetall": "🗑️ Hesabı Sıfırla",
     "addworker": "➕ İşçi Ekle",
     "workers": "👥 İşçilerim"
   },

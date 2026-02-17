@@ -58,7 +58,7 @@
     "button": "📤 BridgeOS empfehlen",
     "message": "🌉 BridgeOS gefällt Ihnen?\n\nHelfen Sie anderen Managern, Sprachbarrieren zu überwinden!\n\nEmpfehlen Sie BridgeOS Kollegen, Freunden oder jedem, der Teams mit verschiedenen Sprachen leitet.\n\n👉 Tippen Sie auf die Schaltfläche zum Teilen:"
   },
-  "reset": {
+  "resetall": {
     "no_account": "Sie haben kein Konto zum Zurücksetzen.",
     "worker_notification": "⚠️ Ihr Kontakt hat sein Konto zurückgesetzt.\nIhr Konto wurde ebenfalls zurückgesetzt.\n\nSie benötigen eine neue Einladung zum Wiederverbinden.",
     "manager_notification": "ℹ️ {worker_name} hat sein Konto zurückgesetzt und ist nicht mehr verbunden.",
@@ -193,7 +193,7 @@
     "subscription": "💳 Abonnement",
     "refer": "📤 BridgeOS empfehlen",
     "feedback": "💬 Feedback senden",
-    "reset": "🗑️ Konto zurücksetzen",
+    "resetall": "🗑️ Konto zurücksetzen",
     "addworker": "➕ Arbeiter hinzufügen",
     "workers": "👥 Meine Arbeiter"
   },

@@ -58,7 +58,7 @@
     "button": "📤 Recommend BridgeOS",
     "message": "🌉 Love BridgeOS?\n\nHelp other managers break language barriers!\n\nRecommend BridgeOS to colleagues, friends, or anyone who manages teams speaking different languages.\n\n👉 Tap the button to share:"
   },
-  "reset": {
+  "resetall": {
     "no_account": "You don't have an account to reset.",
     "worker_notification": "⚠️ Your contact has reset their account.\nYour account has also been reset.\n\nYou'll need a new invitation to reconnect.",
     "manager_notification": "ℹ️ {worker_name} has reset their account and is no longer connected.",
@@ -193,7 +193,7 @@
     "subscription": "💳 Subscription",
     "refer": "📤 Refer BridgeOS",
     "feedback": "💬 Send Feedback",
-    "reset": "🗑️ Reset Account",
+    "resetall": "🗑️ Reset Account",
     "addworker": "➕ Add Worker",
     "workers": "👥 My Workers"
   },

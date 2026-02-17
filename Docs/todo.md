@@ -1,36 +1,17 @@
 # FarmTranslate - TODO
 
-
  # Bugs (21st conversation)
-  - what if manager on bot 1 adds worker and get invitation link on bot 2 to share, but instead of sharing he registares regular with /start
- 2. SECURITY: XSS Vulnerability in Dashboard Templates
  12. PROMPT INJECTION VULNERABILITY
- 13. MEMORY LEAK: I18n Translation Cache
 
 # Imporvements
-- 
-- **gemini-flash**
 - HTML, bot name can be changed
 - Performance and scaling
 - Add bot to registered manager and workers group
-- Multi-worker support by using 5 bots
-- cahce daily, save daily
 -lemon squeezy events - check its working
-- check feedback table and task table in dashboard. 
 - save conversation of all time
-- Feedback & Testing
 - change language
  - remove worker - reset just for one worker. Not all workers. Also, what happens with payments?
  - being manager on one bot and worker on another?
-- Add worker:
-2. **Dashboard updates** - Show `workers` array and `pending_bots` in manager detail page
-3. **Subscription logic** - **Pricing** for multiple workers (business decision) (Tier)
-4. **Help text updates** - Explain multi-bot usage in `/help` command
-5. **`/removeworker` command** - Let manager remove specific worker (alternative to worker's `/reset`)
-6. **Error handling** - What if Bot 2 doesn't have token configured? (graceful degradation)
-7. **Bot 4 & 5 creation** - Currently only 3 bots deployed
-8. **Testing** - Test full flow: register → add worker → pending check → connect → add another
-
 
 
 # Killing features

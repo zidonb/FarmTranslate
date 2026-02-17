@@ -58,7 +58,7 @@
     "button": "📤 Recomendar BridgeOS",
     "message": "🌉 Gosta do BridgeOS?\n\nAjude outros gerentes a quebrar barreiras linguísticas!\n\nRecomende o BridgeOS para colegas, amigos ou qualquer pessoa que gerencie equipes que falam idiomas diferentes.\n\n👉 Toque no botão para compartilhar:"
   },
-  "reset": {
+  "resetall": {
     "no_account": "Você não tem uma conta para redefinir.",
     "worker_notification": "⚠️ Seu contato redefiniu a conta dele.\nSua conta também foi redefinida.\n\nVocê precisará de um novo convite para reconectar.",
     "manager_notification": "ℹ️ {worker_name} redefiniu a conta e não está mais conectado.",
@@ -193,7 +193,7 @@
     "subscription": "💳 Assinatura",
     "refer": "📤 Recomendar BridgeOS",
     "feedback": "💬 Enviar Feedback",
-    "reset": "🗑️ Redefinir Conta",
+    "resetall": "🗑️ Redefinir Conta",
     "addworker": "➕ Adicionar Trabalhador",
     "workers": "👥 Meus Trabalhadores"
   },

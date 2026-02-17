@@ -58,7 +58,7 @@
     "button": "📤 Irekomenda ang BridgeOS",
     "message": "🌉 Gusto mo ang BridgeOS?\n\nTulungan ang ibang mga manager na lampasan ang mga hadlang sa wika!\n\nIrekomenda ang BridgeOS sa mga kasamahan, kaibigan, o kahit sino na namamahala ng mga team na nagsasalita ng iba't ibang wika.\n\n👉 I-tap ang button upang ibahagi:"
   },
-  "reset": {
+  "resetall": {
     "no_account": "Wala kang account na mare-reset.",
     "worker_notification": "⚠️ Nag-reset ng account ang iyong contact.\nNag-reset din ang iyong account.\n\nKailangan mo ng bagong imbitasyon upang muling makakonekta.",
     "manager_notification": "ℹ️ Nag-reset ng account si {worker_name} at hindi na nakakonekta.",
@@ -193,7 +193,7 @@
     "subscription": "💳 Subscription",
     "refer": "📤 Irekomenda ang BridgeOS",
     "feedback": "💬 Magpadala ng Feedback",
-    "reset": "🗑️ I-reset ang Account",
+    "resetall": "🗑️ I-reset ang Account",
     "addworker": "➕ Magdagdag ng Manggagawa",
     "workers": "👥 Mga Manggagawa Ko"
   },
