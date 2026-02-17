@@ -109,15 +109,30 @@ async def addworker_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception as e:
             logger.warning(f"Could not send proactive message from bot slot {next_slot}: {e}")
 
-    # Confirm in current bot
-    await send_message(
-        get_text(language, 'addworker.success',
-                 default="✅ *Worker Slot Assigned on Bot {slot}*\n\n"
-                         "📱 Open this bot to add your worker:\n{bot_link}\n\n"
-                         "💡 The invitation is waiting for you there!",
-                 slot=next_slot, bot_link=bot_chat_link),
-        parse_mode='Markdown'
-    )
+    # Build worker summary
+    summary = get_text(language, 'workers.title', default="👥 Your Workers\n\n")
+    for slot in range(1, 6):
+        conn = {c['bot_slot']: c for c in active_connections}.get(slot)
+        bot_username = get_bot_username_for_slot(slot)
+        bot_link = f"https://t.me/{bot_username}"
+        if conn:
+            try:
+                worker_chat = await context.bot.get_chat(conn['worker_id'])
+                worker_name = worker_chat.first_name or f"Worker {conn['worker_id']}"
+            except Exception:
+                worker_name = f"Worker {conn['worker_id']}"
+            summary += f"Bot {slot}: {worker_name} ✅\n"
+        elif slot == next_slot:
+            summary += f"Bot {slot}: ⬅️ New slot\n"
+        else:
+            summary += f"Bot {slot}: Available\n"
+
+    msg = summary + "\n" + get_text(language, 'addworker.success',
+                   default="✅ Worker Slot Assigned on Bot {slot}\n\n"
+                           "📱 Open this bot to add your worker:\n{bot_link}\n\n"
+                           "💡 The invitation is waiting for you there!",
+                   bot_name=f"Bot {next_slot}", slot=next_slot, bot_link=bot_chat_link)
+    await send_message(msg)
 
 
 # ============================================
@@ -152,6 +167,8 @@ async def workers_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     for slot in range(1, 6):
         bot_name = f"Bot {slot}"
+        bot_username = get_bot_username_for_slot(slot)
+        bot_link = f"https://t.me/{bot_username}"
         conn = slot_map.get(slot)
 
         if conn:
@@ -163,14 +180,14 @@ async def workers_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 worker_name = f"Worker {conn['worker_id']}"
 
             response += get_text(language, 'workers.bot_connected',
-                                 default="{bot_name}: {worker_name} ✅\n",
-                                 bot_name=bot_name, worker_name=worker_name)
+                                 default="{bot_name}: {worker_name} ✅ ({bot_link})\n",
+                                 bot_name=bot_name, worker_name=worker_name, bot_link=bot_link)
         else:
             response += get_text(language, 'workers.bot_available',
-                                 default="{bot_name}: Available\n",
-                                 bot_name=bot_name)
+                                 default="{bot_name}: Available — {bot_link}\n",
+                                 bot_name=bot_name, bot_link=bot_link)
 
     response += get_text(language, 'workers.footer',
-                         default="\n💡 To add a worker: /addworker\n💡 To message a worker: Open that bot's chat")
+                         default="\n💡 To add a worker: /addworker\n💡 To message a worker: Tap the bot link above")
 
-    await send_message(response, parse_mode='Markdown')
+    await send_message(response)
