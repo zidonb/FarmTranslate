@@ -54,7 +54,7 @@
     "worker_status_no": "Hindi ❌"
   },
   "refer": {
-    "share_text": "🌉 Tingnan ang BridgeOS!\n\nGinagamit ko ito upang makipag-usap sa aking team nang real-time - magkakaibang wika kami pero natural na nag-chat!\n\n🌍 {language_count} na wika ang sinusuportahan\n✅ Instant na pagsasalin\n🏭 Mga termino na pang-industriya\n💬 Simple at epektibo\n\nSubukan nang libre: https://t.me/FarmTranslateBot",
+    "share_text": "🌉 Tingnan ang BridgeOS!\n\nGinagamit ko ito upang makipag-usap sa aking team nang real-time - magkakaibang wika kami pero natural na nag-chat!\n\n🌍 {language_count} na wika ang sinusuportahan\n✅ Instant na pagsasalin\n🏭 Mga termino na pang-industriya\n💬 Simple at epektibo\n\nSubukan nang libre: {bot_link}",
     "button": "📤 Irekomenda ang BridgeOS",
     "message": "🌉 Gusto mo ang BridgeOS?\n\nTulungan ang ibang mga manager na lampasan ang mga hadlang sa wika!\n\nIrekomenda ang BridgeOS sa mga kasamahan, kaibigan, o kahit sino na namamahala ng mga team na nagsasalita ng iba't ibang wika.\n\n👉 I-tap ang button upang ibahagi:"
   },

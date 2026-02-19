@@ -16,9 +16,12 @@ from config import load_config
 from utils.logger import setup_logging
 from utils.db_connection import init_connection_pool, close_all_connections
 
-from handlers import LANGUAGE, GENDER, INDUSTRY
-from handlers.registration import start, language_selected, gender_selected, industry_selected, cancel
-from handlers.commands import help_command, menu_command, menu_callback_handler, resetall_command
+from handlers import LANGUAGE, GENDER, INDUSTRY, SETTINGS_LANGUAGE, SETTINGS_GENDER, SETTINGS_INDUSTRY
+from handlers.registration import (
+    start, language_selected, gender_selected, industry_selected, cancel,
+    settings_command, settings_language_selected, settings_gender_selected, settings_industry_selected,
+)
+from handlers.commands import help_command, menu_command, menu_callback_handler, reset_command, resetall_command
 from handlers.connections import addworker_command, workers_command
 from handlers.tasks import tasks_command, daily_command, task_completion_callback, view_tasks_callback
 from handlers.messages import handle_message, handle_media
@@ -61,9 +64,26 @@ def main():
     # Registration flow (must be first so /start is captured by ConversationHandler)
     app.add_handler(conv_handler)
 
+    # Settings flow
+    settings_handler = ConversationHandler(
+        entry_points=[CommandHandler("settings", settings_command)],
+        states={
+            SETTINGS_LANGUAGE: [MessageHandler(filters.TEXT & ~filters.COMMAND, settings_language_selected)],
+            SETTINGS_GENDER:   [MessageHandler(filters.TEXT & ~filters.COMMAND, settings_gender_selected)],
+            SETTINGS_INDUSTRY: [MessageHandler(filters.TEXT & ~filters.COMMAND, settings_industry_selected)],
+        },
+        fallbacks=[
+            CommandHandler("cancel", cancel),
+            CommandHandler("start", start),
+        ],
+        allow_reentry=True,
+    )
+    app.add_handler(settings_handler)
+
     # Commands
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("menu", menu_command))
+    app.add_handler(CommandHandler("reset", reset_command))
     app.add_handler(CommandHandler("resetall", resetall_command))
     app.add_handler(CommandHandler("workers", workers_command))
     app.add_handler(CommandHandler("addworker", addworker_command))
@@ -72,6 +92,7 @@ def main():
     app.add_handler(CommandHandler("subscription", subscription_command))
     app.add_handler(CommandHandler("feedback", feedback_command))
     app.add_handler(CommandHandler("refer", refer_command))
+    app.add_handler(CommandHandler("settings", settings_command))
 
     # Callback queries (inline button presses)
     app.add_handler(CallbackQueryHandler(menu_callback_handler, pattern=r"^menu_"))

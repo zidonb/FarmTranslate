@@ -54,7 +54,7 @@
     "worker_status_no": "No ❌"
   },
   "refer": {
-    "share_text": "🌉 ¡Conoce BridgeOS!\n\nLo uso para comunicarme con mi equipo en tiempo real - ¡hablamos diferentes idiomas pero chateamos naturalmente!\n\n🌍 {language_count} idiomas compatibles\n✅ Traducción instantánea\n🏭 Términos específicos de la industria\n💬 Simple y efectivo\n\nPruébalo gratis: https://t.me/FarmTranslateBot",
+    "share_text": "🌉 ¡Conoce BridgeOS!\n\nLo uso para comunicarme con mi equipo en tiempo real - ¡hablamos diferentes idiomas pero chateamos naturalmente!\n\n🌍 {language_count} idiomas compatibles\n✅ Traducción instantánea\n🏭 Términos específicos de la industria\n💬 Simple y efectivo\n\nPruébalo gratis: {bot_link}",
     "button": "📤 Recomendar BridgeOS",
     "message": "🌉 ¿Te gusta BridgeOS?\n\n¡Ayuda a otros gerentes a romper las barreras del idioma!\n\nRecomienda BridgeOS a colegas, amigos o cualquiera que administre equipos que hablen diferentes idiomas.\n\n👉 Toca el botón para compartir:"
   },

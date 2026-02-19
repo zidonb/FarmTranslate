@@ -54,7 +54,7 @@
     "worker_status_no": "Hayır ❌"
   },
   "refer": {
-    "share_text": "🌉 BridgeOS'a göz atın!\n\nEkibimle gerçek zamanlı iletişim kurmak için kullanıyorum - farklı diller konuşuyoruz ama doğal bir şekilde sohbet ediyoruz!\n\n🌍 {language_count} dil desteği\n✅ Anında çeviri\n🏭 Sektöre özel terimler\n💬 Basit ve etkili\n\nÜcretsiz deneyin: https://t.me/FarmTranslateBot",
+    "share_text": "🌉 BridgeOS'a göz atın!\n\nEkibimle gerçek zamanlı iletişim kurmak için kullanıyorum - farklı diller konuşuyoruz ama doğal bir şekilde sohbet ediyoruz!\n\n🌍 {language_count} dil desteği\n✅ Anında çeviri\n🏭 Sektöre özel terimler\n💬 Basit ve etkili\n\nÜcretsiz deneyin: {bot_link}",
     "button": "📤 BridgeOS'u Öner",
     "message": "🌉 BridgeOS'u sevdiniz mi?\n\nDiğer yöneticilerin dil engellerini aşmasına yardımcı olun!\n\nBridgeOS'u farklı diller konuşan ekipleri yöneten meslektaşlarınıza, arkadaşlarınıza veya herkese önerin.\n\n👉 Paylaşmak için düğmeye dokunun:"
   },

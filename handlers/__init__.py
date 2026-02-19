@@ -1,2 +1,2 @@
 # Conversation states for registration flow
-LANGUAGE, GENDER, INDUSTRY = range(3)
+LANGUAGE, GENDER, INDUSTRY, SETTINGS_LANGUAGE, SETTINGS_GENDER, SETTINGS_INDUSTRY = range(6)

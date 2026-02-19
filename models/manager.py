@@ -61,6 +61,16 @@ def create(manager_id: int, code: str, industry: str):
     logger.info(f"Manager created: manager_id={manager_id}, code={code}, industry={industry}")
 
 
+def update_industry(manager_id: int, industry: str):
+    """Update manager's industry."""
+    with get_db_cursor() as cur:
+        cur.execute(
+            "UPDATE managers SET industry = %s WHERE manager_id = %s AND deleted_at IS NULL",
+            (industry, manager_id)
+        )
+    logger.info(f"Manager industry updated: manager_id={manager_id}, industry={industry}")
+
+
 def soft_delete(manager_id: int):
     """Soft-delete a manager (preserves history)."""
     with get_db_cursor() as cur:

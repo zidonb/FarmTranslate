@@ -309,6 +309,162 @@ async def _complete_worker_registration(update: Update, context: ContextTypes.DE
 
 
 # ============================================
+# /settings — change language, gender, industry
+# ============================================
+
+async def settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Entry point for /settings — lets registered users update their language, gender, industry."""
+    user_id = update.effective_user.id
+    user = user_model.get_by_id(user_id)
+
+    if not user:
+        await update.message.reply_text(
+            get_text('English', 'settings.not_registered',
+                     default="Please use /start to register first.")
+        )
+        from telegram.ext import ConversationHandler
+        return ConversationHandler.END
+
+    context.user_data['settings_language'] = user['language']  # keep current as fallback
+
+    config = load_config()
+    languages = config.get('languages', ['English'])
+    keyboard = [languages[i:i+2] for i in range(0, len(languages), 2)]
+
+    await update.message.reply_text(
+        get_text(user['language'], 'settings.language_question',
+                 default="⚙️ Settings\n\nSelect your new language:"),
+        reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
+    )
+
+    from handlers import SETTINGS_LANGUAGE
+    return SETTINGS_LANGUAGE
+
+
+async def settings_language_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """User picked a new language in settings flow."""
+    selected = update.message.text
+    config = load_config()
+    available = config.get('languages', [])
+
+    if selected not in available:
+        keyboard = [available[i:i+2] for i in range(0, len(available), 2)]
+        await update.message.reply_text(
+            get_text('English', 'registration.invalid_language',
+                     default="⚠️ Please select a language from the keyboard below."),
+            reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
+        )
+        from handlers import SETTINGS_LANGUAGE
+        return SETTINGS_LANGUAGE
+
+    context.user_data['settings_language'] = selected
+
+    male = get_text(selected, 'registration.gender_options.male', default="Male")
+    female = get_text(selected, 'registration.gender_options.female', default="Female")
+    prefer_not = get_text(selected, 'registration.gender_options.prefer_not_to_say', default="Prefer not to say")
+
+    await update.message.reply_text(
+        get_text(selected, 'registration.gender_question',
+                 default="What is your gender?\n(This helps with accurate translations)"),
+        reply_markup=ReplyKeyboardMarkup([[male, female], [prefer_not]], one_time_keyboard=True, resize_keyboard=True)
+    )
+
+    from handlers import SETTINGS_GENDER
+    return SETTINGS_GENDER
+
+
+async def settings_gender_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """User picked a new gender in settings flow."""
+    user_id = update.effective_user.id
+    language = context.user_data.get('settings_language', 'English')
+
+    male = get_text(language, 'registration.gender_options.male', default="Male")
+    female = get_text(language, 'registration.gender_options.female', default="Female")
+    prefer_not = get_text(language, 'registration.gender_options.prefer_not_to_say', default="Prefer not to say")
+    reverse_map = {male: 'Male', female: 'Female', prefer_not: 'Prefer not to say'}
+
+    if update.message.text not in reverse_map:
+        await update.message.reply_text(
+            get_text(language, 'registration.invalid_gender',
+                     default="⚠️ Please select your gender from the keyboard below."),
+            reply_markup=ReplyKeyboardMarkup([[male, female], [prefer_not]], one_time_keyboard=True, resize_keyboard=True)
+        )
+        from handlers import SETTINGS_GENDER
+        return SETTINGS_GENDER
+
+    context.user_data['settings_gender'] = reverse_map[update.message.text]
+    role = manager_model.get_role(user_id)
+
+    if role != 'manager':
+        # Worker — save and done
+        user_model.update(user_id, language=language, gender=reverse_map[update.message.text])
+        await update.message.reply_text(
+            get_text(language, 'settings.updated',
+                     default="✅ Settings updated!"),
+            reply_markup=ReplyKeyboardRemove()
+        )
+        return ConversationHandler.END
+
+    # Manager — ask for industry
+    config = load_config()
+    industries = config.get('industries', {})
+    buttons = []
+    for key in industries:
+        translated = get_text(language, f'industries.{key}', default=industries[key]['name'])
+        buttons.append(translated)
+
+    keyboard = [buttons[i:i+2] for i in range(0, len(buttons), 2)]
+    await update.message.reply_text(
+        get_text(language, 'registration.industry_question',
+                 default="What industry do you work in?"),
+        reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
+    )
+
+    from handlers import SETTINGS_INDUSTRY
+    return SETTINGS_INDUSTRY
+
+
+async def settings_industry_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """User picked a new industry in settings flow — save everything."""
+    user_id = update.effective_user.id
+    language = context.user_data.get('settings_language', 'English')
+    gender = context.user_data.get('settings_gender', 'Prefer not to say')
+    industry_text = update.message.text
+
+    config = load_config()
+    industries = config.get('industries', {})
+    reverse_map = {}
+    for key in industries:
+        translated = get_text(language, f'industries.{key}', default=industries[key]['name'])
+        reverse_map[translated] = key
+
+    if industry_text not in reverse_map:
+        buttons = list(reverse_map.keys())
+        keyboard = [buttons[i:i+2] for i in range(0, len(buttons), 2)]
+        await update.message.reply_text(
+            get_text(language, 'registration.invalid_industry',
+                     default="⚠️ Please select an industry from the keyboard below."),
+            reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
+        )
+        from handlers import SETTINGS_INDUSTRY
+        return SETTINGS_INDUSTRY
+
+    industry_key = reverse_map[industry_text]
+
+    user_model.update(user_id, language=language, gender=gender)
+    manager_model.update_industry(user_id, industry_key)
+
+    logger.info(f"Settings updated: user={user_id}, language={language}, gender={gender}, industry={industry_key}")
+
+    await update.message.reply_text(
+        get_text(language, 'settings.updated',
+                 default="✅ Settings updated!"),
+        reply_markup=ReplyKeyboardRemove()
+    )
+    return ConversationHandler.END
+
+
+# ============================================
 # CANCEL
 # ============================================
 

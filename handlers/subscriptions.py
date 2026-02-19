@@ -6,8 +6,9 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 
 from config import load_config
+import random
 from utils.i18n import get_text
-
+from utils.helpers import BOT_USERNAMES
 import models.user as user_model
 import models.manager as manager_model
 import models.subscription as subscription_model
@@ -144,13 +145,16 @@ async def refer_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     config = load_config()
     language_count = len(config.get('languages', []))
 
+    random_bot = random.choice(list(BOT_USERNAMES.values()))
+    bot_link = f"https://t.me/{random_bot}"
+
     share_text = get_text(language, 'refer.share_text',
                           default="🌉 Check out BridgeOS!\n\nI use it to communicate with my team in real-time - "
                                   "we speak different languages but chat naturally!\n\n"
                                   "🌐 {language_count} languages supported\n"
                                   "✅ Instant translation\n🏭 Industry-specific terms\n"
-                                  "💬 Simple & effective\n\nTry it free: https://t.me/FarmTranslateBot",
-                          language_count=language_count)
+                                  "💬 Simple & effective\n\nTry it free: {bot_link}",
+                          language_count=language_count, bot_link=bot_link)
     button = get_text(language, 'refer.button', default="📤 Recommend BridgeOS")
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton(button, switch_inline_query=share_text)]
