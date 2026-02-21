@@ -7,12 +7,11 @@ Telegram-based translation system connecting managers with foreign workers. Mana
 5 independent bot instances (bot1–bot5) share one PostgreSQL database. Each manager can connect up to 5 workers, one per bot slot. Workers connect via deep-link invitation (e.g. `t.me/BridgeOS_2bot?start=invite_BRIDGE-12345`).
 
 ## Architecture
-
 ```
 handlers/          → Telegram command/message handlers
 models/            → Database access layer (one file per table)
 utils/             → db_connection, translator, i18n, helpers, logger
-bot.py             → Entry point (handler registration, ~90 lines)
+bot.py             → Entry point (handler registration, ~120 lines)
 dashboard.py       → Flask admin panel + LemonSqueezy webhooks
 config.py          → Loads config.json + env vars / secrets.json
 ```
@@ -26,14 +25,17 @@ config.py          → Loads config.json + env vars / secrets.json
   - UNIQUE(manager_id, bot_slot) WHERE active — prevents slot races at DB level
   - UNIQUE(worker_id) WHERE active — one manager per worker
 - **messages** — chat history (connection_id, sender_id, original/translated text)
-- **tasks** — task assignments (connection_id, description, status pending/completed)
+- **tasks** — task assignments (connection_id, description, status pending/completed/cancelled)
 - **subscriptions** — LemonSqueezy billing (manager_id, status, portal URL)
 - **usage_tracking** — free tier limits (manager_id, messages_sent, is_blocked)
 - **feedback** — user feedback
+- **logs** — persistent error logs (bot_id, level, module, message). Capped at 5000 rows with automatic cleanup every 50 writes.
 
 ## Key Flows
 
 **Registration**: /start → language → gender → industry (manager) or auto-connect (worker with invite code). Role determined by presence of invite code.
+
+**Settings**: /settings → language → gender → industry (manager only). All-or-nothing flow — updates existing records, no re-registration. Workers skip industry step.
 
 **Messaging**: User sends text → find connection for this bot slot → get translation context (last N messages) → translate with industry/gender context → forward to other party → save message.
 
@@ -41,15 +43,18 @@ config.py          → Loads config.json + env vars / secrets.json
 
 **Subscriptions**: Free tier (configurable limit) → LemonSqueezy checkout → webhook updates DB → unlimited messages.
 
+**Referrals**: /refer generates a share link with a randomly selected bot (bot1–bot5) to distribute new manager signups across instances.
+
 ## Key Design Decisions
 
 1. **Database constraints prevent race conditions** — no application-level locking needed
 2. **Bot slot = which bot instance** (from BOT_ID env var), not encoded in invitation URL
 3. **Soft deletes** on managers/workers, connections use status field
 4. **i18n for UI** (get_text with locale JSON files), **LLM for conversations** (translator.py)
-5. **Gender stored in English internally** ("Male"/"Female") — translator.py expects this
+5. **Gender stored in English internally** ("Male"/"Female"/"Prefer not to say") — translator.py expects this
 6. **Messages belong to connections**, not user pairs
 7. **Translation context** = last N messages from same connection (replaces old separate table)
+8. **Logging**: console (all levels) + database (ERROR only). Database handler uses capped storage with in-memory counter to avoid per-write overhead. Global error handler catches unhandled exceptions.
 
 ## Config
 
@@ -63,6 +68,6 @@ Railway: worker service (bot.py) + web service (dashboard.py) + PostgreSQL. Each
 
 ## Commands
 
-**Manager**: /start, /help, /menu, /tasks, /daily, /addworker, /workers, /subscription, /refer, /feedback, /reset
+**Manager**: /start, /help, /menu, /settings, /tasks, /daily, /addworker, /workers, /subscription, /refer, /feedback, /reset, /resetall
 
-**Worker**: /start, /help, /menu, /tasks, /refer, /feedback, /reset
+**Worker**: /start, /help, /menu, /settings, /tasks, /refer, /feedback, /reset, /resetall

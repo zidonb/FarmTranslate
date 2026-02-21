@@ -16,4 +16,9 @@ Output Requirements:
 Be critical, direct, and thorough. Focus on hardening the code against failure.
 
 Take as much time as you need!!!
+
+ 
+If you find a bug, explain why it happens, how to fix it, and provide a test case that would have caught it. 
+
+**important**:
 And if no bugs you dont have to make up ones just to please me. I want real bugs.
